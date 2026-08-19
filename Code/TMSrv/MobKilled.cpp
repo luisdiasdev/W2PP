@@ -110,7 +110,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 
 	int Face = pMob[conn].MOB.Equip[0].sIndex;
 
-#pragma region Crias EXP
+#pragma region
 	if (conn >= MAX_USER && pMob[conn].MOB.Clan == 4 && Face >= 315 && Face <= 345 && target > MAX_USER && pMob[target].MOB.Clan != 4)
 	{
 		int summoner = pMob[conn].Summoner;
@@ -203,14 +203,14 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 
 		conn = Summoner;
 	}
-#pragma region PvE
+#pragma region
 	if (target >= MAX_USER || pMob[target].MOB.BaseScore.Level > MAX_LEVEL + 5)
 	{
 		if (target >= MAX_USER || pMob[target].MOB.BaseScore.Level <= MAX_LEVEL)
 		{
 			if (conn < MAX_USER && pMob[target].MOB.Clan != 4)
 			{
-#pragma region Distribuição da EXP
+#pragma region
 				int MobExp = GetExpApply(pMob[conn].extra, (int)pMob[target].MOB.Exp, pMob[conn].MOB.CurrentScore.Level, pMob[target].MOB.CurrentScore.Level);
 				int FinalExp = 0;
 
@@ -248,7 +248,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 							party = pMob[Leader].PartyList[i];
 						else
 							party = Leader;
-#pragma region Pesa A
+#pragma region
 						if (party > 0 && party < MAX_USER && pMob[party].MOB.CurrentScore.Hp > 0 && (tx / 128) == 9 && (pMob[party].TargetX / 128) == 9
 							&& (ty / 128) == 1 && (pMob[party].TargetY / 128) == 1)
 						{
@@ -307,7 +307,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								else
 									exp -= (exp * 15) / 100;
 
-#pragma region Log de Experiência diário
+#pragma region
 								if (when.tm_yday != pMob[party].extra.DayLog.YearDay)
 									pMob[party].extra.DayLog.Exp = 0;
 
@@ -334,7 +334,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 
 								pMob[party].MOB.Exp += exp;
 
-#pragma region RankingUpdateExp
+#pragma region
 								STRUCT_RANKING rankInfo = STRUCT_RANKING(pMob[party].MOB.MobName, pMob[party].MOB.Exp, pMob[party].extra.ClassMaster, pMob[party].MOB.CurrentScore.Level, pMob[party].MOB.Class);
 
 								MSG_UpdateExpRanking expRankingPacket = MSG_UpdateExpRanking(party, rankInfo);
@@ -343,7 +343,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 							}
 						}
 #pragma endregion
-#pragma region Pesa M
+#pragma region
 						else if (party > 0 && party < MAX_USER && pMob[party].MOB.CurrentScore.Hp > 0 && (tx / 128) == 8 && (pMob[party].TargetX / 128) == 8
 							&& (ty / 128) == 2 && (pMob[party].TargetY / 128) == 2)
 						{
@@ -402,7 +402,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								else
 									exp -= (exp * 15) / 100;
 
-#pragma region Log de Experiência diário
+#pragma region
 								if (when.tm_yday != pMob[party].extra.DayLog.YearDay)
 									pMob[party].extra.DayLog.Exp = 0;
 
@@ -428,7 +428,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								}
 
 								pMob[party].MOB.Exp += exp;
-#pragma region RankingUpdateExp
+#pragma region
 								STRUCT_RANKING rankInfo = STRUCT_RANKING(pMob[party].MOB.MobName, pMob[party].MOB.Exp, pMob[party].extra.ClassMaster, pMob[party].MOB.CurrentScore.Level, pMob[party].MOB.Class);
 
 								MSG_UpdateExpRanking expRankingPacket = MSG_UpdateExpRanking(party, rankInfo);
@@ -437,7 +437,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 							}
 						}
 #pragma endregion
-#pragma region Pesa N
+#pragma region
 						else if (party > 0 && party < MAX_USER && pMob[party].MOB.CurrentScore.Hp > 0 && (tx / 128) == 10 && (pMob[party].TargetX / 128) == 10
 							&& (ty / 128) == 2 && (pMob[party].TargetY / 128) == 2)
 						{
@@ -495,7 +495,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									exp += (exp * 15) / 100;
 								else
 									exp -= (exp * 15) / 100;
-#pragma region Log de Experiência diário
+#pragma region
 								if (when.tm_yday != pMob[party].extra.DayLog.YearDay)
 									pMob[party].extra.DayLog.Exp = 0;
 
@@ -521,7 +521,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								}
 
 								pMob[party].MOB.Exp += exp;
-#pragma region RankingUpdateExp
+#pragma region
 								STRUCT_RANKING rankInfo = STRUCT_RANKING(pMob[party].MOB.MobName, pMob[party].MOB.Exp, pMob[party].extra.ClassMaster, pMob[party].MOB.CurrentScore.Level, pMob[party].MOB.Class);
 
 								MSG_UpdateExpRanking expRankingPacket = MSG_UpdateExpRanking(party, rankInfo);
@@ -589,7 +589,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								else
 									exp -= (exp * 15) / 100;
 
-#pragma region Log de Experiência diário
+#pragma region
 								if (when.tm_yday != pMob[party].extra.DayLog.YearDay)
 									pMob[party].extra.DayLog.Exp = 0;
 
@@ -615,7 +615,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 
 								pMob[party].MOB.Exp += exp;
 
-#pragma region RankingUpdateExp
+#pragma region
 								STRUCT_RANKING rankInfo = STRUCT_RANKING(pMob[party].MOB.MobName, pMob[party].MOB.Exp, pMob[party].extra.ClassMaster, pMob[party].MOB.CurrentScore.Level, pMob[party].MOB.Class);
 
 								MSG_UpdateExpRanking expRankingPacket = MSG_UpdateExpRanking(party, rankInfo);
@@ -646,7 +646,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 						if (!PosY)
 							AlvoY = pMob[target].TargetY;
 
-#pragma region Kefra
+#pragma region
 						if (pMob[target].GenerateIndex == KEFRA_BOSS)
 						{
 							if (pMob[conn].MOB.Guild)
@@ -715,7 +715,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 						{
 							int GenerateID = pMob[target].GenerateIndex;
 
-#pragma region Portões de Noatum
+#pragma region
 							if (pMob[target].MOB.Equip[0].sIndex == 220 && CastleState)
 							{
 								if (pMob[target].TargetX < 0 || pMob[target].TargetX >= MAX_GRIDX || pMob[target].TargetY < 0 || pMob[target].TargetY >= MAX_GRIDY)
@@ -754,10 +754,10 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									Log("err,no castle gato to open", "-system", 0);
 							}
 #pragma endregion
-#pragma region Drops especiais - IMP - NYERDS - AGUA - REI - ZAKUM
+#pragma region
 							else
 							{
-#pragma region Agua M
+#pragma region
 								//AguaM
 								if (GenerateID >= WATER_M_INITIAL && GenerateID <= WATER_M_INITIAL + 7)
 								{
@@ -831,7 +831,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									}
 								}
 #pragma endregion
-#pragma region Agua N
+#pragma region
 								else if (GenerateID >= WATER_N_INITIAL && GenerateID <= WATER_N_INITIAL + 7)
 								{
 									int CurrentNumMob = mNPCGen.pList[GenerateID].CurrentNumMob;
@@ -904,7 +904,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									}
 								}
 #pragma endregion
-#pragma region Agua A
+#pragma region
 								else if (GenerateID >= WATER_A_INITIAL && GenerateID <= WATER_A_INITIAL + 7)
 								{
 									int CurrentNumMob = mNPCGen.pList[GenerateID].CurrentNumMob;
@@ -997,7 +997,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									Kingdom2Clear = 1;
 									SendNoticeArea(g_pMessageStringTable[_NN_King2_Killed], 1676, 1816, 1776, 1892);
 								}
-#pragma region Boss R Lac R Ori Circulo divino
+#pragma region
 								else if (GenerateID == 0 || GenerateID == 1 || GenerateID == 2)
 								{
 									STRUCT_ITEM item;
@@ -1071,7 +1071,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 										//CreateItem(AlvoX, AlvoY, &item, rand() % 4, 1);
 									}
 								}
-#pragma region Pesas
+#pragma region
 
 								else if (GenerateIndex >= NIGHTMARE_M_INITIAL && GenerateIndex <= NIGHTMARE_M_END)
 									GenerateMob(GenerateIndex, 0, 0);//Pesa M
@@ -1082,7 +1082,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								else if (GenerateIndex >= NIGHTMARE_A_INITIAL && GenerateIndex <= NIGHTMARE_A_END)
 									GenerateMob(GenerateIndex, 0, 0);//Pesa A
 #pragma endregion
-#pragma region Carta de duelo N
+#pragma region
 								//Carta N
 								if (GenerateID >= SECRET_ROOM_N_SALA1_MOB_1 && GenerateID <= SECRET_ROOM_N_SALA1_MOB_2)
 								{
@@ -1171,7 +1171,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									}
 								}
 #pragma endregion
-#pragma region Carta de duelo M
+#pragma region
 								//Carta M
 								if (GenerateID >= SECRET_ROOM_M_SALA1_MOB_1 && GenerateID <= SECRET_ROOM_M_SALA1_MOB_2)
 								{
@@ -1260,7 +1260,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									}
 								}
 #pragma endregion
-#pragma region Carta de duelo A
+#pragma region
 								//Carta A
 								if (GenerateID >= SECRET_ROOM_A_SALA1_MOB_1 && GenerateID <= SECRET_ROOM_A_SALA1_MOB_2)
 								{
@@ -1349,8 +1349,8 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									}
 								}
 #pragma endregion
-#pragma region Pista de Runas
-#pragma region Pista Nv0 Lich_Crunt
+#pragma region
+#pragma region
 								if (GenerateID == RUNEQUEST_LV0_LICH1 || GenerateID == RUNEQUEST_LV0_LICH2)
 								{
 									int _rand = rand() % 100;
@@ -1425,7 +1425,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									}
 								}
 #pragma endregion
-#pragma region Pista Nv1 Torre
+#pragma region
 								if (GenerateID == RUNEQUEST_LV1_TORRE1 || GenerateID == RUNEQUEST_LV1_TORRE2 || GenerateID == RUNEQUEST_LV1_TORRE3)
 								{
 									int party = GenerateID - RUNEQUEST_LV1_TORRE1;
@@ -1450,7 +1450,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 										Pista[1].Party[2].MobCount++;
 								}
 #pragma endregion
-#pragma region Pista Nv2 Amon
+#pragma region
 								if (GenerateID == RUNEQUEST_LV2_MOB_BOSS)
 								{
 									int partyleader = pMob[conn].Leader;
@@ -1490,7 +1490,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									Log(temp, "-system", 0);
 								}
 #pragma endregion
-#pragma region Pista Nv3 Sulrang
+#pragma region
 								if (GenerateID >= RUNEQUEST_LV3_MOB_SULRANG_INITIAL && GenerateID <= RUNEQUEST_LV3_MOB_SULRANG_END && Pista[3].Party[0].LeaderID != 0 && Pista[3].Party[0].MobCount == 0)
 								{
 									Pista[3].Party[0].MobCount = 1;
@@ -1498,7 +1498,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									GenerateMob(RUNEQUEST_LV3_MOB_BOSS_INITIAL + rand() % 7, 0, 0);
 								}
 #pragma endregion
-#pragma region Pista Nv4 Labirinto
+#pragma region
 								if (GenerateID >= RUNEQUEST_LV4_MOB_INITIAL && GenerateID <= RUNEQUEST_LV4_MOB_END && mNPCGen.pList[GenerateID].CurrentNumMob == 1)
 								{
 									int leader = pMob[conn].Leader;
@@ -1606,7 +1606,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									Log(temp, "-system", 0);
 								}
 #pragma endregion
-#pragma region Pista Nv5 Balrog
+#pragma region
 								if (GenerateID == RUNEQUEST_LV5_MOB_BOSS)
 								{
 									Pista[5].Party[0].MobCount = 1;
@@ -1648,7 +1648,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									Log(temp, "-system", 0);
 								}
 #pragma endregion
-#pragma region Pista Nv6 Coelho
+#pragma region
 								if (GenerateID >= RUNEQUEST_LV6_MOB_INITIAL && GenerateID <= RUNEQUEST_LV6_MOB_END)
 								{
 									if (Pista[6].Party[0].MobCount == 1)
@@ -1693,7 +1693,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								}
 #pragma endregion
 #pragma endregion
-#pragma region RvR
+#pragma region
 								if (GenerateID == RVRTORRE_1 || GenerateID == RVRTORRE_2)
 								{
 									ClearArea(1020, 1916, 1286, 2178);
@@ -1725,7 +1725,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								
 							}
 #pragma endregion
-#pragma region Drop Gold
+#pragma region
 							int MobCoin = pMob[target].MOB.Coin;
 							int UNKGOLD = 18;
 
@@ -1756,7 +1756,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								}
 							}
 #pragma endregion
-#pragma region Drop Evento em todos os mobs
+#pragma region
 							if (evOn && evStartIndex && evEndIndex && evItem && evRate && evCurrentIndex < evEndIndex && rand() % evRate == 0)
 							{
 								STRUCT_ITEM item;
@@ -1789,7 +1789,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 							}
 #pragma endregion
 							int target_level = pMob[target].MOB.CurrentScore.Level;
-#pragma region Drop comum
+#pragma region
 							for (int i = 0; i < MAX_CARRY; i++)
 							{
 								if (pMob[target].MOB.Carry[i].sIndex == 0)
@@ -1944,7 +1944,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								}
 							}
 #pragma endregion
-#pragma region Quest Amuleto mistico
+#pragma region
 							if (conn < MAX_USER && (pMob[target].MOB.Equip[0].sIndex == 239 || pMob[target].MOB.Equip[0].sIndex == 241) && !(rand() % 20))
 							{
 								if (pMob[conn].extra.QuestInfo.Mortal.TerraMistica == 1)
@@ -1954,7 +1954,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								}
 							}
 #pragma endregion
-#pragma region Drenagem de HP do mob com skill de HT
+#pragma region
 							/*							if (pMob[conn].MOB.Rsv & 2)
 							{
 							int mob_maxhp = pMob[target].MOB.CurrentScore.MaxHp;
@@ -1989,15 +1989,15 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 #pragma endregion
 							DeleteMob(target, 1);
 
-#pragma region Pista +1 - Lugefer_Inf
+#pragma region
 							if (GenerateID >= RUNEQUEST_LV1_MOB_INITIAL && GenerateID <= RUNEQUEST_LV1_MOB_END)
 								GenerateMob(GenerateID, 0, 0);
 #pragma endregion
-#pragma region Pista +2 - Amon_Inf
+#pragma region
 							if (GenerateID >= RUNEQUEST_LV2_MOB_INITIAL && GenerateID <= RUNEQUEST_LV2_MOB_END)
 								GenerateMob(GenerateID, 0, 0);
 #pragma endregion
-#pragma region Pista +3 - Kalintz_Mago
+#pragma region
 							if (GenerateID >= RUNEQUEST_LV3_MOB_BOSS_INITIAL && GenerateID <= RUNEQUEST_LV3_MOB_BOSS_END && Pista[3].Party[0].LeaderID != 0 && Pista[3].Party[0].MobCount != 0)
 							{
 								GenerateMob(RUNEQUEST_LV3_MOB_BOSS_INITIAL + rand() % 7, 0, 0);
@@ -2019,7 +2019,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									Pista[3].Party[2].MobCount++;
 							}
 #pragma endregion
-#pragma region Kefra - Mago_Negro
+#pragma region
 							if (GenerateIndex >= KEFRA_MOB_INITIAL && GenerateIndex <= KEFRA_MOB_END && KefraLive == 0)
 								GenerateMob(GenerateIndex, 0, 0);
 #pragma endregion
@@ -2055,7 +2055,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 	}
 #pragma endregion
 
-#pragma region PvP
+#pragma region
 	else
 	{
 		int tlevel = pMob[target].MOB.BaseScore.Level;
@@ -2063,7 +2063,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 		if (tlevel < 0 || tlevel > MAX_LEVEL)
 			return;
 
-#pragma region Lose EXP
+#pragma region
 		unsigned int curexp = (unsigned int)(pMob[target].extra.ClassMaster == MORTAL || pMob[target].extra.ClassMaster == ARCH ? g_pNextLevel[tlevel] : g_pNextLevel_2[tlevel]);
 		unsigned int nextexp = (unsigned int)(pMob[target].extra.ClassMaster == MORTAL || pMob[target].extra.ClassMaster == ARCH ? g_pNextLevel[tlevel + 1] : g_pNextLevel_2[tlevel + 1]);
 		unsigned int alphaexp = (nextexp - curexp);
@@ -2127,7 +2127,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 		int killed_x = pMob[target].TargetX / 128;
 		int killed_y = pMob[target].TargetY / 128;
 
-#pragma region No lose At war
+#pragma region
 		if (conn < MAX_USER)
 		{
 			if (TESTSERVER)
@@ -2274,7 +2274,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 					}
 				}
 			}
-#pragma region PK Drop - CP
+#pragma region
 			else
 			{
 				if (!AtWar && NewbieEventServer == 0)

@@ -38,7 +38,7 @@
 #include "CReadFiles.h"
 #include "CWarTower.h"
 
-#pragma region Defines
+#pragma region
 
 int FREEEXP = 35;
 int PARTY_DIF = 150;
@@ -4521,7 +4521,7 @@ int  ProcessAffect(int idx)
 	if (currentTarget == idx)
 		pMob[idx].CurrentTarget = 0;
 
-#pragma region Fada attack
+#pragma region
 	else
 	{
 		if (currentTarget > 0 && currentTarget < MAX_MOB)
@@ -4665,7 +4665,7 @@ LABEL_59:
 		if(pMob[idx].extra.ClassMaster != MORTAL && pMob[idx].extra.ClassMaster != ARCH)
 			Level += MAX_LEVEL;
 
-#pragma region Regen de HP Aura da Vida
+#pragma region
 		if (Type == 17)
 		{
 			Hp += AffectLevel / 2 + AffectValue;
@@ -4686,7 +4686,7 @@ LABEL_59:
 			goto LessAffect;
 		}
 #pragma endregion
-#pragma region Veneno - Drenagem de HP
+#pragma region
 		if (Type == 20) //??? Possivelmente Veneno's
 		{
 			AffectValue = 100;
@@ -4732,7 +4732,7 @@ LABEL_59:
 			goto LessAffect;
 		}
 #pragma endregion
-#pragma region RegenHP Type21
+#pragma region
 /*		if (Type == 21)//Regen de HT
 		{
 			Hp += AffectValue * MaxHp / 100;
@@ -4754,7 +4754,7 @@ LABEL_59:
 			goto LessAffect;
 		}*/
 #pragma endregion
-#pragma region Trovão
+#pragma region
 		if(Type == 22)
 		{
 			  int alvo1 = 0;
@@ -5063,7 +5063,7 @@ LABEL_59:
 			  }
 		}
 #pragma endregion
-#pragma region Aura Bestial
+#pragma region
 		if(Type == 23)
 		{
 			 int alvo1 = 0;
@@ -5372,7 +5372,7 @@ LABEL_59:
 			  }
 		}
 #pragma endregion
-#pragma region Affects less time
+#pragma region
 	LessAffect :
 		if (pMob[idx].Affect[i].Time < 32400000)
 			pMob[idx].Affect[i].Time--;
@@ -6607,7 +6607,7 @@ void GuildProcess()
 	}
 
 #ifdef RVR_ON
-#pragma region Guerra de Reino
+#pragma region
 	if (NewbieEventServer == 1 && timeinfo->tm_wday != 0 && timeinfo->tm_wday != 6 && timeinfo->tm_hour == RvRHour)
 	{
 		if (RvRState == 0 && timeinfo->tm_min < 5)

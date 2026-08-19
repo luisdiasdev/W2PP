@@ -45,7 +45,7 @@ const char* const CCastleZakum::CASTLE_QUEST_PATH = "../../Common/Settings/Castl
 
 int CastleQuestPosition[MAX_CASTLE_POS][4] =
 {
-#pragma region Hidden
+#pragma region
 	{ 2221, 1270, 2259, 1246 }, //Primeiro bloco
 
 	//Lado Esquerdo da quest
@@ -102,7 +102,7 @@ BOOL CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
 		return TRUE;
 	}
 
-#pragma region Portão de entrada
+#pragma region
 	if (gatekey == 10)
 	{//Portão principal do castelo zakum onde define qual level será a quest.
 		if (Quest < 0 || Quest >= MAX_CASTLE_QUEST)
@@ -184,7 +184,7 @@ BOOL CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
 		}
 	}
 #pragma endregion
-#pragma region Portões de dentro
+#pragma region
 	else if (gatekey >= 11 && gatekey <= 14)
 	{
 		if (Quest != CastleQuestLevel)

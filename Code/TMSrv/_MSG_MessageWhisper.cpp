@@ -29,7 +29,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-#pragma region /cp
+#pragma region
 	if (strcmp(m->MobName, "cp") == 0)
 	{
 		sprintf(temp, g_pMessageStringTable[_DN_Show_Chao], GetPKPoint(conn) - 75);
@@ -37,7 +37,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /getout - Fim cidadão
+#pragma region
 	else if (strcmp(m->MobName, "getout") == 0)
 	{
 		pMob[conn].extra.Citizen = 0;
@@ -48,7 +48,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /srv - Troca de Server
+#pragma region
 	else if (strcmp(m->MobName, "srv") == 0)
 	{
 		int srv = 0;
@@ -77,7 +77,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion	
-#pragma region /gfame
+#pragma region
 	else if (strcmp(m->MobName, "gfame") == 0)
 	{
 		if(pMob[conn].MOB.Guild == 0 || pMob[conn].MOB.GuildLevel != 9)
@@ -92,7 +92,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion	
-#pragma region /spk - Chat para todos os servers
+#pragma region
 	else if (strcmp(m->MobName, "spk") == 0)
 	{
 		int i = 0;
@@ -142,7 +142,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /qst - QuestInfo
+#pragma region
 	else if (strcmp(m->MobName, "qst") == 0)
 	{
 		if(pMob[conn].extra.QuestInfo.Arch.Cristal == 0)
@@ -164,7 +164,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /criar
+#pragma region
 	else if (strcmp(m->MobName, "create") == 0)
 	{
 		if (m->String[0] == 0)
@@ -269,7 +269,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /subcreate
+#pragma region
 	else if (strcmp(m->MobName, "subcreate") == 0)
 	{
 		if(pMob[conn].MOB.Guild == 0)
@@ -364,7 +364,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /expulsar
+#pragma region
 	else if (strcmp(m->MobName, "abandonar") == 0)
 	{
 		if(pMob[conn].MOB.Guild == 0)
@@ -413,7 +413,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /transferir
+#pragma region
 	else if (strcmp(m->MobName, "handover") == 0)
 	{
 		if(pMob[conn].MOB.Guild == 0)
@@ -480,7 +480,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /nt - NT
+#pragma region
 	else if (strcmp(m->MobName, "nt") == 0)
 	{
 		sprintf(temp, g_pMessageStringTable[_DN_CHANGE_COUNT], pMob[conn].extra.NT);
@@ -489,7 +489,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /nig - Pesadelo TIME
+#pragma region
 	else if (strcmp(m->MobName, "nig") == 0)
 	{
 		char tmptime[256];
@@ -506,7 +506,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /tab
+#pragma region
 	if (strcmp(m->MobName, "tab") == 0)
 	{
 		if (pMob[conn].MOB.CurrentScore.Level < 69 && pMob[conn].extra.ClassMaster == MORTAL)
@@ -558,7 +558,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /snd
+#pragma region
 	if (strcmp(m->MobName, "snd") == 0)
 	{
 		strncpy(pMob[conn].Snd, m->String, 96);
@@ -570,7 +570,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /day - Skill
+#pragma region
 	if (strcmp(m->MobName, "day") == 0)
 	{
 		SendClientMessage(conn, "!#11  2");
@@ -578,7 +578,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region _NN_Kingdom - /kingdom
+#pragma region
 	if (strcmp(m->MobName, g_pMessageStringTable[_NN_Kingdom]) == 0 || strcmp(m->MobName, "kingdom") == 0)
 	{
 		if (Clan == 7)
@@ -593,7 +593,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region _NN_King  - /king
+#pragma region
 	else if (strcmp(m->MobName, g_pMessageStringTable[_NN_King]) == 0 || strcmp(m->MobName, "king") == 0)
 	{
 		if (Clan == 7)
@@ -607,7 +607,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region _NN_Summon_Guild - /summonguild
+#pragma region
 	else if (strcmp(m->MobName, g_pMessageStringTable[_NN_Summon_Guild]) == 0 || strcmp(m->MobName, "summonguild") == 0)
 	{
 		int usGuild = pMob[conn].MOB.Guild;
@@ -644,7 +644,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region _NN_Summon - /summon
+#pragma region
 	else if (strcmp(m->MobName, g_pMessageStringTable[_NN_Summon]) == 0 || strcmp(m->MobName, "summon") == 0)
 	{
 		int admin = 0;
@@ -766,7 +766,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /time
+#pragma region
 	else if (strcmp(m->MobName, "time") == 0)
 	{
 		char tmptime[256];
@@ -783,7 +783,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region _CM_GM - /gm
+#pragma region
 	else if (strcmp(m->MobName, "gm") == 0 || strcmp(m->MobName, "GM") == 0)
 	{
 		int level = pMob[conn].MOB.CurrentScore.Level - 1000;
@@ -792,7 +792,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region _NN_Relocate - /relo
+#pragma region
 	else if (strcmp(m->MobName, g_pMessageStringTable[_NN_Relocate]) == 0 || strcmp(m->MobName, "relo") == 0)
 	{
 		int Class = pMob[conn].MOB.Class;
@@ -907,7 +907,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region _NN_Deprivate - /expulsar
+#pragma region
 	else if (strcmp(m->MobName, "expulsar") == 0)
 	{
 		if (m->String[0] == 0)
@@ -926,7 +926,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /fimguerra
+#pragma region
 	else if (strcmp(m->MobName, "fimguerra") == 0)
 	{
 		int myguild = pMob[conn].MOB.Guild;
@@ -983,7 +983,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /fimirma
+#pragma region
 	else if (strcmp(m->MobName, "fimirma") == 0)
 	{
 		int myguild = pMob[conn].MOB.Guild;
@@ -1040,7 +1040,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /pin
+#pragma region
 	else if (strcmp(m->MobName, "pin") == 0)
 	{
 		MSG_DBActivatePinCode sm;
@@ -1084,7 +1084,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /not
+#pragma region
 	else if (strcmp(m->MobName, "not") == 0 && pMob[conn].MOB.CurrentScore.Level >= 1000)
 	{
 		MSG_DBNotice sm_dbn;
@@ -1100,7 +1100,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /wp
+#pragma region
 	else if (strcmp(m->MobName, "wp") == 0)
 	{
 		sprintf(temp, g_pMessageStringTable[_DN_REMAINDONATE], pUser[conn].Donate);
@@ -1108,7 +1108,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /contaprincipal
+#pragma region
 	else if (strcmp(m->MobName, "contaprincipal") == 0)
 	{
 		MSG_DBPrimaryAccount sm;
@@ -1132,10 +1132,10 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 
-#pragma region /r - -- = Cidadao  pm
+#pragma region
 	if (m->MobName[0] == 0)
 	{
-#pragma region Chat Guild : -
+#pragma region
 		if (m->String[0] == '-')
 		{
 			strncpy(m->MobName, pMob[conn].MOB.MobName, NAME_LENGTH);
@@ -1181,7 +1181,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 			return;
 		}
 #pragma endregion
-#pragma region Chat Party : =
+#pragma region
 		if (m->String[0] == '=')
 		{
 			strncpy(m->MobName, pMob[conn].MOB.MobName, NAME_LENGTH);
@@ -1225,7 +1225,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 			return;
 		}
 #pragma endregion
-#pragma region Chat Reino
+#pragma region
 		if (m->String[0] == '@' && m->String[1] == '@')
 		{
 			if(pUser[conn].Message != 0)
@@ -1252,7 +1252,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 			return;
 		}
 #pragma endregion
-#pragma region Chat Cidadão
+#pragma region
 		if (m->String[0] == '@')
 		{
 			if(pUser[conn].Message != 0)
@@ -1280,7 +1280,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 #pragma endregion
 		return;
 	}
-#pragma region PM, /r
+#pragma region
 	if (m->MobName[0] != 0)
 	{
 		m->MobName[NAME_LENGTH - 1] = 0;

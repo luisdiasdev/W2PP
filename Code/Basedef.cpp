@@ -34,7 +34,7 @@
 #include "Basedef.h"
 #include "ItemEffect.h"
 
-#pragma region Defines
+#pragma region
 
 int BaseSIDCHM[4][6] = // Define the base Strength, Intelligence, Dexterity, Constance, HP and MP of the 4 classes
 {
@@ -105,7 +105,7 @@ int g_pSuccessRate[11] = {5, 5, 5, 5, 4, 4, 3, 3, 2, 1, 0};
 
 char g_pItemGrid[8][4][2] = 
 {
-#pragma region ItemGrid
+#pragma region
 	{
 		{01, 00},
 		{00, 00},
@@ -568,7 +568,7 @@ int g_pBonusType[10] = {10, 30, 2, 5, 3, 10, 2, 8, 2, 8 };
 
 int DungeonPos[30][2] = 
 {
-#pragma region DungeonPos
+#pragma region
 	{244, 3822}, 
 	{380, 3810},
 	{352, 3780},
@@ -2998,7 +2998,7 @@ void BASE_GetCurrentScore(STRUCT_MOB & MOB, STRUCT_AFFECT *Affect, STRUCT_MOBEXT
 
 	if(isSummon == 0)
 	{
-#pragma region Soul Hp/Mp add
+#pragma region
 		int bInt = MOB.CurrentScore.Int;
 		int bCon = MOB.CurrentScore.Con;
 
@@ -3252,7 +3252,7 @@ void BASE_GetCurrentScore(STRUCT_MOB & MOB, STRUCT_AFFECT *Affect, STRUCT_MOBEXT
 	int Fogo = MOB.Resist[2];
 	int Gelo = MOB.Resist[3];
 
-#pragma region Buff Loop
+#pragma region
 	for(int i = 0; i < MAX_AFFECT; i++)
 	{
 		if(Affect == 0)
@@ -3777,7 +3777,7 @@ void BASE_GetCurrentScore(STRUCT_MOB & MOB, STRUCT_AFFECT *Affect, STRUCT_MOBEXT
 #pragma endregion
 
 
-#pragma region Loop affect2
+#pragma region
 	for(int i = 0; i < MAX_AFFECT; i++)
 	{
 		if(Affect == 0)

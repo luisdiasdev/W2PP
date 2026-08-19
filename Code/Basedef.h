@@ -24,7 +24,7 @@
 #include <time.h>
 #include <Windows.h>
 
-#pragma region Defines
+#pragma region
 
 //#define PKDrop
 
@@ -60,7 +60,7 @@
 #define		MAX_DBACCOUNT			(MAX_USER * MAX_SERVER) // Max players connected to a single DBSrv at the same time
 #define		MAX_RANK_INDEX			500
 
-#pragma region Account related defines
+#pragma region
 
 #define		ACCOUNTNAME_LENGTH		16		// Max length of the account login
 #define		ACCOUNTPASS_LENGTH		12      // Max length of the account password
@@ -393,7 +393,7 @@
 
 #pragma endregion
 
-#pragma region Structures
+#pragma region
 
 struct STRUCT_ITEM
 {
@@ -835,7 +835,7 @@ struct STRUCT_RANKING
 #pragma pack(pop)
 #pragma endregion
 
-#pragma region File Structures
+#pragma region
 
 struct STRUCT_ACCOUNTFILE
 {
@@ -920,7 +920,7 @@ struct STRUCT_BLOCKMAC
 
 #pragma endregion
 
-#pragma region Messages defines and structures
+#pragma region
 
 #define _MSG      	short		  Size;			\
 					char		  KeyWord;		\
@@ -2326,7 +2326,7 @@ const short _MSG_NPAppeal					= (16 | FLAG_DB2GAME | FLAG_GAME2DB | FLAG_DB2NP);
 
 #pragma endregion
 
-#pragma region Basedef functions prototypes
+#pragma region
 
 int  BASE_NeedLog(STRUCT_ITEM *item, int money);
 int  BASE_GetBonusSkillPoint(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra);
@@ -2436,7 +2436,7 @@ void BASE_CheckFairyDate(STRUCT_ITEM *Item);
 
 #pragma endregion
 
-#pragma region Basedef Externs
+#pragma region
 
 extern STRUCT_GUILDZONE g_pGuildZone[MAX_GUILDZONE];
 

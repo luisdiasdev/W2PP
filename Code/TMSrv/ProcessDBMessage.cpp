@@ -52,7 +52,7 @@ void ProcessDBMessage(char *Msg)
 	}
 
 	int conn = std->ID;
-#pragma region DB - TM
+#pragma region
 	if (conn == 0)
 	{
 		switch (std->Type)
@@ -184,7 +184,7 @@ void ProcessDBMessage(char *Msg)
 		}
 	}
 #pragma endregion
-#pragma region DB - TM - CLIENT
+#pragma region
 	else
 	{
 		if ((conn > 0 && conn < MAX_USER) && pUser[conn].Mode == 0)
@@ -209,7 +209,7 @@ void ProcessDBMessage(char *Msg)
 
 		switch (std->Type)
 		{
-#pragma region _MSG_ReqTransper
+#pragma region
 		case _MSG_ReqTransper:
 		{
 								 if (TransperCharacter == 0)
@@ -225,7 +225,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBSendItem
+#pragma region
 		case _MSG_DBSendItem:
 		{
 								MSG_DBSendItem *m = (MSG_DBSendItem*)Msg;
@@ -337,7 +337,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_NPNotice
+#pragma region
 		case _MSG_NPNotice:
 		{
 							  MSG_NPNotice *m = (MSG_NPNotice*)Msg;
@@ -350,7 +350,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFAccountLogin
+#pragma region
 		case _MSG_DBCNFAccountLogin:
 		{
 									   MSG_DBCNFAccountLogin *m = (MSG_DBCNFAccountLogin*)Msg;
@@ -471,7 +471,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBNewAccountFail
+#pragma region
 		case _MSG_DBNewAccountFail:
 		{
 									  MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -483,7 +483,7 @@ void ProcessDBMessage(char *Msg)
 									  CloseUser(conn);
 		} break;
 #pragma endregion
-#pragma region _MSG_DBAccountLoginFail_Account
+#pragma region
 		case _MSG_DBAccountLoginFail_Account:
 		{
 												MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -497,7 +497,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBAccountLoginFail_Block
+#pragma region
 		case _MSG_DBAccountLoginFail_Block:
 		{
 											  MSG_STANDARDPARM *m = (MSG_STANDARDPARM*)Msg;
@@ -523,7 +523,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBAccountLoginFail_Disable
+#pragma region
 		case _MSG_DBAccountLoginFail_Disable:
 		{
 												MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -537,19 +537,19 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_AccountSecure
+#pragma region
 		case _MSG_AccountSecure:
 		{
 								   SendClientSignal(std->ID, ESCENE_FIELD, _MSG_AccountSecure);
 		} break;
 #pragma endregion
-#pragma region _MSG_AccountSecureFail
+#pragma region
 		case _MSG_AccountSecureFail:
 		{
 									   SendClientSignal(std->ID, ESCENE_FIELD, _MSG_AccountSecureFail);
 		} break;
 #pragma endregion
-#pragma region _MSG_DBOnlyOncePerDay
+#pragma region
 		case _MSG_DBOnlyOncePerDay:
 		{
 									  MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -561,7 +561,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBAccountLoginFail_Pass
+#pragma region
 		case _MSG_DBAccountLoginFail_Pass:
 		{
 											 MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -575,7 +575,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFNewCharacter
+#pragma region
 		case _MSG_DBCNFNewCharacter:
 		{
 									   MSG_CNFNewCharacter *m = (MSG_CNFNewCharacter*)Msg;
@@ -591,7 +591,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFDeleteCharacter
+#pragma region
 		case _MSG_DBCNFDeleteCharacter:
 		{
 										  MSG_CNFDeleteCharacter *m = (MSG_CNFDeleteCharacter*)Msg;
@@ -605,7 +605,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBDeleteCharacterFail
+#pragma region
 		case _MSG_DBDeleteCharacterFail:
 		{
 										   MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -618,7 +618,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBNewCharacterFail
+#pragma region
 		case _MSG_DBNewCharacterFail:
 		{
 										MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -631,7 +631,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFCharacterLogin
+#pragma region
 		case _MSG_DBCNFCharacterLogin:
 		{
 										 MSG_CNFCharacterLogin *m = (MSG_CNFCharacterLogin*)Msg;
@@ -1080,7 +1080,7 @@ void ProcessDBMessage(char *Msg)
 										 Log(tt, pUser[conn].AccountName, pUser[conn].IP);
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCharacterLoginFail
+#pragma region
 		case _MSG_DBCharacterLoginFail:
 		{
 										  MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -1095,7 +1095,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBMessageBoxOk
+#pragma region
 		case _MSG_DBMessageBoxOk:
 		{
 									MSG_MessageBoxOk *m = (MSG_MessageBoxOk*)Msg;
@@ -1107,7 +1107,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBAlreadyPlaying
+#pragma region
 		case _MSG_DBAlreadyPlaying:
 		{
 									  MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -1120,7 +1120,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBStillPlaying
+#pragma region
 		case _MSG_DBStillPlaying:
 		{
 									MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -1133,7 +1133,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBSavingQuit
+#pragma region
 		case _MSG_DBSavingQuit:
 		{
 								  MSG_DBSavingQuit *m = (MSG_DBSavingQuit*)Msg;
@@ -1168,7 +1168,7 @@ void ProcessDBMessage(char *Msg)
 								  CloseUser(m->ID);
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFAccountLogOut
+#pragma region
 		case _MSG_DBCNFAccountLogOut:
 		{
 										MSG_STANDARD *m = (MSG_STANDARD*)Msg;
@@ -1182,7 +1182,7 @@ void ProcessDBMessage(char *Msg)
 										CloseUser(conn);
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFArchCharacterSucess
+#pragma region
 		case _MSG_DBCNFArchCharacterSucess:
 		{
 											  MSG_STANDARDPARM *m = (MSG_STANDARDPARM*)Msg;
@@ -1205,7 +1205,7 @@ void ProcessDBMessage(char *Msg)
 											  Log(temp, pUser[conn].AccountName, pUser[conn].IP);
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFArchCharacterFail
+#pragma region
 		case _MSG_DBCNFArchCharacterFail:
 		{
 											pMob[conn].Mode = MOB_USER;
@@ -1213,7 +1213,7 @@ void ProcessDBMessage(char *Msg)
 											break;
 		} break;
 #pragma endregion
-#pragma region _MSG_DBSendDonate
+#pragma region
 		case _MSG_DBSendDonate:
 		{
 								  MSG_DBSendDonate *m = (MSG_DBSendDonate*)Msg;
@@ -1250,13 +1250,13 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_CNFDBCapsuleInfo
+#pragma region
 		case _MSG_CNFDBCapsuleInfo:
 		{
 									  pUser[conn].cSock.SendOneMessage((char*)Msg, sizeof(MSG_CNFDBCapsuleInfo));
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFCapsuleCharacterFail
+#pragma region
 		case _MSG_DBCNFCapsuleCharacterFail:
 		{
 											   SendCarry(conn);
@@ -1264,7 +1264,7 @@ void ProcessDBMessage(char *Msg)
 											   break;
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFCapsuleCharacterFail2
+#pragma region
 		case _MSG_DBCNFCapsuleCharacterFail2:
 		{
 												SendCarry(conn);
@@ -1272,7 +1272,7 @@ void ProcessDBMessage(char *Msg)
 												break;
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFCapsuleSucess
+#pragma region
 		case _MSG_DBCNFCapsuleSucess:
 		{
 										memset(&pMob[conn].MOB, 0, sizeof(STRUCT_MOB));
@@ -1281,7 +1281,7 @@ void ProcessDBMessage(char *Msg)
 										break;
 		} break;
 #pragma endregion
-#pragma region _MSG_GrindRankingData
+#pragma region
 		case _MSG_GrindRankingData:
 		{
 			/*
@@ -1295,7 +1295,7 @@ void ProcessDBMessage(char *Msg)
 
 		} break;
 #pragma endregion
-#pragma region _MSG_DBClientMessage
+#pragma region
 		case _MSG_DBClientMessage:
 		{
 			MSG_DBClientMessage *m = (MSG_DBClientMessage*)Msg;
@@ -1303,7 +1303,7 @@ void ProcessDBMessage(char *Msg)
 			SendClientMessage(conn, m->String);
 		} break;
 #pragma endregion
-#pragma region _MSG_DBServerSend1
+#pragma region
 		case _MSG_DBServerSend1:
 		{
 			MSG_STANDARDPARM *m = (MSG_STANDARDPARM*)Msg;
@@ -1314,7 +1314,7 @@ void ProcessDBMessage(char *Msg)
 			pUser[conn].cSock.SendMessageA();
 		} break;
 #pragma endregion
-#pragma region _MSG_DBCNFServerChange
+#pragma region
 		case _MSG_DBCNFServerChange:
 		{
 			MSG_DBCNFServerChange *m = (MSG_DBCNFServerChange*)Msg;

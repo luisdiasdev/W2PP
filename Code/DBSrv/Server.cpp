@@ -443,7 +443,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	BASE_InitModuleDir();
     BASE_InitializeBaseDef();
 
-#pragma region Load Base Characters
+#pragma region
 
 	int handle = -1;
 
@@ -1218,7 +1218,7 @@ LONG APIENTRY MainWndProc(HWND hWnd, UINT message, UINT wParam, LONG lParam)
 
 			case IDC_SHUTDOWNNP:
 			{
-#pragma region Load Base Characters
+#pragma region
 
 				int handle = -1;
 
@@ -2040,7 +2040,7 @@ void ProcessSecTimer()
 
 	if (SecCounter % 600 == 0)
 	{
-#pragma region Gerador de Ranking
+#pragma region
 		CReadFiles::WriteRanking();
 #pragma endregion
 	}

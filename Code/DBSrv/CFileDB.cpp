@@ -839,7 +839,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 					return TRUE;
 				}
 				pUser[conn].cSock.SendOneMessage((char*)&sm, sizeof(MSG_CNFCharacterLogin));
-#pragma region Ranking
+#pragma region
 				int rankId = rankingSystem.grindRanking.getElementIndex(pAccountList[Idx].File.Char[Slot].MobName);
 
 				if (rankId >= LAST && rankId <= FIRST)
@@ -1079,7 +1079,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			pUser[conn].cSock.SendOneMessage((char*)&sm, sizeof(MSG_CNFCharacterLogin));
 
-#pragma region Ranking
+#pragma region
 			int rankId = rankingSystem.grindRanking.getElementIndex(pAccountList[Idx].File.Char[Slot].MobName);
 
 			if (rankId >= LAST && rankId <= FIRST)

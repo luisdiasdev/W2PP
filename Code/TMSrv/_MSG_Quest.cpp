@@ -46,7 +46,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 	}
 
 
-#pragma region Set npcMode Base
+#pragma region
 
 	if (npcMerc == 100 && npcGrade == 0)
 		npcMode = QUEST_COVEIRO;
@@ -163,7 +163,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 
 	switch (npcMode)
 	{
-#pragma region MOUNT_MASTER
+#pragma region
 	case MOUNT_MASTER:
 	{
 						int mountIndex = pMob[conn].MOB.Equip[14].sIndex;
@@ -231,7 +231,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 						Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region ZAKUM
+#pragma region
 	case ZAKUM:
 	{
 					char UserNameArea[128];
@@ -246,7 +246,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 					SendSay(npcIndex, temp);
 	} break;
 #pragma endregion
-#pragma region AMU_MISTICO
+#pragma region
 	case AMU_MISTICO:
 	{
 						if (pMob[conn].extra.QuestInfo.Mortal.TerraMistica != 0 || pMob[conn].extra.ClassMaster != MORTAL)
@@ -286,7 +286,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 						Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region QUEST_COVEIRO
+#pragma region
 	case QUEST_COVEIRO:
 	{
 							if (pMob[conn].extra.ClassMaster != MORTAL && pMob[conn].extra.ClassMaster != ARCH)
@@ -331,7 +331,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 							Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region QUEST_JARDINEIRO
+#pragma region
 	case QUEST_JARDINEIRO:
 	{
 							if (pMob[conn].extra.ClassMaster != MORTAL && pMob[conn].extra.ClassMaster != ARCH)
@@ -375,7 +375,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 							Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region QUEST_KAIZEN
+#pragma region
 	case QUEST_KAIZEN:
 	{
 						if (pMob[conn].extra.ClassMaster != MORTAL && pMob[conn].extra.ClassMaster != ARCH)
@@ -419,7 +419,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 						Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region QUEST_HIDRA
+#pragma region
 	case QUEST_HIDRA:
 	{
 						if (pMob[conn].extra.ClassMaster != MORTAL && pMob[conn].extra.ClassMaster != ARCH)
@@ -463,7 +463,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 						Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region QUEST_ELFOS
+#pragma region
 	case QUEST_ELFOS:
 	{
 						if (pMob[conn].extra.ClassMaster != MORTAL && pMob[conn].extra.ClassMaster != ARCH)
@@ -507,7 +507,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 						Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region JEFFI
+#pragma region
 	case JEFFI:
 	{
 					if (pMob[conn].MOB.Equip[13].sIndex == 447 || pMob[conn].MOB.Equip[13].sIndex == 692)
@@ -605,7 +605,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 
 	} break;
 #pragma endregion
-#pragma region SHAMA
+#pragma region
 	case SHAMA:
 	{
 					int circle = pMob[conn].MOB.Equip[13].sIndex;
@@ -686,7 +686,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 					break;
 	} break;
 #pragma endregion
-#pragma region KING
+#pragma region
 	case KING:
 	{
 				int ReiClan = pMob[npcIndex].MOB.Clan;
@@ -1120,7 +1120,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 				}
 	} break;
 #pragma endregion
-#pragma region KINGDOM BROKER
+#pragma region
 	case KINGDOM:
 	{
 					int Clan = pMob[conn].MOB.Clan;
@@ -1240,7 +1240,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 
 	} break;
 #pragma endregion
-#pragma region URNAMMU
+#pragma region
 	case URNAMMU:
 	{
 					if (pMob[conn].extra.ClassMaster != CELESTIALCS)
@@ -1306,7 +1306,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 					break;
 	} break;
 #pragma endregion
-#pragma region UXMAL
+#pragma region
 	case UXMAL:
 	{
 		struct tm when;
@@ -1390,7 +1390,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 
 	} break;
 #pragma endregion
-#pragma region ARZAN_DRAGON
+#pragma region
 	case ARZAN_DRAGON:
 	{
 		if(pMob[conn].MOB.Coin < 2000000)
@@ -1464,7 +1464,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 		Log(temp, "-system", 0);
 	}break;
 #pragma endregion
-#pragma region GOLD_DRAGON
+#pragma region
 	case GOLD_DRAGON:
 	{
 		int treasure = CombineTreasureMap(conn);
@@ -1619,7 +1619,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 		SendSay(npcIndex, g_pMessageStringTable[_NN_Gather_7_Clistals]);
 	} break;
 #pragma endregion
-#pragma region EXPLOIT_LEADER
+#pragma region
 	case EXPLOIT_LEADER:
 	{
 		if(pMob[conn].extra.QuestInfo.Mortal.TerraMistica == 0)
@@ -1738,7 +1738,7 @@ void Exec_MSG_Quest(int conn, char *pMsg)
 		Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region MESTREHAB
+#pragma region
 	case MESTREHAB:
 	{
 		if(confirm == 0)
@@ -1888,7 +1888,7 @@ DiretoReset:
         SendClientMessage(conn, g_pMessageStringTable[_NN_Stat_Initialized]);
 	} break;
 #pragma endregion
-#pragma region TREINADORNEWBIE1
+#pragma region
 	case TREINADORNEWBIE1:
 	{
 		if(pMob[conn].extra.ClassMaster != MORTAL || pMob[conn].MOB.CurrentScore.Level >= FREEEXP || pMob[conn].extra.QuestInfo.Mortal.Newbie != 0)
@@ -1931,7 +1931,7 @@ DiretoReset:
 		SendCarry(conn);
 	} break;
 #pragma endregion
-#pragma region TREINADORNEWBIE2
+#pragma region
 	case TREINADORNEWBIE2:
 	{
 		if(pMob[conn].extra.ClassMaster != MORTAL || pMob[conn].MOB.CurrentScore.Level >= FREEEXP || pMob[conn].extra.QuestInfo.Mortal.Newbie != 1)
@@ -1985,7 +1985,7 @@ DiretoReset:
 		SendCarry(conn);
 	} break;
 #pragma endregion
-#pragma region TREINADORNEWBIE3
+#pragma region
 	case TREINADORNEWBIE3:
 	{
 		if(pMob[conn].extra.ClassMaster != MORTAL || pMob[conn].MOB.CurrentScore.Level >= FREEEXP || pMob[conn].extra.QuestInfo.Mortal.Newbie != 2)
@@ -2039,7 +2039,7 @@ DiretoReset:
 		SendCarry(conn);
 	} break;
 #pragma endregion
-#pragma region TREINADORNEWBIE4
+#pragma region
 	case TREINADORNEWBIE4:
 	{
 		if(pMob[conn].extra.ClassMaster != MORTAL || pMob[conn].MOB.CurrentScore.Level >= FREEEXP || pMob[conn].extra.QuestInfo.Mortal.Newbie != 3)
@@ -2095,7 +2095,7 @@ DiretoReset:
 		SendCarry(conn);
 	} break;
 #pragma endregion
-#pragma region COMP_SEPHI
+#pragma region
 	case COMP_SEPHI:
 	{
 		if(confirm == 0)
@@ -2160,7 +2160,7 @@ DiretoReset:
 		Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region CAPAVERDE_TELEPORT
+#pragma region
 	case CAPAVERDE_TELEPORT:
 	{
 		if (pMob[conn].extra.ClassMaster != MORTAL)
@@ -2181,7 +2181,7 @@ DiretoReset:
 		Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region CAPAVERDE_TRADE
+#pragma region
 	case CAPAVERDE_TRADE:
 	{
 		if (pMob[conn].extra.ClassMaster != MORTAL)
@@ -2229,7 +2229,7 @@ DiretoReset:
 		SendClientMessage(conn, temp);
 	} break;
 #pragma endregion
-#pragma region MOLARGARGULA
+#pragma region
 	case MOLARGARGULA:
 	{
 		if (pMob[conn].extra.ClassMaster != MORTAL)
@@ -2250,7 +2250,7 @@ DiretoReset:
 		DoTeleport(conn, 817 + rand() % 5 - 3, 4062 + rand() % 5 - 3);
 	} break;
 #pragma endregion
-#pragma region BLACKORACLE
+#pragma region
 	case BLACKORACLE:
 	{
 		int i = 0;
@@ -2335,7 +2335,7 @@ DiretoReset:
 		Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region QUEST_CAPAREAL
+#pragma region
 	case QUEST_CAPAREAL:
 	{
 		if (pMob[conn].extra.ClassMaster != MORTAL)
@@ -2356,7 +2356,7 @@ DiretoReset:
 		Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region CARBUNCLE_WIND
+#pragma region
 	case CARBUNCLE_WIND:
 	{
 		if (pMob[conn].extra.ClassMaster != MORTAL && pMob[conn].extra.ClassMaster != ARCH)
@@ -2393,7 +2393,7 @@ DiretoReset:
 		Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region PERZEN
+#pragma region
 	case PERZEN:
 	{
 		int i = 0;
@@ -2425,7 +2425,7 @@ DiretoReset:
 		Log(temp, "-system", 0);
 	} break;
 #pragma endregion
-#pragma region KIBITA
+#pragma region
 	case KIBITA:
 	{
 		if(pMob[conn].extra.Citizen == 0 && pMob[conn].MOB.Coin >= 4000000)
@@ -2560,7 +2560,7 @@ DiretoReset:
 		SendClientMessage(conn, g_pMessageStringTable[_DN_TOWN_SORRY]);
 	} break;
 #pragma endregion
-#pragma region GODGOVERNMENT
+#pragma region
 	case GODGOVERNMENT:
 	{
 		int curkill = GetCurKill(conn);
@@ -2592,7 +2592,7 @@ DiretoReset:
 		SendSay(npcIndex, g_pMessageStringTable[_NN_MOREKILLPOINT]);
 	} break;
 #pragma endregion
-#pragma region SOBREVIVENTE
+#pragma region
 	case SOBREVIVENTE:
 	{
 		int i = 0;
@@ -2620,7 +2620,7 @@ DiretoReset:
 
 	} break;
 #pragma endregion
-#pragma region LIDER_APRENDIZ
+#pragma region
 	case LIDER_APRENDIZ:
 	{
 		if (pMob[conn].extra.ClassMaster != ARCH)
@@ -2659,7 +2659,7 @@ DiretoReset:
 		SendClientMessage(conn, temp);
 	} break;
 #pragma endregion
-#pragma region GUARDA_REAL_EVT1
+#pragma region
 	case GUARDA_REAL_EVT1:
 		{
 			int ItemReq = 4055;

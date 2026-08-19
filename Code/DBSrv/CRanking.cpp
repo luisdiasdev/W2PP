@@ -28,7 +28,7 @@ extern CUser pAdmin[MAX_ADMIN]; // Server.cpp
 //Initialize ranking system
 RankingSystem rankingSystem;
 
-#pragma region GrindRanking class
+#pragma region
 GrindRanking::GrindRanking()
 {
 	for (int i = 0; i < MAX_RANK_INDEX; i++)
@@ -90,7 +90,7 @@ GrindRankingConnId GrindRanking::getElementConnId(int rankId)
 }
 #pragma endregion
 
-#pragma region RankingSystem class
+#pragma region
 RankingSystem::RankingSystem()
 {
 	loadRanking();
