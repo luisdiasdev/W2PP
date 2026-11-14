@@ -210,7 +210,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 		{
 			if (conn < MAX_USER && pMob[target].MOB.Clan != 4)
 			{
-#pragma region Distribuição da EXP
+#pragma region EXP_DISTRIBUTION
 				int MobExp = GetExpApply(pMob[conn].extra, (int)pMob[target].MOB.Exp, pMob[conn].MOB.CurrentScore.Level, pMob[target].MOB.CurrentScore.Level);
 				int FinalExp = 0;
 
@@ -307,7 +307,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								else
 									exp -= (exp * 15) / 100;
 
-#pragma region Log de Experiência diário
+#pragma region DAILY_EXP_LOG
 								if (when.tm_yday != pMob[party].extra.DayLog.YearDay)
 									pMob[party].extra.DayLog.Exp = 0;
 
@@ -402,7 +402,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								else
 									exp -= (exp * 15) / 100;
 
-#pragma region Log de Experiência diário
+#pragma region DAILY_EXP_LOG
 								if (when.tm_yday != pMob[party].extra.DayLog.YearDay)
 									pMob[party].extra.DayLog.Exp = 0;
 
@@ -495,7 +495,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 									exp += (exp * 15) / 100;
 								else
 									exp -= (exp * 15) / 100;
-#pragma region Log de Experiência diário
+#pragma region DAILY_EXP_LOG
 								if (when.tm_yday != pMob[party].extra.DayLog.YearDay)
 									pMob[party].extra.DayLog.Exp = 0;
 
@@ -589,7 +589,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								else
 									exp -= (exp * 15) / 100;
 
-#pragma region Log de Experiência diário
+#pragma region DAILY_EXP_LOG
 								if (when.tm_yday != pMob[party].extra.DayLog.YearDay)
 									pMob[party].extra.DayLog.Exp = 0;
 

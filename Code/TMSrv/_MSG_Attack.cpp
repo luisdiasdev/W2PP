@@ -604,7 +604,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 			}
 #pragma endregion
 
-#pragma region Cura / Recuperação
+#pragma region HEAL_RECOVERY
 			else if (InstanceType == 6)
 			{
 				if (pMob[idx].MOB.Clan == 4)
@@ -1226,7 +1226,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 			}
 #pragma endregion
 
-#pragma region Transformação
+#pragma region TRANSFORMATION
 			if (skillnum == 64 || skillnum == 66 || skillnum == 68 || skillnum == 70 || skillnum == 71)
 			{
 				pMob[conn].GetCurrentScore(conn);
@@ -1235,7 +1235,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 			}
 #pragma endregion
 
-#pragma region Book Ressureição
+#pragma region SKILLBOOK_RESSURECTION
 			if (pMob[conn].MOB.CurrentScore.Hp == 0 && skillnum == 99)
 			{
 				int rev = rand() % 115;

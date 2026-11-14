@@ -218,7 +218,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			pUser[conn].UseItemTime = GetTickCount();
 */
 
-#pragma region Refinar item Selado no inventário
+#pragma region REFINE_LOCKED_SEAL
 			if (itemtype == 5)
 			{
 				if (sanc >= 9)
@@ -1194,7 +1194,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		return;
 	}
 	#pragma endregion
-#pragma region Poção Kappa
+#pragma region KAPPA_POTION
 	if (Vol == 10 || Vol == 55 || Vol == 200 || Vol == 201 || Vol == 56 || Vol == 52 || Vol == 53 || Vol == 57 || Vol == 202)
 	{
 		int value = 0;
@@ -1430,7 +1430,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region Rações
+#pragma region PET_RATION
 	if (Vol == 15)
 	{
 		if (m->DestType || m->DestPos != 14)
@@ -1516,7 +1516,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region Âmago
+#pragma region PET_ESSENCE
 	if (Vol == 16)
 	{
 		if (m->DestType || m->DestPos != 14)
@@ -2263,7 +2263,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		pMob[conn].MOB.Coin += CReadFiles::QuestCoin[thisQuest];
 		pMob[conn].MOB.Exp += QuestExp;
 
-#pragma region Log de Experiência diário
+#pragma region DAILY_EXP_LOG
 		if (when.tm_yday != pMob[conn].extra.DayLog.YearDay)
 			pMob[conn].extra.DayLog.Exp = 0;
 
@@ -2307,7 +2307,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			sprintf(temp, g_pMessageStringTable[_NS_GETEXP], QuestExpParty);
 			SendClientMessage(partyleader, temp);
 
-#pragma region Log de Experiência diário
+#pragma region DAILY_EXP_LOG
 			if (when.tm_yday != pMob[partyleader].extra.DayLog.YearDay)
 				pMob[partyleader].extra.DayLog.Exp = 0;
 
@@ -2344,7 +2344,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			{
 				pMob[partymember].MOB.Exp += QuestExpParty;
 
-#pragma region Log de Experiência diário
+#pragma region DAILY_EXP_LOG
 				if (when.tm_yday != pMob[partymember].extra.DayLog.YearDay)
 					pMob[partymember].extra.DayLog.Exp = 0;
 
@@ -2863,7 +2863,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Pedidos de caça
+#pragma region HUNTING_SCROLL
 	if (Vol == 195)
 	{
 		if (item->sIndex < 3432 || item->sIndex > 3437)
@@ -3574,7 +3574,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Remédio da Coragem
+#pragma region COURAGE_MEDICINE
 	if (item->sIndex == 4046 || item->sIndex == 646)
 	{
 		int sAffect = GetEmptyAffect(conn, 30);
@@ -3642,7 +3642,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Feijões mágicos - Removedor
+#pragma region REMOVE_MAGIC_BEAN
 	if(Vol == 186)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -3739,7 +3739,7 @@ lbl_a_noparty:
 		return;
 	}
 	#pragma endregion
-#pragma region Pergaminho do Perdão
+#pragma region FORGIVENESS_SCROLL
 	if (Vol == 203)
 	{
 		SetPKPoint(conn, 150);
@@ -4161,7 +4161,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Jóias PvP
+#pragma region PVP_JEWELS
 	if (Vol == 242)
 	{
 		int sAffect = GetEmptyAffect(conn, 8);
@@ -4224,7 +4224,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Armazenagem - Recuperação
+#pragma region STORAGE_RECOVERY_JEWELS
 	if(Vol == 243)
 	{
 		if(item->sIndex == 3203)
@@ -5024,7 +5024,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Extração Elmo
+#pragma region HELM_EXTRACTION
 	if (item->sIndex == 3021)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5123,7 +5123,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Extração Peito
+#pragma region CHEST_EXTRACTION
 	if (item->sIndex == 3022)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5221,7 +5221,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Extração Calça
+#pragma region LEGS_EXTRACTION
 	if (item->sIndex == 3023)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5319,7 +5319,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Extração Luva
+#pragma region GLOVES_EXTRACTION
 	if (item->sIndex == 3024)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5417,7 +5417,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Extração Bota
+#pragma region BOOTS_EXTRACTION
 	if (item->sIndex == 3025)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5527,7 +5527,7 @@ lbl_a_noparty:
 		return;
 	}
 #pragma endregion
-#pragma region Extração Arma
+#pragma region WEAPON_EXTRACTION
 	if (item->sIndex == 3026)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);

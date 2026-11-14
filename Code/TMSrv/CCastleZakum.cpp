@@ -102,7 +102,7 @@ BOOL CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
 		return TRUE;
 	}
 
-#pragma region Portão de entrada
+#pragma region ENTRY_GATE
 	if (gatekey == 10)
 	{//Portão principal do castelo zakum onde define qual level será a quest.
 		if (Quest < 0 || Quest >= MAX_CASTLE_QUEST)

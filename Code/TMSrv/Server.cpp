@@ -4754,7 +4754,7 @@ LABEL_59:
 			goto LessAffect;
 		}*/
 #pragma endregion
-#pragma region Trovão
+#pragma region THUNDER
 		if(Type == 22)
 		{
 			  int alvo1 = 0;
