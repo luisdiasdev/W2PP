@@ -37,7 +37,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		return;
 	}
 #pragma endregion
-#pragma region /getout - Fim cidadão
+#pragma region END_CITZEN_GETOUT
 	else if (strcmp(m->MobName, "getout") == 0)
 	{
 		pMob[conn].extra.Citizen = 0;
@@ -1135,7 +1135,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 #pragma region /r - -- = Cidadao  pm
 	if (m->MobName[0] == 0)
 	{
-#pragma region Chat Guild : -
+#pragma region GUILD_CHAT
 		if (m->String[0] == '-')
 		{
 			strncpy(m->MobName, pMob[conn].MOB.MobName, NAME_LENGTH);
@@ -1181,7 +1181,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 			return;
 		}
 #pragma endregion
-#pragma region Chat Party : =
+#pragma region PARTY_CHAT
 		if (m->String[0] == '=')
 		{
 			strncpy(m->MobName, pMob[conn].MOB.MobName, NAME_LENGTH);
@@ -1225,7 +1225,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 			return;
 		}
 #pragma endregion
-#pragma region Chat Reino
+#pragma region KINGDOM_CHAT
 		if (m->String[0] == '@' && m->String[1] == '@')
 		{
 			if(pUser[conn].Message != 0)
@@ -1252,7 +1252,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 			return;
 		}
 #pragma endregion
-#pragma region Chat Cidadão
+#pragma region CITZEN_CHAT
 		if (m->String[0] == '@')
 		{
 			if(pUser[conn].Message != 0)

@@ -1553,7 +1553,7 @@ lbl_PST1:
 
 	Sec4 = SecCounter % 4;
 
-#pragma region Ataque / fala em ação dos mobs
+#pragma region MOB_ATTACK_SPEACH_ACTION
 	for (int index = Sec4 + MAX_USER; index < MAX_MOB; index += 4)
 	{
 		if (pMob[index].Mode != MOB_COMBAT)
