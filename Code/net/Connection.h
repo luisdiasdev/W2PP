@@ -35,6 +35,14 @@ public:
 	std::uint64_t Generation() const;
 	std::size_t QueuedBytes() const;
 
+	// True while the attached session is still the one that produced
+	// `generation`. Callbacks capture the generation they were created with so
+	// a recycled slot cannot deliver events to a newer connection.
+	bool IsCurrent(std::uint64_t generation) const
+	{
+		return generation != 0 && Generation() == generation;
+	}
+
 private:
 	SessionPtr session_;
 };

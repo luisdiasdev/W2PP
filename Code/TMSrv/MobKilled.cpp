@@ -25,7 +25,7 @@
 #include <errno.h>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 #include "..\ItemEffect.h"
 #include "Language.h"
 
@@ -678,7 +678,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								sprintf(temp, g_pMessageStringTable[_SN_End_Khepra], guildname);
 								SendNotice(temp);
 
-								DrawConfig(TRUE);
+								RefreshStatus(TRUE);
 							}
 							
 							else
@@ -687,7 +687,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								sprintf(temp, g_pMessageStringTable[_SN_End_Khepra], "UoW");
 								SendNotice(temp);
 
-								DrawConfig(TRUE);
+								RefreshStatus(TRUE);
 							}
 
 							for (int xx = 2335; xx < 2395; xx++)
@@ -1785,7 +1785,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 
 								SetItemBonus(&item, pMob[target].MOB.CurrentScore.Level, 0, 0);
 								PutItem(conn, &item);
-								DrawConfig(1);
+								RefreshStatus(1);
 							}
 #pragma endregion
 							int target_level = pMob[target].MOB.CurrentScore.Level;

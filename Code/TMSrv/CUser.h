@@ -20,7 +20,7 @@
 #define __CUSER__
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 
 //-------Connecting User Modes----------------------------------------------------------------------------
 #define USER_EMPTY       0 // There's no user on this slot
@@ -44,7 +44,7 @@ public:
 	unsigned int IP; // 20
 	int Mode; // 24
 	int TradeMode; // 28 // TradeMode ?
-	CPSock cSock; // 32 - 32
+	net::Connection cSock;
 	char Unk2[400]; // 64
 	int Unk3; // 464
 	STRUCT_ITEM Cargo[MAX_CARGO]; // 468 - 1024
@@ -116,7 +116,11 @@ public:
 public:
 	CUser();
 	~CUser();
-	int   AcceptUser(int ListenSocket);
+
+	// Sessions are owned by the host slot table; copying would alias them.
+	CUser(const CUser &) = delete;
+	CUser &operator=(const CUser &) = delete;
+
 	int CloseUser();
 };
 

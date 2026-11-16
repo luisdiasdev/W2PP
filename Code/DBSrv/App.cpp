@@ -137,7 +137,7 @@ void AcceptGameConnection(asio::ip::tcp::socket socket, const std::string &peer)
 		if (i == MAX_SERVERNUMBER)
 		{
 			char temp[256];
-			snprintf(temp, sizeof(temp), "err wsa_accept request from  %s", sIP);
+			snprintf(temp, sizeof(temp), "err accept request from  %s", sIP);
 			Log(temp, "-system", 0);
 			return;
 		}
@@ -147,7 +147,7 @@ void AcceptGameConnection(asio::ip::tcp::socket socket, const std::string &peer)
 	else if (pUser[user].Mode != USER_EMPTY)
 	{
 		char temp[256];
-		snprintf(temp, sizeof(temp), "err wsa_accept no previous slot %d", user);
+		snprintf(temp, sizeof(temp), "err accept no previous slot %d", user);
 		Log(temp, "-system", 0);
 
 		pUser[user].cSock.CloseSocket();
@@ -157,7 +157,7 @@ void AcceptGameConnection(asio::ip::tcp::socket socket, const std::string &peer)
 
 	if (user < 0 || user >= MAX_SERVER)
 	{
-		Log("err wsa_accept no empty", "-system", 0);
+		Log("err accept no empty", "-system", 0);
 		return;
 	}
 
@@ -165,7 +165,7 @@ void AcceptGameConnection(asio::ip::tcp::socket socket, const std::string &peer)
 	{
 		char temp[256];
 		snprintf(temp, sizeof(temp),
-			"err,wsa_accept outer ethernet IP: %u.%u.%u.%u",
+			"err,accept outer ethernet IP: %u.%u.%u.%u",
 			cIP[0], cIP[1], cIP[2], cIP[3]);
 		Log(temp, "-system", 0);
 		return;
@@ -263,7 +263,7 @@ void AcceptAdminConnection(asio::ip::tcp::socket socket, const std::string &peer
 	{
 		char temp[256];
 		snprintf(temp, sizeof(temp),
-			"err, wsa_acceptadmin request accept from  %u.%u.%u.%u",
+			"err, acceptadmin request accept from  %u.%u.%u.%u",
 			cIP[0], cIP[1], cIP[2], cIP[3]);
 		Log(temp, "-system", 0);
 		return;
@@ -273,7 +273,7 @@ void AcceptAdminConnection(asio::ip::tcp::socket socket, const std::string &peer
 	{
 		char temp[256];
 		snprintf(temp, sizeof(temp),
-			"err, wsa_acceptadmin not empty previous slot %d", user);
+			"err, acceptadmin not empty previous slot %d", user);
 		Log(temp, "-system", 0);
 
 		pAdmin[user].cSock.CloseSocket();

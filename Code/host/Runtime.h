@@ -24,6 +24,9 @@ public:
 	using CommandHandler = std::function<void(const std::string &command)>;
 	using TickHandler = std::function<void()>;
 
+	// Opaque handle for a scheduled tick; SetTickInterval retimes it.
+	using TickId = std::shared_ptr<void>;
+
 	Runtime();
 	~Runtime();
 
@@ -33,6 +36,12 @@ public:
 	asio::io_context &Context() { return context_; }
 
 	void ScheduleTick(std::chrono::milliseconds interval, TickHandler handler);
+	TickId ScheduleTickWithId(std::chrono::milliseconds interval, TickHandler handler);
+
+	// Retimes a tick returned by ScheduleTickWithId. The new interval applies
+	// from now, matching SetTimer's restart behavior.
+	void SetTickInterval(const TickId &tick, std::chrono::milliseconds interval);
+
 	void Post(std::function<void()> work);
 
 	void Run();

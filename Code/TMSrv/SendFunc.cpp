@@ -293,7 +293,7 @@ void SendCreateMob(int conn, int otherconn, int bSend)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (!pUser[conn].cSock.Sock)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 	MSG_CreateMob sm;
@@ -1015,7 +1015,7 @@ void PartyGridMulticast(int tx, int ty, MSG_STANDARD *msg, int skip, int Leaderc
 
 				if (msg != NULL && tmob < MAX_USER && tmob != skip && !pUser[tmob].PartyChat)
 				{
-					if (pUser[tmob].Mode != USER_PLAY || pUser[tmob].cSock.Sock == 0)
+					if (pUser[tmob].Mode != USER_PLAY || !pUser[tmob].cSock.IsOpen())
 						continue;
 
 					pUser[tmob].cSock.AddMessage((char*)msg, msg->Size);
@@ -1043,7 +1043,7 @@ void PartyGridMulticast(int tx, int ty, MSG_STANDARD *msg, int skip, int Leaderc
 				continue;
 
 
-			if (pUser[partyconn].Mode != USER_PLAY || pUser[partyconn].cSock.Sock == 0)
+			if (pUser[partyconn].Mode != USER_PLAY || !pUser[partyconn].cSock.IsOpen())
 				continue;
 
 			if (!pUser[partyconn].cSock.AddMessage((char*)msg, msg->Size))
@@ -1060,7 +1060,7 @@ void SendItem(int conn, int Type, int Slot, STRUCT_ITEM *item)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[conn].cSock.Sock == 0)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 	MSG_SendItem sm_si;
@@ -1200,7 +1200,7 @@ void SendEtc(int conn)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[conn].cSock.Sock == 0)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 	MSG_UpdateEtc sm;
@@ -1238,7 +1238,7 @@ void SendCargoCoin(int conn)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[conn].cSock.Sock == 0)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 	MSG_STANDARDPARM sm_ucc;
@@ -1374,7 +1374,7 @@ void SendShopList(int conn, int MobIndex, int ShopType)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[conn].cSock.Sock == 0)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 	MSG_ShopList sm_sl;
@@ -1443,7 +1443,7 @@ void SendReqParty(int conn, int Leaderconn, int PartyID)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[conn].cSock.Sock == 0)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 	MSG_SendReqParty sm_srp;
@@ -1477,7 +1477,7 @@ void SendAddParty(int Leaderconn, int conn, int PartyID)
 	if (pUser[Leaderconn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[Leaderconn].cSock.Sock == 0)
+	if (!pUser[Leaderconn].cSock.IsOpen())
 		return;
 
 	MSG_CNFAddParty sm_cap;
@@ -1513,7 +1513,7 @@ void SendRemoveParty(int conn, int connExit)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[conn].cSock.Sock == 0)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 
@@ -1539,7 +1539,7 @@ void SendCarry(int conn)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[conn].cSock.Sock == 0)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 	MSG_UpdateCarry sm;
@@ -1575,7 +1575,7 @@ void SendWeather()
 		if (pUser[i].Mode != USER_PLAY)
 			continue;
 
-		if (!pUser[i].cSock.Sock)
+		if (!pUser[i].cSock.IsOpen())
 			continue;
 
 
@@ -1595,7 +1595,7 @@ void SendSetHpMp(int conn)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[conn].cSock.Sock == 0)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 	MSG_SetHpMp sm_shm;
@@ -1627,7 +1627,7 @@ void SendHpMode(int conn)
 	if (pUser[conn].Mode != USER_PLAY)
 		return;
 
-	if (pUser[conn].cSock.Sock == 0)
+	if (!pUser[conn].cSock.IsOpen())
 		return;
 
 	MSG_SetHpMode sm_shmd;

@@ -25,7 +25,7 @@
 #include <errno.h>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 #include "..\ItemEffect.h"
 #include "Language.h"
 
@@ -58,14 +58,7 @@ void ProcessSecTimer()
 			{
 				Log("sys,server down complete", "-system", 0);
 
-				if (hFont != 0)
-				{
-					DeleteObject(hFont);
-
-					hFont = NULL;
-				}
-
-				PostQuitMessage(NULL);
+				RequestServerShutdown();
 
 				return;
 			}
@@ -112,7 +105,7 @@ void ProcessSecTimer()
 
 		if (ServerDown == 120)
 		{
-			SetTimer(hWndMain, TIMER_SEC, 200, 0);
+			SetSecondTickInterval(200);
 
 			return;
 		}
@@ -127,44 +120,10 @@ lbl_PST1:
 	if(SecCounter % 120)
 		CReadFiles::ReadMacblock();
 
-	if (BILLING != 0 && BillCounter > 0 && BillServerSocket.Sock == 0)
-	{
-		BillCounter--;
-
-		if (BillCounter <= 0)
-		{
-			CurrentTime = platform::MonotonicMs();
-
-			sprintf(temp, "err,start reconnect BILL %d", CurrentTime);
-			Log(temp, "-system", 0);
-
-			int *pip = (int*)LocalIP;
-
-			int ret = BillServerSocket.ConnectBillServer(BillServerAddress, BillServerPort, *pip, WSA_READBILL);
-
-			CurrentTime = platform::MonotonicMs();
-
-			sprintf(temp, "err,start reconnect BILL %d", CurrentTime);
-			Log(temp, "-system", 0);
-
-			if (ret == 0)
-			{
-				Log("err,Reconnect BILL Server(x2) fail.", "-system", 0);
-
-				BILLING = 0;
-			}
-			else
-			{
-				_AUTH_GAME Unk;
-
-				memset(&Unk, 0, 196);
-
-				SendBilling2(&Unk, 4);
-			}
-		}
-	}
+	if (BILLING != 0)
+		ProcessBillingRetry();
 	else
-		BillCounter = 0;
+		BillingResetRetry();
 	
 	if (SecCounter % 8 == 0)
 	{
@@ -202,13 +161,13 @@ lbl_PST1:
 	{
 		if (pUser[bb].Mode)
 		{
-			if (pUser[bb].cSock.nSendPosition)
+			if (pUser[bb].cSock.QueuedBytes())
 			{
 				BOOL bSend = pUser[bb].cSock.SendMessageA();
 				if (!bSend)
 				{
 					sprintf(temp, "err,send fail close %d/%d %d/%d",
-						bb, pUser[bb].cSock.Sock, pUser[bb].cSock.nSendPosition, pUser[bb].cSock.nSentPosition);
+						bb, pUser[bb].cSock.IsOpen(), (int)pUser[bb].cSock.QueuedBytes());
 
 					pUser[bb].AccountName[ACCOUNTNAME_LENGTH - 1] = 0;
 					pUser[bb].AccountName[ACCOUNTNAME_LENGTH - 2] = 0;
@@ -2046,7 +2005,7 @@ void ProcessMinTimer()
 
 			for (int i = 1; i < MAX_USER; i++)
 			{
-				if (pUser[i].Mode == USER_EMPTY || pUser[i].cSock.Sock == 0)
+				if (pUser[i].Mode == USER_EMPTY || !pUser[i].cSock.IsOpen())
 					continue;
 
 				if (pUser[i].TradeMode == 1)

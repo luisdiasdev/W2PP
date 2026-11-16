@@ -31,7 +31,7 @@
 #include <time.h>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 
 #include "CItem.h"
 #include "CMob.h"

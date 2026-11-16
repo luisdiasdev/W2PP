@@ -25,7 +25,7 @@
 #include <errno.h>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 #include "..\ItemEffect.h"
 
 #include "CReadFiles.h"

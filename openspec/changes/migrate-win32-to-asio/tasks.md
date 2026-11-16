@@ -44,13 +44,13 @@
 
 ## 5. TMSrv cutover
 
-- [ ] 5.1 Cut TMSrv over to the headless runtime in one atomic change: convert `main()`/startup, switch `CUser` and all links to `net::Connection`, replace client accept/read handling, replace the blocking DB retry with the two-attempt/200 ms timer ladder, add the billing session and 196-byte parser, convert timers, remove `GetUserFromSocket`, and remove the window procedure, menus, GDI drawing and dialogs. Verify a missing `localip.txt`/`serverlist.txt` exits non-zero with a diagnostic.
-- [ ] 5.2 Verify the DB link reconnect ladder: first connect fails and second succeeds, and both attempts fail leading to graceful shutdown; verify both tests pass.
-- [ ] 5.3 Verify billing outbound record length/content and disconnect/reset behavior with loopback tests, and verify the 196-byte parser handles split and coalesced reads.
-- [ ] 5.4 Verify client login/character-select loopback tests with slot reuse and generation checks, including a handler that closes the session mid-drain.
-- [ ] 5.5 Add an end-to-end loopback smoke test that connects a fixture client, completes the handshake and one game message, and verifies the decoded reply matches the expected frame.
-- [ ] 5.6 Verify no window/GDI/menu/`MessageBox`/`Sleep` symbols remain in `Code/TMSrv/`, and verify no `WM_*` or `WSA*` identifier remains in either server.
-- [ ] 5.7 Document TMSrv's headless run steps, console commands and shutdown behavior in `docs/operations.md`, and verify the commands against the smoke-test runtime tree.
+- [x] 5.1 Cut TMSrv over to the headless runtime in one atomic change: convert `main()`/startup, switch `CUser` and all links to `net::Connection`, replace client accept/read handling, replace the blocking DB retry with the two-attempt/200 ms timer ladder, add the billing session and 196-byte parser, convert timers, remove `GetUserFromSocket`, and remove the window procedure, menus, GDI drawing and dialogs. Verify a missing `localip.txt`/`serverlist.txt` exits non-zero with a diagnostic.
+- [x] 5.2 Verify the DB link reconnect ladder: first connect fails and second succeeds, and both attempts fail leading to graceful shutdown; verify both tests pass.
+- [x] 5.3 Verify billing outbound record length/content and disconnect/reset behavior with loopback tests, and verify the 196-byte parser handles split and coalesced reads.
+- [x] 5.4 Verify client login/character-select loopback tests with slot reuse and generation checks, including a handler that closes the session mid-drain.
+- [x] 5.5 Add an end-to-end loopback smoke test that connects a fixture client, completes the handshake and one game message, and verifies the decoded reply matches the expected frame.
+- [x] 5.6 Verify no window/GDI/menu/`MessageBox`/`Sleep` symbols remain in `Code/TMSrv/`, and verify no `WM_*` or `WSA*` identifier remains in either server.
+- [x] 5.7 Document TMSrv's headless run steps, console commands and shutdown behavior in `docs/operations.md`, and verify the commands against the smoke-test runtime tree.
 
 ## 6. Remove Win32 from shared code and headers
 

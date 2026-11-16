@@ -71,6 +71,28 @@ TEST_CASE("runtime shutdown handler runs once", "[runtime]")
 	REQUIRE(runtime.IsShuttingDown());
 }
 
+TEST_CASE("runtime retimes a scheduled tick", "[runtime]")
+{
+	host::Runtime runtime;
+	int ticks = 0;
+
+	const host::Runtime::TickId tick = runtime.ScheduleTickWithId(
+		std::chrono::milliseconds(5000),
+		[&]()
+		{
+			++ticks;
+
+			if (ticks == 3)
+				runtime.RequestShutdown();
+		});
+
+	runtime.SetTickInterval(tick, std::chrono::milliseconds(2));
+	runtime.Run();
+
+	REQUIRE(ticks == 3);
+	REQUIRE(runtime.IsShuttingDown());
+}
+
 TEST_CASE("runtime status snapshot is available without a window", "[runtime]")
 {
 	host::Runtime runtime;

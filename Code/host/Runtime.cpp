@@ -51,12 +51,41 @@ void Runtime::ArmTick(const std::shared_ptr<Tick> &tick)
 
 void Runtime::ScheduleTick(std::chrono::milliseconds interval, TickHandler handler)
 {
+	ScheduleTickWithId(interval, std::move(handler));
+}
+
+Runtime::TickId Runtime::ScheduleTickWithId(std::chrono::milliseconds interval,
+                                           TickHandler handler)
+{
 	std::shared_ptr<Tick> tick = std::make_shared<Tick>();
 	tick->timer = std::make_shared<asio::steady_timer>(context_);
 	tick->interval = interval;
 	tick->handler = std::move(handler);
 
 	ticks_.push_back(tick);
+	ArmTick(tick);
+
+	return tick;
+}
+
+void Runtime::SetTickInterval(const TickId &id, std::chrono::milliseconds interval)
+{
+	if (!id)
+		return;
+
+	std::shared_ptr<Tick> tick = std::static_pointer_cast<Tick>(id);
+
+	if (tick->interval == interval)
+		return;
+
+	tick->interval = interval;
+
+	if (shuttingDown_.load())
+		return;
+
+	// Restart the wait so the new interval takes effect immediately, as
+	// SetTimer did.
+	tick->timer->cancel();
 	ArmTick(tick);
 }
 

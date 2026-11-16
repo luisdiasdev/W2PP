@@ -95,3 +95,118 @@ pwsh -NoProfile -File tests/integration/dbsrv_loopback.ps1 `
   -ExeDir build/x86-debug/Debug `
   -CommonDir build/Common
 ```
+
+# TMSrv operations (headless)
+
+TMSrv is a console application. It opens no window and needs no desktop
+session. The game listener port is unchanged (`8281`), the DB link connects to
+`7514` and the optional billing link uses the address in `biserver.txt`.
+
+## Runtime tree
+
+The process sets its working directory to the executable's directory, so the
+existing layout is preserved:
+
+```
+<exe dir>/
+  tmsrv.exe
+  gameconfig.txt        # generated from defaults when absent
+  localip.txt           # local address used for the listener and DB bind
+  serverlist.txt        # group/number/address table
+  biserver.txt          # optional billing host and port
+  LevelItem.txt
+  NPCGener.txt
+  MobName.txt
+  Language.txt
+  heightmap.dat
+  BaseMob/TK FM BM HT
+  Admin.txt             # optional
+  Log/
+../../Common/           # relative to <exe dir>
+  ItemEffect.h
+  itemlist.csv
+  extraitem.csv
+  InitItem.csv
+  SkillData.csv
+  Guilds.txt
+  AttributeMap.dat
+  Settings/SancRate.txt
+  Settings/QuestsRate.txt
+  Settings/CompRate.txt
+  Settings/MobMerc.txt
+  Settings/CastleQuest.txt
+```
+
+`localip.txt` and `serverlist.txt` are required: when either is missing (or the
+local address is not listed) the server logs and writes a diagnostic to
+standard error and exits non-zero. The same applies to a listener that cannot
+bind and to a DB link that fails both startup attempts.
+
+## Starting
+
+```powershell
+Set-Location <exe dir>
+.\tmsrv.exe
+```
+
+Startup order is preserved from the former `WinMain`: configuration, content
+and base-set reads, `Reboot`, local address/server group selection, DB link,
+billing link, guild report and the game listener. The DB connect is
+asynchronous: the first attempt runs immediately, the second one 200 ms later
+when the first fails, and the event loop keeps running between them. If both
+fail the process performs a graceful shutdown and exits non-zero during boot.
+
+## Console commands
+
+The console thread is started only when stdin is a terminal. The integration
+harness sets `W2PP_FORCE_CONSOLE=1` to feed commands through a pipe.
+
+| Command | Action |
+|---|---|
+| `saveall` | Saves every online character (former menu action). |
+| `reboot` | Starts the legacy `ServerDown` countdown. |
+| `readguild` | Re-reads guild data. |
+| `readguildname` | Re-builds the guild name table. |
+| `readgameconfig` | Re-reads `gameconfig.txt` and refreshes the status snapshot. |
+| `reloadmob` | Re-reads `NPCGener.txt`. |
+| `status` | Prints the group/index/local address, user count, billing and server-down state plus the game configuration. |
+| `quit` | Graceful shutdown. |
+
+Commands are posted to the event loop, so they execute in submission order and
+never interleave with a timer tick.
+
+## Shutdown
+
+`quit`, `Ctrl+C` and `SIGTERM` share one path: stop the listener, stop the
+reconnect ladder, send the billing logout record, close the client/DB/billing
+links, write guild data, flush and close the log files, then exit with success.
+A requested `reboot` instead runs the legacy countdown and shuts down through
+the second-tick handler once every user has been saved.
+
+## Loopback verification
+
+`tests/integration/tmsrv_smoke.ps1` builds a minimal runtime tree, runs the
+real executable and verifies:
+
+- a missing `localip.txt` exits non-zero with a diagnostic;
+- a missing `serverlist.txt` exits non-zero with a diagnostic;
+- the DB link connects to a stub listener and sends the four-byte init
+  handshake;
+- the game port accepts a loopback client with the init handshake;
+- the `status`, `saveall` and `quit` console commands work and the process
+  exits successfully.
+
+Run it through CTest:
+
+```powershell
+ctest --preset x86-debug -R tmsrv-smoke --output-on-failure
+```
+
+Or directly:
+
+```powershell
+pwsh -NoProfile -File tests/integration/tmsrv_smoke.ps1 `
+  -ExeDir build/x86-debug/Debug `
+  -CommonDir build/Common
+```
+

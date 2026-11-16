@@ -58,6 +58,10 @@ add_library(w2pp_core STATIC
   Code/net/Connector.h
   Code/net/Connection.cpp
   Code/net/Connection.h
+  Code/net/BillingLink.cpp
+  Code/net/BillingLink.h
+  Code/net/RetryLadder.cpp
+  Code/net/RetryLadder.h
   Code/net/LocalAddress.cpp
   Code/net/LocalAddress.h
   Code/host/Runtime.cpp
@@ -85,6 +89,7 @@ target_link_libraries(w2pp_core PUBLIC ${W2PP_TRANSITIONAL_LIBS} asio::asio)
 # ---------------------------------------------------------------------------
 
 set(TMSRV_SOURCES
+  Code/TMSrv/App.cpp
   Code/TMSrv/CCastleZakum.cpp
   Code/TMSrv/CItem.cpp
   Code/TMSrv/CMob.cpp
@@ -180,7 +185,7 @@ set(TMSRV_HEADERS
   Code/TMSrv/resource.h
 )
 
-add_executable(tmsrv WIN32
+add_executable(tmsrv
   ${TMSRV_SOURCES}
   ${TMSRV_HEADERS}
   Code/TMSrv/TMSrv.rc
@@ -269,6 +274,9 @@ if(BUILD_TESTING)
     tests/codec/LegacyReferenceTests.cpp
     tests/platform/PlatformTests.cpp
     tests/net/TransportTests.cpp
+    tests/net/RetryLadderTests.cpp
+    tests/net/BillingTests.cpp
+    tests/net/ClientLinkTests.cpp
     tests/host/RuntimeTests.cpp
   )
 
@@ -295,6 +303,18 @@ if(BUILD_TESTING)
     set_tests_properties(dbsrv-loopback PROPERTIES
       LABELS integration
       TIMEOUT 90
+    )
+
+    add_test(
+      NAME tmsrv-smoke
+      COMMAND ${W2PP_PWSH} -NoProfile -ExecutionPolicy Bypass
+              -File "${CMAKE_SOURCE_DIR}/tests/integration/tmsrv_smoke.ps1"
+              -ExeDir "$<TARGET_FILE_DIR:tmsrv>"
+              -CommonDir "$<TARGET_FILE_DIR:tmsrv>/../../Common"
+    )
+    set_tests_properties(tmsrv-smoke PROPERTIES
+      LABELS integration
+      TIMEOUT 120
     )
   endif()
 
