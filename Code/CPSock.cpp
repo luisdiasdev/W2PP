@@ -20,30 +20,14 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "CPSock.h"
 #include "Basedef.h"
+#include "net/FrameCodec.h"
 
 int ConnectPort = 0;
 
-unsigned char pKeyWord[512] = { // 7.xx keys
-	0x84, 0x87, 0x37, 0xd7, 0xea, 0x79, 0x91, 0x7d, 0x4b, 0x4b, 0x85, 0x7d, 0x87, 0x81, 0x91, 0x7c, 0x0f, 0x73, 0x91, 0x91, 0x87, 0x7d, 0x0d, 0x7d, 0x86, 0x8f, 0x73, 0x0f, 0xe1, 0xdd, 0x85, 0x7d,
-	0x05, 0x7d, 0x85, 0x83, 0x87, 0x9c, 0x85, 0x33, 0x0d, 0xe2, 0x87, 0x19, 0x0f, 0x79, 0x85, 0x86, 0x37, 0x7d, 0xd7, 0xdd, 0xe9, 0x7d, 0xd7, 0x7d, 0x85, 0x79, 0x05, 0x7d, 0x0f, 0xe1, 0x87, 0x7e,
-	0x23, 0x87, 0xf5, 0x79, 0x5f, 0xe3, 0x4b, 0x83, 0xa3, 0xa2, 0xae, 0x0e, 0x14, 0x7d, 0xde, 0x7e, 0x85, 0x7a, 0x85, 0xaf, 0xcd, 0x7d, 0x87, 0xa5, 0x87, 0x7d, 0xe1, 0x7d, 0x88, 0x7d, 0x15, 0x91,
-	0x23, 0x7d, 0x87, 0x7c, 0x0d, 0x7a, 0x85, 0x87, 0x17, 0x7c, 0x85, 0x7d, 0xac, 0x80, 0xbb, 0x79, 0x84, 0x9b, 0x5b, 0xa5, 0xd7, 0x8f, 0x05, 0x0f, 0x85, 0x7e, 0x85, 0x80, 0x85, 0x98, 0xf5, 0x9d,
-	0xa3, 0x1a, 0x0d, 0x19, 0x87, 0x7c, 0x85, 0x7d, 0x84, 0x7d, 0x85, 0x7e, 0xe7, 0x97, 0x0d, 0x0f, 0x85, 0x7b, 0xea, 0x7d, 0xad, 0x80, 0xad, 0x7d, 0xb7, 0xaf, 0x0d, 0x7d, 0xe9, 0x3d, 0x85, 0x7d,
-	0x87, 0xb7, 0x23, 0x7d, 0xe7, 0xb7, 0xa3, 0x0c, 0x87, 0x7e, 0x85, 0xa5, 0x7d, 0x76, 0x35, 0xb9, 0x0d, 0x6f, 0x23, 0x7d, 0x87, 0x9b, 0x85, 0x0c, 0xe1, 0xa1, 0x0d, 0x7f, 0x87, 0x7d, 0x84, 0x7a,
-	0x84, 0x7b, 0xe1, 0x86, 0xe8, 0x6f, 0xd1, 0x79, 0x85, 0x19, 0x53, 0x95, 0xc3, 0x47, 0x19, 0x7d, 0xe7, 0x0c, 0x37, 0x7c, 0x23, 0x7d, 0x85, 0x7d, 0x4b, 0x79, 0x21, 0xa5, 0x87, 0x7d, 0x19, 0x7d,
-	0x0d, 0x7d, 0x15, 0x91, 0x23, 0x7d, 0x87, 0x7c, 0x85, 0x7a, 0x85, 0xaf, 0xcd, 0x7d, 0x87, 0x7d, 0xe9, 0x3d, 0x85, 0x7d, 0x15, 0x79, 0x85, 0x7d, 0xc1, 0x7b, 0xea, 0x7d, 0xb7, 0x7d, 0x85, 0x7d,
-	0x85, 0x7d, 0x0d, 0x7d, 0xe9, 0x73, 0x85, 0x79, 0x05, 0x7d, 0xd7, 0x7d, 0x85, 0xe1, 0xb9, 0xe1, 0x0f, 0x65, 0x85, 0x86, 0x2d, 0x7d, 0xd7, 0xdd, 0xa3, 0x8e, 0xe6, 0x7d, 0xde, 0x7e, 0xae, 0x0e,
-	0x0f, 0xe1, 0x89, 0x7e, 0x23, 0x7d, 0xf5, 0x79, 0x23, 0xe1, 0x4b, 0x83, 0x0c, 0x0f, 0x85, 0x7b, 0x85, 0x7e, 0x8f, 0x80, 0x85, 0x98, 0xf5, 0x7a, 0x85, 0x1a, 0x0d, 0xe1, 0x0f, 0x7c, 0x89, 0x0c,
-	0x85, 0x0b, 0x23, 0x69, 0x87, 0x7b, 0x23, 0x0c, 0x1f, 0xb7, 0x21, 0x7a, 0x88, 0x7e, 0x8f, 0xa5, 0x7d, 0x80, 0xb7, 0xb9, 0x18, 0xbf, 0x4b, 0x19, 0x85, 0xa5, 0x91, 0x80, 0x87, 0x81, 0x87, 0x7c,
-	0x0f, 0x73, 0x91, 0x91, 0x84, 0x87, 0x37, 0xd7, 0x86, 0x79, 0xe1, 0xdd, 0x85, 0x7a, 0x73, 0x9b, 0x05, 0x7d, 0x0d, 0x83, 0x87, 0x9c, 0x85, 0x33, 0x87, 0x7d, 0x85, 0x0f, 0x87, 0x7d, 0x0d, 0x7d,
-	0xf6, 0x7e, 0x87, 0x7d, 0x88, 0x19, 0x89, 0xf5, 0xd1, 0xdd, 0x85, 0x7d, 0x8b, 0xc3, 0xea, 0x7a, 0xd7, 0xb0, 0x0d, 0x7d, 0x87, 0xa5, 0x87, 0x7c, 0x73, 0x7e, 0x7d, 0x86, 0x87, 0x23, 0x85, 0x10,
-	0xd7, 0xdf, 0xed, 0xa5, 0xe1, 0x7a, 0x85, 0x23, 0xea, 0x7e, 0x85, 0x98, 0xad, 0x79, 0x86, 0x7d, 0x85, 0x7d, 0xd7, 0x7d, 0xe1, 0x7a, 0xf5, 0x7d, 0x85, 0xb0, 0x2b, 0x37, 0xe1, 0x7a, 0x87, 0x79,
-	0x84, 0x7d, 0x73, 0x73, 0x87, 0x7d, 0x23, 0x7d, 0xe9, 0x7d, 0x85, 0x7e, 0x02, 0x7d, 0xdd, 0x2d, 0x87, 0x79, 0xe7, 0x79, 0xad, 0x7c, 0x23, 0xda, 0x87, 0x0d, 0x0d, 0x7b, 0xe7, 0x79, 0x9b, 0x7d,
-	0xd7, 0x8f, 0x05, 0x7d, 0x0d, 0x34, 0x8f, 0x7d, 0xad, 0x87, 0xe9, 0x7c, 0x85, 0x80, 0x85, 0x79, 0x8a, 0xc3, 0xe7, 0xa5, 0xe8, 0x6b, 0x0d, 0x74, 0x10, 0x73, 0x33, 0x17, 0x0d, 0x37, 0x21, 0x19
-};
 //Server.cpp
 extern HWND			hWndMain;
 extern unsigned int CurrentTime;
@@ -134,7 +118,7 @@ SOCKET CPSock::StartListen(HWND hWnd, int ip, int port, int WSA)
 
 	if(tSock == INVALID_SOCKET) 
 	{	
-		MessageBox(hWnd, "Initialize socket fail", "ERROR", MB_OK);
+		platform::ReportFatal(hWnd, "Initialize socket fail", "ERROR", MB_OK);
 
 		return FALSE;
 	}
@@ -146,7 +130,7 @@ SOCKET CPSock::StartListen(HWND hWnd, int ip, int port, int WSA)
 
 	if(bind(tSock, (struct sockaddr FAR *)&local_sin, sizeof(local_sin)) == SOCKET_ERROR)
 	{	
-		MessageBox(hWnd, "Binding fail", "ERROR", MB_OK);
+		platform::ReportFatal(hWnd, "Binding fail", "ERROR", MB_OK);
 		closesocket(tSock);
 
 		return FALSE;
@@ -154,7 +138,7 @@ SOCKET CPSock::StartListen(HWND hWnd, int ip, int port, int WSA)
 
 	if(listen(tSock, MAX_PENDING_CONNECTS) < 0)
 	{	
-		MessageBox(hWnd, "Listen fail", "ERROR", MB_OK);
+		platform::ReportFatal(hWnd, "Listen fail", "ERROR", MB_OK);
 		closesocket(tSock);
 
 		return FALSE;
@@ -162,7 +146,7 @@ SOCKET CPSock::StartListen(HWND hWnd, int ip, int port, int WSA)
 
 	if(WSAAsyncSelect(tSock, hWnd, WSA, FD_ACCEPT) > 0)
 	{	
-		MessageBox (hWnd, "WSAAsyncSelect fail", "ERROR", MB_OK);
+		platform::ReportFatal(hWnd, "WSAAsyncSelect fail", "ERROR", MB_OK);
 		closesocket(tSock);
 
 		return FALSE;
@@ -197,7 +181,7 @@ SOCKET CPSock::ConnectServer(char *HostAddr, int Port, int ip, int WSA)
 
 	if(tSock == INVALID_SOCKET) 
     {	
-		MessageBox(NULL, "Initialize socket fail", "ERROR", MB_OK);
+		platform::ReportWarning(NULL, "Initialize socket fail", "ERROR", MB_OK);
 		return 0;
 	}
 	
@@ -217,7 +201,7 @@ SOCKET CPSock::ConnectServer(char *HostAddr, int Port, int ip, int WSA)
 
 			if(bind(tSock, (struct sockaddr FAR *)&local_sin, sizeof(local_sin)) == SOCKET_ERROR)
 			{	
-				MessageBox(NULL, "Binding fail", "ERROR", MB_OK);
+				platform::ReportWarning(NULL, "Binding fail", "ERROR", MB_OK);
 				closesocket(tSock);
 
 				return 0;
@@ -289,7 +273,7 @@ SOCKET CPSock::ConnectBillServer(char *HostAddr, int Port, int ip, int WSA)
 
 			if(bind(tSock, (struct sockaddr FAR *)&local_sin, sizeof(local_sin)) == SOCKET_ERROR)
 			{	
-				MessageBox (NULL, "Binding fail", "ERROR", MB_OK);	
+				platform::ReportWarning(NULL, "Binding fail", "ERROR", MB_OK);	
 				closesocket(tSock);
 
 				return 0;
@@ -362,58 +346,50 @@ char* CPSock::ReadMessage(int *ErrorCode, int *ErrorType)
 		return 0;
 	}
 
-	//  Init packet authentication
-	if(Init == 0)
-	{	
-		if(nRecvPosition - nProcPosition < 4) 
-			return 0;
+	bool initSeen = (Init != 0);
 
-		int InitCode = *((unsigned int *)(pRecvBuffer + nProcPosition));
+	net::DecodeOutcome outcome = net::DecodeNextFrame(
+		reinterpret_cast<unsigned char *>(pRecvBuffer) + nProcPosition,
+		static_cast<size_t>(nRecvPosition - nProcPosition),
+		true, initSeen);
 
-		if(InitCode != INITCODE)
-		{	
-			*ErrorCode = 2;
-			*ErrorType = InitCode;
+	Init = initSeen ? 1 : 0;
 
-			return 0;
-		}
-
-		Init = 1;
-		nProcPosition += 4;
-	}
-
-	//	Check received message is larger than HEADER
-	if	(nRecvPosition - nProcPosition < sizeof(HEADER)) 
-		return 0;
-
-	//	Check full message arrived
-	unsigned short	Size		= *((unsigned short *) (pRecvBuffer + nProcPosition)); 
-	unsigned char	iKeyWord	= *((unsigned char  *) (pRecvBuffer + nProcPosition + 2));
-	unsigned char	KeyWord		= pKeyWord[iKeyWord * 2];
-	unsigned char	CheckSum	= *((unsigned char  *) (pRecvBuffer + nProcPosition + 3));
-	unsigned int	SockType	= *((unsigned int	*) (pRecvBuffer + nProcPosition + 4));
-	unsigned int	SockID		= *((unsigned int	*) (pRecvBuffer + nProcPosition + 6));
-
-	if(Size > MAX_MESSAGE_SIZE || Size < sizeof(HEADER)) 
-	{	
-		nRecvPosition=	0;
-		nProcPosition=	0;
-
-		*ErrorCode   =	2;
-		*ErrorType   =	Size;
+	if (outcome.status == net::DecodeStatus::NeedMoreData)
+	{
+		nProcPosition += static_cast<int>(outcome.consumed);
 
 		return 0;
 	}
 
-	unsigned int	Rest = nRecvPosition - nProcPosition;
+	if (outcome.status == net::DecodeStatus::InitMismatch)
+	{
+		unsigned int InitCode = 0;
 
-	if (Size > Rest) 
+		memcpy(&InitCode, pRecvBuffer + nProcPosition, sizeof(InitCode));
+
+		*ErrorCode = 2;
+		*ErrorType = static_cast<int>(InitCode);
+
 		return 0;
+	}
 
-	//	Get message
-	char *pMsg = &(pRecvBuffer[nProcPosition]);
+	if (outcome.status == net::DecodeStatus::BadSize)
+	{
+		nRecvPosition = 0;
+		nProcPosition = 0;
 
-	nProcPosition = nProcPosition + Size;
+		*ErrorCode = 2;
+		*ErrorType = static_cast<int>(outcome.size);
+
+		return 0;
+	}
+
+	// outcome.status is Frame or BadChecksum: the frame was extracted (and,
+	// as before, transformed in place) even when its checksum is wrong.
+	char *pMsg = reinterpret_cast<char *>(outcome.frame);
+
+	nProcPosition += static_cast<int>(outcome.consumed);
 
 	if(nRecvPosition <= nProcPosition) 
 	{	
@@ -421,47 +397,11 @@ char* CPSock::ReadMessage(int *ErrorCode, int *ErrorType)
 		nProcPosition = 0;
 	}
 
-	// Compare check_sum in packet
-	unsigned char Sum1 = 0;
-	unsigned char Sum2 = 0;
-
-	int	pos = KeyWord;
-
-	for	(int i = 4; i < Size; i++, pos++)
-	{	
-		int rst = pos%256;
-
-		Sum2 += pMsg[i];
-
-		unsigned char Trans = pKeyWord[rst * 2 + 1];
-
-		int mod = i&0x3;
-
-		if  (mod == 0) 
-			pMsg[i] = pMsg[i] - (Trans << 1);
-
-		if  (mod == 1) 
-			pMsg[i] = pMsg[i] + (Trans >> 3);
-
-		if  (mod == 2) 
-			pMsg[i] = pMsg[i] - (Trans << 2);
-
-		if  (mod == 3) 
-			pMsg[i] = pMsg[i] + (Trans >> 5);
-
-		Sum1 += pMsg[i];
+	if (outcome.status == net::DecodeStatus::BadChecksum)
+	{
+		*ErrorCode = 1;
+		*ErrorType = static_cast<int>(outcome.size);
 	}
-
-	unsigned char Sum = Sum2 - Sum1;
-
-	// return packet, even check_sum not match
-	if	(Sum != CheckSum)
-	{	
-		*ErrorCode	= 1;
-		*ErrorType  = Size;
-
-		return pMsg;
-	} 
 
 	return pMsg;
 }
@@ -533,11 +473,9 @@ BOOL CPSock::AddMessage(char *pMsg, int Size)
 	}
 	
 	unsigned char iKeyWord  =	rand()%256;
-	unsigned char KeyWord	=	pKeyWord[iKeyWord * 2];
-	unsigned char CheckSum	=	0;
 	pSMsg->Size				=	Size;
 	pSMsg->KeyWord			=	iKeyWord;
-	pSMsg->CheckSum			=	CheckSum;
+	pSMsg->CheckSum			=	0;
 	pSMsg->ClientTick		=	CurrentTime;
 	LastSendTime			=	CurrentTime;
 
@@ -551,40 +489,15 @@ BOOL CPSock::AddMessage(char *pMsg, int Size)
 	}
 #endif 
 
-	unsigned char Sum1 = 0;
-	unsigned char Sum2 = 0;
- 	int			  pos  = KeyWord;
+	memcpy(pSendBuffer + nSendPosition, pMsg, Size);
 
-	for (int i = 4; i < Size; i++, pos++)
-	{	
-		Sum1 += pMsg[i];
+	unsigned char CheckSum = net::EncodePayload(
+		reinterpret_cast<unsigned char *>(pSendBuffer) + nSendPosition,
+		static_cast<size_t>(Size), iKeyWord);
 
-		int rst = pos%256;
-
-		unsigned char Trans = pKeyWord[rst * 2 + 1];
-
-		int mod = i&0x3;
-
-		if  (mod == 0) 
-			pSendBuffer[nSendPosition + i] = pMsg[i] + (Trans << 1); 
-
-		if  (mod == 1) 
-			pSendBuffer[nSendPosition + i] = pMsg[i] - (Trans >> 3);
-
-		if  (mod == 2)
-			pSendBuffer[nSendPosition + i] = pMsg[i] + (Trans << 2);
-
-		if  (mod == 3) 
-			pSendBuffer[nSendPosition + i] = pMsg[i] - (Trans >> 5);
-
-		Sum2 += pSendBuffer[nSendPosition + i];
-	}
-	
-	CheckSum = Sum2 - Sum1;
 	pSMsg->CheckSum = CheckSum;
+	pSendBuffer[nSendPosition + 3] = CheckSum;
 
-	memcpy(pSendBuffer + nSendPosition, pMsg, 4);
-	
 	nSendPosition = nSendPosition + Size;
 	
 	return TRUE;

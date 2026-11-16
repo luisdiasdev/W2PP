@@ -30,6 +30,7 @@
 #include <time.h>
 
 #include "CReadFiles.h"
+#include "../platform/FileSystem.h"
 #include "CFileDB.h"
 #include "CUser.h"
 #include "Server.h"
@@ -133,47 +134,31 @@ void CReadFiles::ImportItem()
 	char filename[256];
 	char movefile[256];
 	char *getret;
-	struct _finddata_t c_file;
 	FILE *fp;
 
-	sprintf(temp, IMPORT_ITEM_PATH);
+	platform::DirectoryIterator iterator(IMPORT_ITEM_PATH); platform::DirectoryEntry c_file;
 
-	int hFindFile = _findfirst(temp, &c_file);
+	if (iterator.Result() != platform::FsResult::Ok)
 
-	if (hFindFile == -1)
-		return;
+	return;
 
 	int count = 0;
 
-	while (1)
+	while (iterator.Next(c_file))
 	{
 		count++;
 
 		if (count > 10)
 			break;
 
-		if (c_file.name[0] == '.')
-		{
-			int ret = _findnext(hFindFile, &c_file);
 
-			if (ret != 0)
-				break;
-
-			continue;
-		}
-
-		sprintf(filename, IMPORT_ITEM2_PATH, c_file.name);
-		sprintf(movefile, IMPORT_ITEM_ERROR_PATH, c_file.name);
+		sprintf(filename, IMPORT_ITEM2_PATH, c_file.name.c_str());
+		sprintf(movefile, IMPORT_ITEM_ERROR_PATH, c_file.name.c_str());
 
 		fp = fopen(filename, "rt");
 
 		if (fp == NULL)
 		{
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
-
 			continue;
 		}
 
@@ -186,14 +171,9 @@ void CReadFiles::ImportItem()
 		{
 			fclose(fp);
 
-			MoveFile(filename, movefile);
+			platform::RenameFile(filename, movefile);
 
 			Log(filename, "-IMPORT no contents", 0);
-
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
 
 			continue;
 		}
@@ -208,14 +188,9 @@ void CReadFiles::ImportItem()
 
 		if (Index < 0 || Index >= MAX_ITEMLIST || Eff1 < 0 || Eff2 < 0 || Eff3 < 0 || Eff1 > 255 || Eff2 > 255 || Eff3 > 255)
 		{
-			MoveFile(filename, movefile);
+			platform::RenameFile(filename, movefile);
 
 			Log(filename, "-IMPORT no contents", 0);
-
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
 
 			continue;
 		}
@@ -269,14 +244,9 @@ void CReadFiles::ImportItem()
 		if (!hread)
 		{
 			if (!RunTimeSent)
-				MoveFile(filename, movefile);
+				platform::RenameFile(filename, movefile);
 
 			Log(filename, "-IMPORT no account", 0);
-
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
 
 			continue;
 		}
@@ -309,9 +279,9 @@ void CReadFiles::ImportItem()
 
 		if (Pos == -1)
 		{
-			int iret = MoveFile(filename, movefile);
+			platform::FsResult iret = platform::RenameFile(filename, movefile);
 
-			if (!iret)
+			if (iret != platform::FsResult::Ok)
 			{
 				int err = GetLastError();
 
@@ -319,11 +289,6 @@ void CReadFiles::ImportItem()
 			}
 
 			Log(temp, "-IMPORT no space, file moved to err", 0);
-
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
 
 			continue;
 		}
@@ -338,13 +303,8 @@ void CReadFiles::ImportItem()
 			Log(filename, "-IMPORT ITEM SUCCESS - ACCOUNT SAVE FAIL", 0);
 
 			if (!RunTimeSent)
-				MoveFile(filename, movefile);
+				platform::RenameFile(filename, movefile);
 
-
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
 
 			continue;
 		}
@@ -355,11 +315,11 @@ void CReadFiles::ImportItem()
 
 		Log(filename, log, 0);
 
-		ret = DeleteFile(filename);
+		ret = (platform::DeleteFile(filename) == platform::FsResult::Ok) ? 1 : 0;
 
 		if (!ret)
 		{
-			ret = MoveFile(filename, movefile);
+			ret = (platform::RenameFile(filename, movefile) == platform::FsResult::Ok) ? 1 : 0;
 
 			if (ret)
 				Log(filename, "-IMPORT ITEM SUCCESS - FILE MOVED [WORNING]", 0);
@@ -367,14 +327,10 @@ void CReadFiles::ImportItem()
 				Log(filename, "-IMPORT ITEM SUCCESS - FILE NOT DELETED!!!!!!!! [WORNING]", 0);
 		}
 
-		if (_findnext(hFindFile, &c_file) != 0)
-			break;
-		continue;
+		
 
 	}
 
-	if (hFindFile != -1)
-		_findclose(hFindFile);
 }
 
 void CReadFiles::ImportUser()
@@ -382,17 +338,15 @@ void CReadFiles::ImportUser()
 	FILE *fp = NULL;
 
 	char temp[128];
-	struct _finddata_t c_file;
 
-	sprintf(temp, IMPORT_USER_PATH);
-	int hFindFile = _findfirst(temp, &c_file);
+	platform::DirectoryIterator iterator(IMPORT_USER_PATH); platform::DirectoryEntry c_file;
+	if (iterator.Result() != platform::FsResult::Ok)
 
-	if (hFindFile == -1)
-		return;
+	return;
 
 	char *ret;
 
-	while (1)
+	while (iterator.Next(c_file))
 	{
 		char filename[256];
 		char id[256];
@@ -405,25 +359,13 @@ void CReadFiles::ImportUser()
 		int ssn1;
 		int ssn2;
 
-		if (c_file.name[0] == '.')
-		{
-			int ret = _findnext(hFindFile, &c_file);
 
-			if (ret == 0)
-				continue;
-			else
-				break;
-		}
-
-		sprintf(filename, IMPORT_USER2_PATH, &c_file.name);
+		sprintf(filename, IMPORT_USER2_PATH, c_file.name.c_str());
 		fp = fopen(filename, "rt");
 
 		if (fp == NULL)
 		{
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		int len = 0;
@@ -434,10 +376,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		sscanf(temp, "%s", id);
@@ -448,10 +387,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		_strupr(id);
@@ -465,10 +401,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		sscanf(temp, "%s", pass);
@@ -479,10 +412,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		pass[ACCOUNTPASS_LENGTH - 1] = 0;
@@ -494,10 +424,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 		sscanf(temp, "%s", name);
 
@@ -507,10 +434,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		name[REALNAME_LENGTH - 1] = 0;
@@ -522,10 +446,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		sscanf(temp, "%d", &ssn1);
@@ -534,10 +455,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		ret = fgets(temp, 127, fp);
@@ -546,10 +464,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		sscanf(temp, "%d", &ssn2);
@@ -558,10 +473,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		ret = fgets(temp, 127, fp);
@@ -570,10 +482,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		len = strlen(temp);
@@ -589,10 +498,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		strncpy(email, temp, EMAIL_LENGTH);
@@ -603,10 +509,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		len = strlen(temp);
@@ -622,10 +525,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		strncpy(tel, temp, TELEPHONE_LENGTH);
@@ -636,10 +536,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		len = strlen(temp);
@@ -655,10 +552,7 @@ void CReadFiles::ImportUser()
 		{
 			fclose(fp);
 
-			if (_findnext(hFindFile, &c_file) == 0)
-				continue;
-			else
-				break;
+			continue;
 		}
 
 		strncpy(addr, temp, ADDRESS_LENGTH);
@@ -677,50 +571,41 @@ void CReadFiles::ImportUser()
 		int ret = cFileDB.AddAccount(id, pass, name, ssn1, ssn2, email, tel, addr, bonus);
 
 		if (ret != 0)
-			ret = DeleteFile(filename);
+			ret = (platform::DeleteFile(filename) == platform::FsResult::Ok) ? 1 : 0;
 
-		if (_findnext(hFindFile, &c_file) == 0)
-			continue;
-		else
-			break;
+		continue;
 	}
 
-	if (fp != NULL)
-		_findclose(hFindFile);
 }
 
 void CReadFiles::ReadGuildInfo()
 {
-	int handle = -1;
+	platform::File guildFile;
 
-	handle = _open(GUILD_INFO_PATH, _O_RDONLY | _O_BINARY);
-
-	if (handle == -1)
+	if (!guildFile.OpenRead(GUILD_INFO_PATH))
 	{
-		MessageBoxA(hWndMain, "no GuildInfo file", "BOOTING ERROR", MB_OK);
+		platform::ReportWarning(hWndMain, "no GuildInfo file", "BOOTING ERROR", MB_OK);
 
 		return;
 	}
 
-	_read(handle, GuildInfo, sizeof(GuildInfo));
-	_close(handle);
+	guildFile.Read(GuildInfo, sizeof(GuildInfo));
+	guildFile.Close();
 }
 
 void CReadFiles::WriteGuildInfo()
 {
-	int handle = -1;
+	platform::File guildFile;
 
-	handle = _open(GUILD_INFO_PATH, O_RDWR | O_CREAT | O_BINARY, _S_IREAD | _S_IWRITE);
-
-	if (handle == -1)
+	if (!guildFile.OpenReadWrite(GUILD_INFO_PATH))
 	{
-		MessageBoxA(hWndMain, "no GuildInfo file", "BOOTING ERROR", MB_OK);
+		platform::ReportWarning(hWndMain, "no GuildInfo file", "BOOTING ERROR", MB_OK);
 
 		return;
 	}
 
-	_write(handle, GuildInfo, sizeof(GuildInfo));
-	_close(handle);
+	guildFile.Write(GuildInfo, sizeof(GuildInfo));
+	guildFile.Close();
 }
 
 void CReadFiles::ImportDonate()
@@ -729,19 +614,17 @@ void CReadFiles::ImportDonate()
 	char filename[256];
 	char movefile[256];
 	char *getret;
-	struct _finddata_t c_file;
 	FILE *fp;
 
-	sprintf(temp, IMPORT_DONATE_PATH);
+	platform::DirectoryIterator iterator(IMPORT_DONATE_PATH); platform::DirectoryEntry c_file;
 
-	int hFindFile = _findfirst(temp, &c_file);
+	if (iterator.Result() != platform::FsResult::Ok)
 
-	if (hFindFile == -1)
-		return;
+	return;
 
 	int count = 0;
 
-	while (1)
+	while (iterator.Next(c_file))
 	{
 		count++;
 
@@ -749,18 +632,13 @@ void CReadFiles::ImportDonate()
 			break;
 
 
-		sprintf(filename, IMPORT_DONATE2_PATH, c_file.name);
-		sprintf(movefile, IMPORT_DONATE_ERROR_PATH, c_file.name);
+		sprintf(filename, IMPORT_DONATE2_PATH, c_file.name.c_str());
+		sprintf(movefile, IMPORT_DONATE_ERROR_PATH, c_file.name.c_str());
 
 		fp = fopen(filename, "rt");
 
 		if (fp == NULL)
 		{
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
-
 			continue;
 		}
 
@@ -773,14 +651,9 @@ void CReadFiles::ImportDonate()
 		{
 			fclose(fp);
 
-			MoveFile(filename, movefile);
+			platform::RenameFile(filename, movefile);
 
 			Log(filename, "-IMPORT no contents", 0);
-
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
 
 			continue;
 		}
@@ -795,14 +668,9 @@ void CReadFiles::ImportDonate()
 
 		if (Donate < 0)
 		{
-			MoveFile(filename, movefile);
+			platform::RenameFile(filename, movefile);
 
 			Log(filename, "-IMPORT no contents", 0);
-
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
 
 			continue;
 		}
@@ -845,14 +713,9 @@ void CReadFiles::ImportDonate()
 		if (!hread)
 		{
 			if (!RunTimeSent)
-				MoveFile(filename, movefile);
+				platform::RenameFile(filename, movefile);
 
 			Log(filename, "-IMPORT no account", 0);
-
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
 
 			continue;
 		}
@@ -868,13 +731,8 @@ void CReadFiles::ImportDonate()
 			Log(filename, "-IMPORT DONATE SUCCESS - ACCOUNT SAVE FAIL", 0);
 
 			if (!RunTimeSent)
-				MoveFile(filename, movefile);
+				platform::RenameFile(filename, movefile);
 
-
-			int ret = _findnext(hFindFile, &c_file);
-
-			if (ret != 0)
-				break;
 
 			continue;
 		}
@@ -885,11 +743,11 @@ void CReadFiles::ImportDonate()
 
 		Log(filename, log, 0);
 
-		ret = DeleteFile(filename);
+		ret = (platform::DeleteFile(filename) == platform::FsResult::Ok) ? 1 : 0;
 
 		if (!ret)
 		{
-			ret = MoveFile(filename, movefile);
+			ret = (platform::RenameFile(filename, movefile) == platform::FsResult::Ok) ? 1 : 0;
 
 			if (ret)
 				Log(filename, "-IMPORT DONATE SUCCESS - FILE MOVED [WARNING]", 0);
@@ -897,14 +755,10 @@ void CReadFiles::ImportDonate()
 				Log(filename, "-IMPORT DONATE SUCCESS - FILE NOT DELETED!!!!!!!! [WARNING]", 0);
 		}
 
-		if (_findnext(hFindFile, &c_file) != 0)
-			break;
-		continue;
+		
 
 	}
 
-	if (hFindFile != -1)
-		_findclose(hFindFile);
 }
 
 void CReadFiles::UpdateUser()
@@ -912,32 +766,21 @@ void CReadFiles::UpdateUser()
 	char temp[128];
 	char filename[128];
 	char *ret;
-	struct _finddata_t c_file;
 	FILE *fp;
 
-	sprintf(temp, UPDATE_USER_PATH, ServerIndex);
+	sprintf(temp, UPDATE_USER_PATH, ServerIndex); platform::DirectoryIterator iterator(temp); platform::DirectoryEntry c_file;
 
-	int hFindFile = _findfirst(temp, &c_file);
+	if (iterator.Result() != platform::FsResult::Ok)
 
-	if (hFindFile == -1)
-		return;
+	return;
 
-	do
+	while (iterator.Next(c_file))
 	{
 		char id[128];
 		char pass[256];
 
-		if (c_file.name[0] == '.')
-		{
-			int ret = _findnext(hFindFile, &c_file);
 
-			if (ret != 0)
-				break;
-
-			continue;
-		}
-
-		sprintf(filename, UPDATE_USER2_PATH, ServerIndex, c_file.name);
+		sprintf(filename, UPDATE_USER2_PATH, ServerIndex, c_file.name.c_str());
 
 		fp = fopen(filename, "rt");
 
@@ -951,11 +794,6 @@ void CReadFiles::UpdateUser()
 			{
 				fclose(fp);
 
-				int ret = _findnext(hFindFile, &c_file);
-
-				if (ret != 0)
-					break;
-
 				continue;
 			}
 
@@ -965,11 +803,6 @@ void CReadFiles::UpdateUser()
 			if (len == 0 || len >= ACCOUNTNAME_LENGTH)
 			{
 				fclose(fp);
-
-				int ret = _findnext(hFindFile, &c_file);
-
-				if (ret != 0)
-					break;
 
 				continue;
 			}
@@ -983,11 +816,6 @@ void CReadFiles::UpdateUser()
 			{
 				fclose(fp);
 
-				int ret = _findnext(hFindFile, &c_file);
-
-				if (ret != 0)
-					break;
-
 				continue;
 			}
 			sscanf(temp, "%s", pass);
@@ -996,11 +824,6 @@ void CReadFiles::UpdateUser()
 			if (len == 0 || len >= ACCOUNTPASS_LENGTH)
 			{
 				fclose(fp);
-
-				int ret = _findnext(hFindFile, &c_file);
-
-				if (ret != 0)
-					break;
 
 				continue;
 			}
@@ -1016,28 +839,22 @@ void CReadFiles::UpdateUser()
 
 			if (ret)
 			{
-				ret = DeleteFile(filename);
+				ret = (platform::DeleteFile(filename) == platform::FsResult::Ok) ? 1 : 0;
 
 				sprintf(temp, "AccountName:%s AccountPass:%s filename:%s", id, pass, filename);
 				Log(temp, "-UPDATE USER SUCCESS - FILE DELETED [WARNING]", 0);
 			}
 			else
 			{
-				ret = DeleteFile(filename);
+				ret = (platform::DeleteFile(filename) == platform::FsResult::Ok) ? 1 : 0;
 
 				sprintf(temp, "AccountName:%s AccountPass:%s filename:%s", id, pass, filename);
 				Log(temp, "-UPDATE USER FAIL - FILE DELETED [WARNING]", 0);
 			}
 		}
 
-		int ret = _findnext(hFindFile, &c_file);
+		}
 
-		if (ret != 0)
-			break;
-	} while (1);
-
-	if (hFindFile != -1)
-		_findclose(hFindFile);
 }
 
 void CReadFiles::WriteRanking()

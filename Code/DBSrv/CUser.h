@@ -21,7 +21,7 @@
 #define _CUSER_
 
 #include "../Basedef.h"
-#include "../CPSock.h"
+#include "../net/Connection.h"
 
 #define USER_EMPTY    0   // is empty
 #define USER_ACCEPT   1   // ACCEPT state after connected
@@ -31,7 +31,7 @@ class CUser
 public:
 	unsigned int    IP;
 	int    Mode;
-	CPSock cSock;
+	net::Connection cSock;
 	int    Count;
 	int    Level;
 	int    Encode1;
@@ -46,7 +46,8 @@ public:
 	CUser();
 	~CUser();
 
-	BOOL AcceptUser(int ListenSocket, int WSA);
+	CUser(const CUser &) = delete;
+	CUser &operator=(const CUser &) = delete;
 };
 
 #endif

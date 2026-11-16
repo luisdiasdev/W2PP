@@ -49,7 +49,7 @@ int CNPCGenerator::ReadNPCGenerator()
 
 	if (fs == NULL)
 	{
-		MessageBoxA(hWndMain, "NPCGener.txt¦í ¥", "+-¦Ô+¡ ¢Ããð", MB_OK);
+		platform::ReportFatal(hWndMain, "NPCGener.txt¦í ¥", "+-¦Ô+¡ ¢Ããð", MB_OK);
 
 		return 0;
 	}
@@ -178,7 +178,7 @@ int CNPCGenerator::ParseString(int i, char *str)
 		BOOL ret = ReadMob(&pList[i].Leader, "npc");
 
 		if (ret == FALSE)
-			MessageBox(hWndMain, str2, "Can't read NPC file in NPCGener.txt", NULL);
+			platform::ReportWarning(hWndMain, str2, "Can't read NPC file in NPCGener.txt", NULL);
 
 		else
 			pList[i].Mode = MOB_USE;
@@ -194,7 +194,7 @@ int CNPCGenerator::ParseString(int i, char *str)
 		BOOL ret = ReadMob(&pList[i].Follower, "npc");
 
 		if (ret == FALSE)
-			MessageBox(hWndMain, str2, "Can't read NPC file in NPCGener.txt", NULL);
+			platform::ReportWarning(hWndMain, str2, "Can't read NPC file in NPCGener.txt", NULL);
 
 		else
 			pList[i].Mode = MOB_USE;
@@ -214,14 +214,14 @@ int CNPCGenerator::ParseString(int i, char *str)
 	else if (!strcmp(str1, "StartX:"))
 	{
 		if(value <= 0 || value >= MAX_GRIDX)
-			MessageBoxA(NULL, str1, pList[i].Leader.MobName, MB_OK);
+			platform::ReportWarning(NULL, str1, pList[i].Leader.MobName, MB_OK);
 
 		pList[i].SegmentListX[0] = value;
 	}
 	else if (!strcmp(str1, "StartY:"))
 	{
 		if(value <= 0 || value >= MAX_GRIDX)
-			MessageBoxA(NULL, str1, pList[i].Leader.MobName, MB_OK);
+			platform::ReportWarning(NULL, str1, pList[i].Leader.MobName, MB_OK);
 		pList[i].SegmentListY[0] = value;
 	}
 	else if (!strcmp(str1, "DestRange:"))
@@ -298,7 +298,7 @@ void CNPCGenerator::ReadRegion()
 
 	if (fp == NULL)
 	{
-		MessageBoxA(hWndMain, "Não foi possivel carregar regions.txt", "WARNING!", MB_OK);
+		platform::ReportWarning(hWndMain, "Não foi possivel carregar regions.txt", "WARNING!", MB_OK);
 		return;
 	}
 
@@ -686,287 +686,287 @@ void CNPCSummon::Initialize()
 	MobFound = ReadMob(&Mob[0], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[0].MobName, "Can't read NPC 0", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[0].MobName, "Can't read NPC 0", MB_OK);
 
 	strcpy((char*)Mob[1].MobName, "Javali");
 
 	MobFound = ReadMob(&Mob[1], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[1].MobName, "Can't read NPC 1", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[1].MobName, "Can't read NPC 1", MB_OK);
 
 	strcpy((char*)Mob[2].MobName, "Lobo");
 
 	MobFound = ReadMob(&Mob[2], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[2].MobName, "Can't read NPC 2", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[2].MobName, "Can't read NPC 2", MB_OK);
 
 	strcpy((char*)Mob[3].MobName, "Urso");
 
 	MobFound = ReadMob(&Mob[3], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[3].MobName, "Can't read NPC 3", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[3].MobName, "Can't read NPC 3", MB_OK);
 
 	strcpy((char*)Mob[4].MobName, "Tigre");
 
 	MobFound = ReadMob(&Mob[4], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[4].MobName, "Can't read NPC 4", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[4].MobName, "Can't read NPC 4", MB_OK);
 
 	strcpy((char*)Mob[5].MobName, "Gorila");
 
 	MobFound = ReadMob(&Mob[5], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[5].MobName, "Can't read NPC 5", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[5].MobName, "Can't read NPC 5", MB_OK);
 
 	strcpy((char*)Mob[6].MobName, "Dragao_Negro");
 
 	MobFound = ReadMob(&Mob[6], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[6].MobName, "Can't read NPC 6", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[6].MobName, "Can't read NPC 6", MB_OK);
 
 	strcpy((char*)Mob[7].MobName, "Succubus");
 
 	MobFound = ReadMob(&Mob[7], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[7].MobName, "Can't read NPC 7", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[7].MobName, "Can't read NPC 7", MB_OK);
 
 	strcpy((char*)Mob[8].MobName, "Porco");
 
 	MobFound = ReadMob(&Mob[8], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[8].MobName, "Can't read NPC 8", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[8].MobName, "Can't read NPC 8", MB_OK);
 
 	strcpy((char*)Mob[9].MobName, "Javali_");
 
 	MobFound = ReadMob(&Mob[9], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[9].MobName, "Can't read NPC 9", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[9].MobName, "Can't read NPC 9", MB_OK);
 
 	strcpy((char*)Mob[10].MobName, "Porco");
 
 	MobFound = ReadMob(&Mob[10], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[10].MobName, "Can't read NPC 10", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[10].MobName, "Can't read NPC 10", MB_OK);
 
 	strcpy((char*)Mob[11].MobName, "Javali");
 
 	MobFound = ReadMob(&Mob[11], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[11].MobName, "Can't read NPC 11", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[11].MobName, "Can't read NPC 11", MB_OK);
 
 	strcpy((char*)Mob[12].MobName, "Lobo");
 
 	MobFound = ReadMob(&Mob[12], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[12].MobName, "Can't read NPC 12", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[12].MobName, "Can't read NPC 12", MB_OK);
 
 	strcpy((char*)Mob[13].MobName, "Dragao_menor");
 
 	MobFound = ReadMob(&Mob[13], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[13].MobName, "Can't read NPC 13", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[13].MobName, "Can't read NPC 13", MB_OK);
 
 	strcpy((char*)Mob[14].MobName, "Urso");
 
 	MobFound = ReadMob(&Mob[14], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[14].MobName, "Can't read NPC 14", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[14].MobName, "Can't read NPC 14", MB_OK);
 
 	strcpy((char*)Mob[15].MobName, "Dente_de_Sabre");
 
 	MobFound = ReadMob(&Mob[15], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[15].MobName, "Can't read NPC 15", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[15].MobName, "Can't read NPC 15", MB_OK);
 
 	strcpy((char*)Mob[16].MobName, "Sem_Sela_N");
 
 	MobFound = ReadMob(&Mob[16], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[16].MobName, "Can't read NPC 16", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[16].MobName, "Can't read NPC 16", MB_OK);
 
 	strcpy((char*)Mob[17].MobName, "Fantasma_N");
 
 	MobFound = ReadMob(&Mob[17], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[17].MobName, "Can't read NPC 17", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[17].MobName, "Can't read NPC 17", MB_OK);
 
 	strcpy((char*)Mob[18].MobName, "Leve_N");
 
 	MobFound = ReadMob(&Mob[18], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[18].MobName, "Can't read NPC 18", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[18].MobName, "Can't read NPC 18", MB_OK);
 
 	strcpy((char*)Mob[19].MobName, "Equip_N");
 
 	MobFound = ReadMob(&Mob[19], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[19].MobName, "Can't read NPC 19", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[19].MobName, "Can't read NPC 19", MB_OK);
 
 	strcpy((char*)Mob[20].MobName, "Andaluz_N");
 
 	MobFound = ReadMob(&Mob[20], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[20].MobName, "Can't read NPC 20", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[20].MobName, "Can't read NPC 20", MB_OK);
 
 	strcpy((char*)Mob[21].MobName, "Sem_Sela_B");
 
 	MobFound = ReadMob(&Mob[21], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[21].MobName, "Can't read NPC 21", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[21].MobName, "Can't read NPC 21", MB_OK);
 
 	strcpy((char*)Mob[22].MobName, "Fantasma_B");
 
 	MobFound = ReadMob(&Mob[22], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[22].MobName, "Can't read NPC 22", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[22].MobName, "Can't read NPC 22", MB_OK);
 
 	strcpy((char*)Mob[23].MobName, "Leve_B");
 
 	MobFound = ReadMob(&Mob[23], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[23].MobName, "Can't read NPC 23", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[23].MobName, "Can't read NPC 23", MB_OK);
 
 	strcpy((char*)Mob[24].MobName, "Equip_B");
 
 	MobFound = ReadMob(&Mob[24], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[24].MobName, "Can't read NPC 24", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[24].MobName, "Can't read NPC 24", MB_OK);
 
 	strcpy((char*)Mob[25].MobName, "Andaluz_B");
 
 	MobFound = ReadMob(&Mob[25], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[25].MobName, "Can't read NPC 25", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[25].MobName, "Can't read NPC 25", MB_OK);
 
 	strcpy((char*)Mob[26].MobName, "Fenrir");
 
 	MobFound = ReadMob(&Mob[26], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[26].MobName, "Can't read NPC 26", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[26].MobName, "Can't read NPC 26", MB_OK);
 
 	strcpy((char*)Mob[27].MobName, "Dragao");
 
 	MobFound = ReadMob(&Mob[27], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[27].MobName, "Can't read NPC 27", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[27].MobName, "Can't read NPC 27", MB_OK);
 
 	strcpy((char*)Mob[28].MobName, "FenrirSombra");
 
 	MobFound = ReadMob(&Mob[28], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[28].MobName, "Can't read NPC 28", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[28].MobName, "Can't read NPC 28", MB_OK);
 
 	strcpy((char*)Mob[29].MobName, "Tigre_de_Fogo");
 
 	MobFound = ReadMob(&Mob[29], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[29].MobName, "Can't read NPC 29", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[29].MobName, "Can't read NPC 29", MB_OK);
 
 	strcpy((char*)Mob[30].MobName, "Dragao_Vermelho");
 
 	MobFound = ReadMob(&Mob[30], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[30].MobName, "Can't read NPC 30", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[30].MobName, "Can't read NPC 30", MB_OK);
 
 	strcpy((char*)Mob[31].MobName, "Unicornio");
 
 	MobFound = ReadMob(&Mob[31], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[31].MobName, "Can't read NPC 31", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[31].MobName, "Can't read NPC 31", MB_OK);
 
 	strcpy((char*)Mob[32].MobName, "Pegasus");
 
 	MobFound = ReadMob(&Mob[32], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[32].MobName, "Can't read NPC 32", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[32].MobName, "Can't read NPC 32", MB_OK);
 
 	strcpy((char*)Mob[33].MobName, "Unisus");
 
 	MobFound = ReadMob(&Mob[33], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[33].MobName, "Can't read NPC 33", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[33].MobName, "Can't read NPC 33", MB_OK);
 
 	strcpy((char*)Mob[34].MobName, "Grifo");
 
 	MobFound = ReadMob(&Mob[34], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[34].MobName, "Can't read NPC 34", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[34].MobName, "Can't read NPC 34", MB_OK);
 
 	strcpy((char*)Mob[35].MobName, "Hipogrifo");
 
 	MobFound = ReadMob(&Mob[35], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[35].MobName, "Can't read NPC 35", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[35].MobName, "Can't read NPC 35", MB_OK);
 
 	strcpy((char*)Mob[36].MobName, "Grifo_Sangrento");
 
 	MobFound = ReadMob(&Mob[36], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[36].MobName, "Can't read NPC 36", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[36].MobName, "Can't read NPC 36", MB_OK);
 
 	strcpy((char*)Mob[37].MobName, "Svadilfire");
 
 	MobFound = ReadMob(&Mob[37], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[37].MobName, "Can't read NPC 37", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[37].MobName, "Can't read NPC 37", MB_OK);
 
 	strcpy((char*)Mob[38].MobName, "Sleipnir");
 
 	MobFound = ReadMob(&Mob[38], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[38].MobName, "Can't read NPC 38", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[38].MobName, "Can't read NPC 38", MB_OK);
 
 	strcpy((char*)Mob[39].MobName, "Pantera_Negra");
 
 	MobFound = ReadMob(&Mob[39], "BaseSummon");
 
 	if (!MobFound)
-		MessageBoxA(hWndMain, Mob[39].MobName, "Can't read NPC 39", MB_OK);
+		platform::ReportWarning(hWndMain, Mob[39].MobName, "Can't read NPC 39", MB_OK);
 }
 
 void SetAct(char *dest, char *act)
 {
 	if (strlen(act) >= 79)
 	{
-		MessageBox(hWndMain, act, "NPC Generater's Action can't be larger than 80.", NULL);
+		platform::ReportWarning(hWndMain, act, "NPC Generater's Action can't be larger than 80.", NULL);
 
 		return;
 	}

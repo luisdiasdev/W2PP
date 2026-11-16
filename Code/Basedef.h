@@ -22,7 +22,13 @@
 #define _BASEDEF_
 
 #include <time.h>
+#include <winsock2.h>
 #include <Windows.h>
+
+#include "net/Protocol.h"
+#include "platform/Clock.h"
+#include "platform/Diagnostics.h"
+#include "platform/File.h"
 
 #pragma region Defines
 
@@ -40,10 +46,6 @@
 
 
 #define		APP_VERSION				6975
-
-#define		GAME_PORT				8281	  // Game server listening port, client connects to it
-#define		DB_PORT					7514      // DB server listening port, Game server connects to it
-#define		ADMIN_PORT				8895	  // DB server listening port, NPTool connects to it
 
 #define		MAX_SERVER				10      // Max number of game servers that can connect to DB server
 #define		MAX_SERVERGROUP			10		// Max number of servers that can exist

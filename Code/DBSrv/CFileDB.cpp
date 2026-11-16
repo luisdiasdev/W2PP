@@ -27,6 +27,7 @@
 #include <time.h> 
 
 #include "CFileDB.h"
+#include "../net/Connection.h"
 #include "CUser.h"
 #include "Server.h"
 #include "CRanking.h"
@@ -41,7 +42,7 @@ extern int TransperCharacter;
 extern CUser pUser[MAX_SERVER]; // Server.cpp
 extern CUser pAdmin[MAX_ADMIN]; // Server.cpp
 
-extern CPSock AdminClient;
+extern net::Connection AdminClient;
 
 extern STRUCT_MOB g_pBaseSet[MAX_CLASS]; // Server.cpp
 
@@ -96,11 +97,11 @@ int CFileDB::AddAccount(char *id, char *pass, char *name, int ssn1, int ssn2, ch
 
 	sprintf(temp, "./account/%s/%s", First, check);
 
-	int Handle = _open(temp, O_RDONLY | O_BINARY);
+	platform::File probe;
 
-	if(Handle != -1)
+	if(probe.OpenRead(temp))
 	{
-		_close(Handle);
+		probe.Close();
 
 		return FALSE;
 	}
@@ -163,12 +164,12 @@ int CFileDB::UpdateAccount(char *id, char *pass)
 
 	sprintf(temp, "./account/%s/%s", First, check);
 
-	int Handle = _open(temp, O_RDONLY | O_BINARY);
+	platform::File probe;
 
-	if(Handle == -1)
+	if(!probe.OpenRead(temp))
 		return FALSE;
 
-	_close(Handle);
+	probe.Close();
 
 	int Idx = GetIndex(id);
 
@@ -278,7 +279,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			int idx = GetIndex(conn, m->ID);
 
-			if(TransperCharacter == 0 || AdminClient.Sock == 0)
+			if(TransperCharacter == 0 || AdminClient.IsOpen() == false)
 			{
 				Log("err,transper but not transper_server", pAccountList[idx].File.Info.AccountName, 0);
 
@@ -379,7 +380,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					pUser[i].cSock.SendOneMessage((char*)&sm, sizeof(MSG_GuildReport));
 			}
 
@@ -411,7 +412,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock)
+				if(pUser[i].cSock.IsOpen())
 					SendDBSignalParm2(i, 0, _MSG_War, m->Parm1, m->Parm2);
 			}
 			
@@ -445,7 +446,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					SendDBSignalParm2(i, 0, _MSG_GuildAlly, m->Guild, m->Ally);
 			}
 
@@ -470,10 +471,10 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock == 0)
+				if(pUser[i].cSock.IsOpen() == false)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					SendGuildInfo(i, myguild);
 			}
 
@@ -499,7 +500,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					SendDBSignalParm3(i, 0, _MSG_DBSetIndex, -1, Sapphire, i);
 			}
 
@@ -583,7 +584,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pAdmin[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pAdmin[i].cSock.Sock != 0)
+				if(pAdmin[i].cSock.IsOpen())
 					pAdmin[i].cSock.SendOneMessage((char*)std, std->Size);
 			}
 
@@ -603,7 +604,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock)
+				if(pUser[i].cSock.IsOpen())
 					pUser[i].cSock.SendOneMessage((char*)m, sizeof(MSG_MessageDBImple));
 			}
 		} break;
@@ -793,7 +794,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				for (int i = 0; i < MAX_SERVER; i++)
 				{
-					if (pUser[i].cSock.Sock == 0 || pUser[i].Mode == USER_EMPTY)
+					if (pUser[i].cSock.IsOpen() == false || pUser[i].Mode == USER_EMPTY)
 						continue;
 
 					pUser[i].cSock.SendOneMessage((char*)&sm_pa, sizeof(MSG_DBCheckPrimaryAccount));
@@ -1595,7 +1596,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					pUser[i].cSock.SendOneMessage(Msg, sizeof(MSG_MagicTrumpet));
 			}
 
@@ -1604,7 +1605,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pAdmin[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pAdmin[i].cSock.Sock != 0)
+				if(pAdmin[i].cSock.IsOpen())
 					pAdmin[i].cSock.SendOneMessage(Msg, sizeof(MSG_MagicTrumpet));
 			}
 	}break;
@@ -1616,7 +1617,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					pUser[i].cSock.SendOneMessage(Msg, sizeof(MSG_DBNotice));
 			}
 	}break;
@@ -1631,9 +1632,9 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		sprintf(temp, "./capsule/%d", Index);
 
-		int Handle = _open(temp, O_RDONLY | O_BINARY);
+		platform::File capsuleFile;
 
-		if(Handle == -1)
+		if(!capsuleFile.OpenRead(temp))
 		{
 			/*if(errno == EINVAL)
 				Log("err readcapsule EINVAL", temp, 0);
@@ -1647,9 +1648,9 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		STRUCT_CAPSULE file;
 
-		_read(Handle, &file, sizeof(STRUCT_CAPSULE));
+		capsuleFile.Read(&file, sizeof(STRUCT_CAPSULE));
 
-		_close(Handle);
+		capsuleFile.Close();
 
 		MSG_CNFDBCapsuleInfo sm;
 
@@ -1700,24 +1701,13 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		char temp[256];
 		sprintf(temp, "./capsule/%d", LastCapsule);
 
-		int Handle = _open(temp, O_RDWR | O_CREAT | O_BINARY, _S_IREAD | _S_IWRITE);
+		platform::File capsuleFile;
 
-		if(Handle == -1)
+		if(!capsuleFile.OpenReadWrite(temp))
 		{
-			 if (errno == EEXIST)
-				 Log("err putincapsulewrite EEXIST", 0, 0);
-			 if (errno == EACCES)
-				 Log("err putincapsulewrite EACCES", 0, 0);
-			 if (errno == EINVAL)
-				 Log("err putincapsulewrite EINVAL", 0, 0);
-			 if (errno == EMFILE)
-				 Log("err putincapsulewrite EMFILE", 0, 0);
-			 if (errno == ENOENT)
-				 Log("err putincapsulewrite ENOENT", 0, 0);
-			 else
-				Log("err putincapsulewrite UNKNOWN", 0, 0);
+			Log("err putincapsulewrite OPEN", 0, 0);
 
-			 return FALSE;
+			return FALSE;
 		}
 
 		STRUCT_CAPSULE file;
@@ -1727,8 +1717,8 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		file.extra.QuestInfo.Arch.MortalSlot = -1;
 
-		_write(Handle, &file, sizeof(STRUCT_CAPSULE));
-		_close(Handle);
+		capsuleFile.Write(&file, sizeof(STRUCT_CAPSULE));
+		capsuleFile.Close();
 
 		memset(pAccountList[Idx].File.ShortSkill[Slot], 0, 16);
 
@@ -1810,30 +1800,19 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		char temp[256];
 		sprintf(temp, "./capsule/%d", index);
 
-		int Handle = _open(temp, O_RDONLY | O_BINARY);
+		platform::File capsuleFile;
 
-		if(Handle == -1)
+		if(!capsuleFile.OpenRead(temp))
 		{
-			 if (errno == EEXIST)
-				 Log("err putincapsuleread EEXIST", 0, 0);
-			 if (errno == EACCES)
-				 Log("err putincapsuleread EACCES", 0, 0);
-			 if (errno == EINVAL)
-				 Log("err putincapsuleread EINVAL", 0, 0);
-			 if (errno == EMFILE)
-				 Log("err putincapsuleread EMFILE", 0, 0);
-			 if (errno == ENOENT)
-				 Log("err putincapsuleread ENOENT", 0, 0);
-			 else
-				Log("err putincapsuleread UNKNOWN", 0, 0);
+			Log("err putincapsuleread OPEN", 0, 0);
 
-			 return FALSE;
+			return FALSE;
 		}
 
 		STRUCT_CAPSULE file;
 
-		_read(Handle, &file, sizeof(STRUCT_CAPSULE));
-		_close(Handle);
+		capsuleFile.Read(&file, sizeof(STRUCT_CAPSULE));
+		capsuleFile.Close();
 
 		strncpy(file.MOB.MobName, m->MobName, 12);
 
@@ -2083,7 +2062,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		for (int i = 0; i < MAX_SERVER; i++)
 		{
-			if (pUser[i].cSock.Sock == 0 || pUser[i].Mode == USER_EMPTY)
+			if (pUser[i].cSock.IsOpen() == false || pUser[i].Mode == USER_EMPTY)
 				continue;
 
 			pUser[i].cSock.SendOneMessage((char*)&sm, sizeof(MSG_DBCheckPrimaryAccount));
@@ -2113,7 +2092,7 @@ int CFileDB::SendDBSignal(int svr, unsigned short id, unsigned short signal)
     sm.ID = id;
 	sm.Size = sizeof(sm);
 
-	if(pUser[svr].cSock.Sock)
+	if(pUser[svr].cSock.IsOpen())
 		pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
 	return TRUE;
@@ -2128,7 +2107,7 @@ int CFileDB::SendDBSignalParm(int svr, unsigned short id, unsigned short signal,
 	 sm.Size = sizeof(sm);
 	 sm.Parm = parm;
 
-	 if(pUser[svr].cSock.Sock)
+	 if(pUser[svr].cSock.IsOpen())
 		 pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
 	 return TRUE;
@@ -2144,7 +2123,7 @@ int CFileDB::SendDBSignalParm2(int svr, unsigned short id, unsigned short signal
 	sm.Parm1 = parm1;
 	sm.Parm2 = parm2;
 
-	if(pUser[svr].cSock.Sock)
+	if(pUser[svr].cSock.IsOpen())
 		pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
 	return TRUE;
@@ -2161,7 +2140,7 @@ int CFileDB::SendDBSignalParm3(int svr, unsigned short id, unsigned short signal
 	sm.Parm2 = parm2;
 	sm.Parm3 = parm3;
 
-	if(pUser[svr].cSock.Sock)
+	if(pUser[svr].cSock.IsOpen())
 		pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
 	return TRUE;
@@ -2195,7 +2174,7 @@ void CFileDB::SendGuildInfo(int srv, int Guild)
 
 	memcpy(&sm.GuildInfo, &GuildInfo[Guild], sizeof(STRUCT_GUILDINFO));
 
-	if(pUser[srv].cSock.Sock)
+	if(pUser[srv].cSock.IsOpen())
 		pUser[srv].cSock.SendOneMessage((char*)&sm, sizeof(MSG_GuildInfo));
 }
 
@@ -2274,28 +2253,17 @@ int CFileDB::CreateCharacter(char *ac, char *ch)
         return FALSE;
 	}
 
-	int Handle = _open(temp, O_RDWR | O_CREAT | O_BINARY, _S_IREAD | _S_IWRITE);
+	platform::File accountFile;
 
-	if(Handle == -1)
+	if(!accountFile.OpenReadWrite(temp))
 	{
-		 if (errno == EEXIST)
-			 Log("err createchar EEXIST", ch, 0);
-         if (errno == EACCES)
-			 Log("err createchar EACCES", ch, 0);
-         if (errno == EINVAL)
-			 Log("err createchar EINVAL", ch, 0);
-	     if (errno == EMFILE)
-			 Log("err createchar EMFILE", ch, 0);
-	     if (errno == ENOENT)
-			 Log("err createchar ENOENT", ch, 0);
-		 else
-			Log("err createchar UNKNOWN", ch, 0);
+		Log("err createchar OPEN", ch, 0);
 
          return FALSE;
 	}
 
-	_write(Handle, ac, ACCOUNTNAME_LENGTH);
-	_close(Handle);
+	accountFile.Write(ac, ACCOUNTNAME_LENGTH);
+	accountFile.Close();
 
 	return TRUE;
 }
@@ -2381,7 +2349,7 @@ void CFileDB::SendDBSavingQuit(int Idx, int mode)
 
     memcpy(sm.AccountName, pAccountList[Idx].File.Info.AccountName, ACCOUNTNAME_LENGTH);
 
-	if(pUser[conn].cSock.Sock && pUser[conn].Mode != USER_EMPTY)
+	if(pUser[conn].cSock.IsOpen() && pUser[conn].Mode != USER_EMPTY)
 		pUser[conn].cSock.SendOneMessage((char*)&sm, sizeof(MSG_DBSavingQuit));
 
     return;
@@ -2410,60 +2378,34 @@ int CFileDB::DBWriteAccount(STRUCT_ACCOUNTFILE *account)
 
 	sprintf(temp, "./account/%s/%s", First, check);	
 
-	int Handle = _open(temp, O_RDWR|O_CREAT|O_BINARY, _S_IREAD | _S_IWRITE);
+	platform::File accountFile;
 
-	if(Handle == -1)
+	if(!accountFile.OpenReadWrite(temp))
 	{
-		if (errno == EEXIST)
-			Log("err writeaccount EEXIST", accname, 0);
-		if (errno == EACCES)
-			Log("err writeaccount EACCES", accname, 0);
-		if (errno == EINVAL)
-			Log("err writeaccount EINVAL", accname, 0);
-		if (errno == EMFILE)
-			Log("err writeaccount EMFILE", accname, 0);
-		if (errno == ENOENT)
-			Log("err writeaccount ENOENT", accname, 0);
-		else
-			Log("err writeaccount UNKNOWN", accname, 0);
+		Log("err writeaccount OPEN", accname, 0);
 
 		return FALSE;
 	}
 
-	int ret = _lseek(Handle, 0, SEEK_SET);
-
-	if(ret == -1)
+	if(!accountFile.Seek(0, SEEK_SET))
 	{
 		Log("err,writeaccount lseek fail", accname, 0);
 
-		_close(Handle); 
+		accountFile.Close(); 
 
 		return FALSE;
 	}
 
-	ret = _write(Handle, account, sizeof(STRUCT_ACCOUNTFILE));
-
-	if(ret == -1)
+	if(!accountFile.Write(account, sizeof(STRUCT_ACCOUNTFILE)))
 	{
-		_close(Handle);
+		accountFile.Close();
 
 		Log("CreateAccount write fail", accname, 0);
 
-		if (errno == EEXIST)
-			Log("CreateAccount EEXIST", accname, 0);
-		if (errno == EACCES)
-			Log("CreateAccount EACCES", accname, 0);
-		if (errno == EINVAL)
-			Log("CreateAccount EINVAL", accname, 0);
-		if (errno == EMFILE)
-			Log("CreateAccount EMFILE", accname, 0);
-		if (errno == ENOENT)
-			Log("CreateAccount ENOENT", accname, 0);
-
 		return FALSE;
 	}
 
-	_close(Handle);
+	accountFile.Close();
 
 	return TRUE;
 }
@@ -2487,30 +2429,26 @@ int CFileDB::DBExportAccount(STRUCT_ACCOUNTFILE *file)
 
 	sprintf(temp, "S:/export/account%d/%s", ServerIndex, check);
 
-	int Handle = _open(temp, O_RDWR | O_CREAT | O_BINARY, _S_IREAD | _S_IWRITE);
+	platform::File exportFile;
 
-	if(Handle == -1)
+	if(!exportFile.OpenReadWrite(temp))
 		return FALSE;
 
-	int ret = _lseek(Handle, 0, SEEK_SET);
-
-	if(ret == -1)
+	if(!exportFile.Seek(0, SEEK_SET))
 	{
-		_close(Handle);
+		exportFile.Close();
 
 		return FALSE;
 	}
 
-	ret = _write(Handle, file, sizeof(STRUCT_ACCOUNTFILE));
-
-	if(ret == -1)
+	if(!exportFile.Write(file, sizeof(STRUCT_ACCOUNTFILE)))
 	{
-		_close(Handle);
+		exportFile.Close();
 
 		return FALSE;
 	}
 
-	_close(Handle);
+	exportFile.Close();
 
 	return TRUE;
 }
@@ -2541,34 +2479,27 @@ int CFileDB::DBReadAccount(STRUCT_ACCOUNTFILE *file)
 
 	sprintf(temp, "./account/%s/%s", First, check);
 
-	int Handle = _open(temp, O_RDONLY | O_BINARY);
+	platform::File accountFile;
 
-	if(Handle == -1)
+	if(!accountFile.OpenRead(temp))
 	{
-		if(errno == EINVAL)
-			Log("err readaccount EINVAL", file->Info.AccountName, 0);
-		else if(errno == EMFILE)
-			Log("err readaccount EEMFILE", file->Info.AccountName, 0);
-		/*else
-			Log("err readaccount UNKNOW", file->Info.AccountName, 0);*/
+		Log("err readaccount OPEN", file->Info.AccountName, 0);
 
 		return FALSE;
 	}
 
-	int length = _filelength(Handle);
+	int length = static_cast<int>(accountFile.Size());
 
 	int reqsz = sizeof(STRUCT_ACCOUNTFILE);
 
-	int ret = _read(Handle, file, reqsz);
-
-	if(ret == -1)
+	if(!accountFile.Read(file, reqsz))
 	{
-		_close(Handle);
+		accountFile.Close();
 
 		return FALSE;
 	}
 
-	_close(Handle);
+	accountFile.Close();
 
 	if(length < reqsz)
 		memset(file->ShortSkill, 0, 8);
@@ -2652,15 +2583,15 @@ void CFileDB::GetAccountByChar(char *acc, char *cha)
 
 	sprintf(temp, "./char/%s/%s", first, check);
 
-	int Handle = _open(temp, O_RDONLY | O_BINARY);
+	platform::File charFile;
 
-	if(Handle == -1)
+	if(!charFile.OpenRead(temp))
 	{
 		return;
 	}
 
-	_read(Handle, acc, ACCOUNTNAME_LENGTH);
-	_close(Handle);
+	charFile.Read(acc, ACCOUNTNAME_LENGTH);
+	charFile.Close();
 }
 
 void CFileDB::InitAccountList(int idx)

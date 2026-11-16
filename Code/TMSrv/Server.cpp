@@ -765,7 +765,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (fp == NULL)
 	{
-		MessageBox(hWndMain, "no gameconfig.txt, server will generate default setting.", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "no gameconfig.txt, server will generate default setting.", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		ConfigReady = 1;
 
@@ -782,7 +782,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Drop Item Event Settings:\n"))
 	{
-		MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line1", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line1", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -802,7 +802,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(parm[0], "evindex") || strcmp(parm[1], "evdelete") || strcmp(parm[2], "evon") || strcmp(parm[3], "evitem") || strcmp(parm[4], "evrate") || strcmp(parm[5], "evstart"))
 	{
-		MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line2", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line2", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -811,7 +811,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (value[0] == -1 || value[1] == -1 || value[2] == -1 || value[3] == -1 || value[4] == -1 || value[5] == -1 || value[6] == -1 || value[7] == -1)
 	{
-		MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line2", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line2", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -832,7 +832,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Etc Event Settings:\n"))
 	{
-		MessageBox(hWndMain, "not game server generated gameconfig.txt - Line3", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line3", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -852,7 +852,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(parm[0], "double") || strcmp(parm[1], "deadpoint") || strcmp(parm[2], "dungeonevent") || strcmp(parm[3], "statsapphire"))
 	{
-		MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line4", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line4", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -861,7 +861,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (value[0] == -1 || value[1] == -1 || value[2] == -1 || value[3] == -1)
 	{
-		MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line4", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line4", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -878,7 +878,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Billing Settings:\n"))
 	{
-		MessageBox(hWndMain, "not game server generated gameconfig.txt - Line5", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line5", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -898,7 +898,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(parm[0], "billmode") || strcmp(parm[1], "freeexp"))
 	{
-		MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line6", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line6", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -907,7 +907,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (value[0] == -1 || value[1] == -1)
 	{
-		MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line6", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line6", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -928,7 +928,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Item Drop Bonus Settings:\n"))
 	{
-		MessageBox(hWndMain, "not game server generated gameconfig.txt - Line7", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line7", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		return;
 	}
@@ -941,7 +941,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 	{
 		if (value[k] < 0 || value[k] > 9999)
 		{
-			MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line8", "Error", MB_OK | MB_SYSTEMMODAL);
+			platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line8", "Error", MB_OK | MB_SYSTEMMODAL);
 
 			fclose(fp);
 
@@ -960,7 +960,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 	{
 		if (value[k] < 0 || value[k] > 9999)
 		{
-			MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line9", "Error", MB_OK | MB_SYSTEMMODAL);
+			platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line9", "Error", MB_OK | MB_SYSTEMMODAL);
 
 			fclose(fp);
 
@@ -981,7 +981,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 	{
 		if (value[k] < 0 || value[k] > 9999)
 		{
-			MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line10", "Error", MB_OK | MB_SYSTEMMODAL);
+			platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line10", "Error", MB_OK | MB_SYSTEMMODAL);
 
 			fclose(fp);
 
@@ -1001,7 +1001,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 	{
 		if (value[k] < 0 || value[k] > 9999)
 		{
-			MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line11", "Error", MB_OK | MB_SYSTEMMODAL);
+			platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line11", "Error", MB_OK | MB_SYSTEMMODAL);
 
 			fclose(fp);
 
@@ -1017,7 +1017,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Treasure Settings:\n"))
 	{
-		MessageBox(hWndMain, "not game server generated gameconfig.txt - Line12", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line12", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -1066,7 +1066,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Etc Settings:\n"))
 	{
-		MessageBox(hWndMain, "not game server generated gameconfig.txt - Line13", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line13", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -1086,7 +1086,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(parm[0], "partydif") || strcmp(parm[1], "kefrastatus") || strcmp(parm[2], "GTorreHour") || strcmp(parm[3], "RVRHour") || strcmp(parm[4], "DropItem") || strcmp(parm[5], "BRHour") || strcmp(parm[6], "maxNightmare") || strcmp(parm[7], "PotionDelay"))
 	{
-		MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line13", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line13", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -1095,7 +1095,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (value[0] == -1 || value[1] == -1 || value[2] == -1 || value[3] == -1 || value[4] == -1 || value[5] == -1 || value[6] == -1 || value[7] == -1)
 	{
-		MessageBox(hWndMain, "not game-server generated gameconfig.txt - Line13", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line13", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		fclose(fp);
 
@@ -3389,6 +3389,16 @@ void RebuildGenerator()
 	}
 }
 
+static void PlatformDiagnosticSink(const char *line)
+{
+	char buffer[1024];
+	strncpy(buffer, line != NULL ? line : "", sizeof(buffer) - 1);
+	buffer[sizeof(buffer) - 1] = '\0';
+
+	char systemTag[] = "-system";
+	Log(buffer, systemTag, 0);
+}
+
 BOOL InitApplication(HANDLE hInstance)
 {
 	WNDCLASS  wc;
@@ -3477,6 +3487,7 @@ BOOL WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	StartLog();
 	StartChatLog();
+	platform::SetDiagnosticSink(PlatformDiagnosticSink);
 
 	memset(&g_pTreasure, 0, sizeof(g_pTreasure));
 
@@ -3517,7 +3528,7 @@ BOOL WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		fclose(fp);
 	}
 	else
-		MessageBox(hWndMain, "Não foi possivel encontrar o arquivo LocalIP.txt", "Erro ao iniciar", NULL);
+		platform::ReportFatal(hWndMain, "Não foi possivel encontrar o arquivo LocalIP.txt", "Erro ao iniciar", NULL);
 
 	int r1 = 0, r2 = 0, r3 = 0, r4 = 0;
 
@@ -3550,7 +3561,7 @@ BOOL WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	if (DBServerAddress[0] == 0)
 	{
-		MessageBox(hWndMain, "Não foi possivel pegar o ServerGroup. LocalIP.txt / ServerList.txt", "Erro ao iniciar", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportFatal(hWndMain, "Não foi possivel pegar o ServerGroup. LocalIP.txt / ServerList.txt", "Erro ao iniciar", MB_OK | MB_SYSTEMMODAL);
 
 		return TRUE;
 	}
@@ -3564,7 +3575,7 @@ BOOL WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	if (ret == NULL)
 	{
 		Log("erro, Não foi possivel se conectar a DBServer", "-system", 0);
-		MessageBox(hWndMain, "Não foi possivel se conectar a DBServer", "Erro ao iniciar", NULL);
+		platform::ReportFatal(hWndMain, "Não foi possivel se conectar a DBServer", "Erro ao iniciar", NULL);
 
 		return FALSE;
 	}
@@ -3622,7 +3633,7 @@ BOOL WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	memset(FailAccount, 0, sizeof(FailAccount));
 
-	CurrentTime = timeGetTime();
+	CurrentTime = platform::MonotonicMs();
 
 	CReadFiles::CReadFiles();
 	// CEncampment::ReadCamp();
@@ -6975,19 +6986,12 @@ int  ReadMob(STRUCT_MOB *mob, char *dir)
 {
 	sprintf(temp, "./%s/%s", dir, mob->MobName);
 
-	int Handle = _open(temp, O_RDONLY | O_BINARY);
+	platform::File mobFile;
 
-	if (Handle == -1)
+	if (!mobFile.OpenRead(temp))
 	{
-		if (errno == EINVAL)
-			sprintf(temp, "err,ReadMob EEXIST %s", mob->MobName);
-
-		else if (errno == EMFILE)
-			sprintf(temp, "err,ReadMob EMFILE %s", mob->MobName);
-
-		else if (errno == ENOENT)
+		if (mobFile.LastError() == platform::FileError::NotFound)
 			sprintf(temp, "err,ReadMob ENOENTN %s", mob->MobName);
-
 		else
 			sprintf(temp, "err,ReadMob UNKNOW %s", mob->MobName);
 
@@ -6997,16 +7001,14 @@ int  ReadMob(STRUCT_MOB *mob, char *dir)
 
 	strncpy(temp, mob->MobName, NAME_LENGTH);
 
-	int ret = _read(Handle, mob, sizeof(STRUCT_MOB));
-
-	if (ret == -1)
+	if (!mobFile.Read(mob, sizeof(STRUCT_MOB)))
 	{
-		_close(Handle);
+		mobFile.Close();
 
 		return FALSE;
 	}
 
-	_close(Handle);
+	mobFile.Close();
 
 	strncpy(mob->MobName, temp, NAME_LENGTH);
 
@@ -7143,17 +7145,17 @@ void Reboot()
 
 	mNPCGen.ReadNPCGenerator();
 
-	int Handle = _open("./heightmap.dat", _O_RDONLY | _O_BINARY, NULL);
+	platform::File heightFile;
 
-	if (Handle == -1)
+	if (!heightFile.OpenRead("./heightmap.dat"))
 	{
 		Log("err Load height grid fail", "-system", 0);
 
 		return;
 	}
 
-	_read(Handle, (void*)pHeightGrid, sizeof(pHeightGrid));
-	_close(Handle);
+	heightFile.Read((void*)pHeightGrid, sizeof(pHeightGrid));
+	heightFile.Close();
 
 	BASE_InitializeBaseDef();
 	BASE_ApplyAttribute((char*)pHeightGrid, MAX_GRIDX);
@@ -8735,7 +8737,7 @@ void ReadLevelItemConfig(void)
 
 	if (fp == NULL)
 	{
-		MessageBox(hWndMain, "no LevelItem.txt", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportFatal(hWndMain, "no LevelItem.txt", "Error", MB_OK | MB_SYSTEMMODAL);
 
 		return;
 	}

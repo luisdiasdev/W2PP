@@ -399,7 +399,7 @@ void CCastleZakum::ReadCastleQuest()
 
 	if (fs == NULL)
 	{
-		MessageBoxA(hWndMain, "CastleQuest.txt não foi encontrado.", CASTLE_QUEST_PATH, MB_OK);
+		platform::ReportFatal(hWndMain, "CastleQuest.txt não foi encontrado.", CASTLE_QUEST_PATH, MB_OK);
 
 		return;
 	}

@@ -21,6 +21,7 @@
 #include "CUser.h"
 #include "Server.h"
 #include "CReadFiles.h"
+#include "../platform/FileSystem.h"
 
 extern CUser pUser[MAX_SERVER]; // Server.cpp
 extern CUser pAdmin[MAX_ADMIN]; // Server.cpp
@@ -117,99 +118,79 @@ void RankingSystem::loadRanking()
 */
 int RankingSystem::readAccountsInDir(char *dir)
 {
-	HANDLE handle;
-	WIN32_FIND_DATA win32_find_data;
-
 	int entryCount = 0;
 
 	char tmp[1024];
 
-	handle = FindFirstFile(dir, &win32_find_data);
+	platform::DirectoryIterator iterator(dir);
+	platform::DirectoryEntry entry;
 
-	if (handle == INVALID_HANDLE_VALUE)
+	while (iterator.Next(entry))
 	{
-		// TODO: Error: can't read initial file
-	}
-	else
-	{
-		while (FindNextFile(handle, &win32_find_data))
+		if (entry.isDirectory)
 		{
-			char *fileName = win32_find_data.cFileName;
+			sprintf(tmp, "./account/%s/*", entry.name.c_str());
+			entryCount += readAccountsInDir(tmp);
+		}
+		else
+		{
+			const platform::LocalTime sysTime = platform::LocalNow();
 
-			if (!strncmp(fileName, ".", 1))
+			// Only use active accounts 
+			if (entry.lastWriteTime.year != sysTime.year ||
+			    entry.lastWriteTime.month < sysTime.month - 1)
 				continue;
 
-			if (win32_find_data.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
+			sprintf(tmp, "%s", entry.path.c_str());
+
+			errno = 0;
+
+			FILE* fs;
+			fopen_s(&fs, tmp, "rb");
+
+			if (fs != NULL)
 			{
-				sprintf(tmp, "./account/%s/*", fileName);
-				entryCount += readAccountsInDir(tmp);
-			}
-			else
-			{
-				SYSTEMTIME fWriteTime;
-				SYSTEMTIME sysTime;
-				FileTimeToSystemTime(&win32_find_data.ftLastWriteTime, &fWriteTime);
-				GetLocalTime(&sysTime);
+				int fsize = 0;
 
-				// Only use active accounts 
-				if (fWriteTime.wYear != sysTime.wYear || fWriteTime.wMonth < sysTime.wMonth - 1)
-					continue;
+				fseek(fs, 0, SEEK_END);
+				fsize = ftell(fs);
+				fseek(fs, 0, SEEK_SET);
 
-				strcpy(tmp, dir);
-				tmp[strlen(dir) - 1] = '\0';
-				sprintf(tmp, "%s%s", tmp, fileName);
-
-				errno = 0;
-
-				FILE* fs;
-				fopen_s(&fs, tmp, "rb");
-
-				if (fs != NULL)
+				if ((fsize >= 7500 && fsize <= 7600) || fsize == sizeof(STRUCT_ACCOUNTFILE))
 				{
-					int fsize = 0;
+					STRUCT_ACCOUNTFILE accBuffer;
+					memset(&accBuffer, 0, sizeof(STRUCT_ACCOUNTFILE));
 
-					fseek(fs, 0, SEEK_END);
-					fsize = ftell(fs);
-					fseek(fs, 0, SEEK_SET);
+					fread(&accBuffer, sizeof(STRUCT_ACCOUNTFILE), 1, fs);
 
-					if ((fsize >= 7500 && fsize <= 7600) || fsize == sizeof(STRUCT_ACCOUNTFILE))
+					for (int i = 0; i < MOB_PER_ACCOUNT; i++)
 					{
-						STRUCT_ACCOUNTFILE accBuffer;
-						memset(&accBuffer, 0, sizeof(STRUCT_ACCOUNTFILE));
+						if (accBuffer.Char[i].MobName[0] == '\0')
+							continue;
 
-						fread(&accBuffer, sizeof(STRUCT_ACCOUNTFILE), 1, fs);
+						if (accBuffer.Char[i].BaseScore.Level >= 1000)
+							continue;
 
-						for (int i = 0; i < MOB_PER_ACCOUNT; i++)
-						{
-							if (accBuffer.Char[i].MobName[0] == '\0')
-								continue;
+						int classmaster = accBuffer.mobExtra[i].ClassMaster;
 
-							if (accBuffer.Char[i].BaseScore.Level >= 1000)
-								continue;
+						tryInsertInRanking(OUT_OF_RANK, accBuffer.Char[i].MobName, accBuffer.Char[i].Exp, classmaster, accBuffer.Char[i].CurrentScore.Level, accBuffer.Char[i].Class, NULL, NULL, NULL);
 
-							int classmaster = accBuffer.mobExtra[i].ClassMaster;
-
-							tryInsertInRanking(OUT_OF_RANK, accBuffer.Char[i].MobName, accBuffer.Char[i].Exp, classmaster, accBuffer.Char[i].CurrentScore.Level, accBuffer.Char[i].Class, NULL, NULL, NULL);
-
-							entryCount++;
-						}
+						entryCount++;
 					}
-					else
-					{
-						// TODO: file don't have the right size
-					}
-
-					fclose(fs);
 				}
 				else
 				{
-					// TODO: Cant open file to read
+					// TODO: file don't have the right size
 				}
+
+				fclose(fs);
+			}
+			else
+			{
+				// TODO: Cant open file to read
 			}
 		}
 	}
-
-	FindClose(handle);
 
 	return entryCount;
 }
@@ -309,7 +290,7 @@ void RankingSystem::sendUpdateIndividualRank(int rankId, int tmsrvId, int player
 				rankPacket.PlayerRank = *playerRank;
 			}
 
-			if (pUser[tmsrvId].cSock.Sock)
+			if (pUser[tmsrvId].cSock.IsOpen())
 				pUser[tmsrvId].cSock.SendOneMessage((char*)&rankPacket, sizeof(rankPacket));
 		}
 	}

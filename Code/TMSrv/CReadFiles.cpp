@@ -82,7 +82,7 @@ void CReadFiles::ReadSancRate()
 
 	if (fp == NULL)
 	{
-		MessageBoxA(hWndMain, "Não foi possivel encontrar o arquivo.", SANC_RATE_PATH, MB_OK);
+		platform::ReportFatal(hWndMain, "Não foi possivel encontrar o arquivo.", SANC_RATE_PATH, MB_OK);
 		return;
 	}
 
@@ -110,13 +110,13 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 >= 12)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (2)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (2)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -127,13 +127,13 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 >= 12)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (2)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (2)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -144,13 +144,13 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 >= 12)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (2)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (2)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -161,7 +161,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -172,7 +172,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -183,7 +183,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -194,7 +194,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -205,7 +205,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -216,7 +216,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -227,7 +227,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -238,7 +238,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -249,7 +249,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -260,7 +260,7 @@ void CReadFiles::ReadSancRate()
 		{
 			if (val2 < 0 || val2 > 9)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", SANC_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -279,7 +279,7 @@ void CReadFiles::ReadQuestsRate()
 
 	if (fp == NULL)
 	{
-		MessageBoxA(hWndMain, "Não foi possivel encontrar o arquivo.", QUESTS_RATE_PATH, MB_OK);
+		platform::ReportFatal(hWndMain, "Não foi possivel encontrar o arquivo.", QUESTS_RATE_PATH, MB_OK);
 		return;
 	}
 
@@ -312,13 +312,13 @@ void CReadFiles::ReadQuestsRate()
 		{
 			if (val2 < 0 || val2 >= 5)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", QUESTS_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", QUESTS_RATE_PATH, MB_OK);
 				continue;
 			}
 
 			if (val3 < 0 || val3 >= 2000000000 || val4 < 0 || val4 >= 2000000000)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (2)", QUESTS_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (2)", QUESTS_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -330,13 +330,13 @@ void CReadFiles::ReadQuestsRate()
 		{
 			if (val2 < 0 || val2 >= 5)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", QUESTS_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", QUESTS_RATE_PATH, MB_OK);
 				continue;
 			}
 
 			if (val3 < 0 || val3 > 2000000000)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (2)", QUESTS_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (2)", QUESTS_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -347,7 +347,7 @@ void CReadFiles::ReadQuestsRate()
 		{
 			if (val2 < 0 || val2 >= 5)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", QUESTS_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", QUESTS_RATE_PATH, MB_OK);
 				continue;
 			}
 			int minLv = val3;
@@ -358,7 +358,7 @@ void CReadFiles::ReadQuestsRate()
 
 			if (minLv < 0 || minLv >= 400 || maxLv < 0 || maxLv >= 400 || minLv2 < 0 || minLv2 >= 400 || maxLv2 < 0 || maxLv2 >= 400)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (2)", QUESTS_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (2)", QUESTS_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -380,7 +380,7 @@ void CReadFiles::ReadCompRate()
 
 	if (fp == NULL)
 	{
-		MessageBoxA(hWndMain, "Não foi possivel encontrar o arquivo.", COMP_RATE_PATH, MB_OK);
+		platform::ReportFatal(hWndMain, "Não foi possivel encontrar o arquivo.", COMP_RATE_PATH, MB_OK);
 		return;
 	}
 
@@ -408,7 +408,7 @@ void CReadFiles::ReadCompRate()
 		{
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -438,7 +438,7 @@ void CReadFiles::ReadCompRate()
 		{
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -450,7 +450,7 @@ void CReadFiles::ReadCompRate()
 		{
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -462,7 +462,7 @@ void CReadFiles::ReadCompRate()
 		{
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -474,7 +474,7 @@ void CReadFiles::ReadCompRate()
 		{
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -486,7 +486,7 @@ void CReadFiles::ReadCompRate()
 		{
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -570,7 +570,7 @@ void CReadFiles::ReadCompRate()
 		{
 			if (val3 < 0 || val3 > 100)
 			{
-				MessageBoxA(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
+				platform::ReportWarning(hWndMain, "Índice inválido. (1)", COMP_RATE_PATH, MB_OK);
 				continue;
 			}
 
@@ -594,7 +594,7 @@ void CReadFiles::ReadMobMerc()
 
 	if (fs == NULL)
 	{
-		MessageBoxA(hWndMain, "MobMerc.txt não foi encontrado.", MOB_MERC_PATH, MB_OK);
+		platform::ReportFatal(hWndMain, "MobMerc.txt não foi encontrado.", MOB_MERC_PATH, MB_OK);
 
 		return;
 	}
