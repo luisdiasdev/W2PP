@@ -93,12 +93,15 @@ void CReadFiles::ReadSancRate()
 		if (ret == NULL)
 			break;
 
-		char str1[128];
-		char str2[128];
-		char str3[128];
+		char str1[128] = { 0 };
+		char str2[128] = { 0 };
+		char str3[128] = { 0 };
 		// char str4[128];
 
-		sscanf(temp, "%s %s %s", str1, str2, str3);
+		// A blank or malformed line leaves the buffers empty; atoi/_strupr
+		// must never see uninitialized stack data.
+		if (sscanf(temp, "%s %s %s", str1, str2, str3) < 1)
+			continue;
 
 		int val1 = atoi(str1);
 		int val2 = atoi(str2);
@@ -290,14 +293,17 @@ void CReadFiles::ReadQuestsRate()
 		if (ret == NULL)
 			break;
 
-		char str1[128];
-		char str2[128];
-		char str3[128];
-		char str4[128];
-		char str5[128];
-		char str6[128];
+		char str1[128] = { 0 };
+		char str2[128] = { 0 };
+		char str3[128] = { 0 };
+		char str4[128] = { 0 };
+		char str5[128] = { 0 };
+		char str6[128] = { 0 };
 
-		sscanf(temp, "%s %s %s %s %s %s", str1, str2, str3, str4, str5, str6);
+		// A blank or malformed line leaves the buffers empty; atoi/_strupr
+		// must never see uninitialized stack data.
+		if (sscanf(temp, "%s %s %s %s %s %s", str1, str2, str3, str4, str5, str6) < 1)
+			continue;
 
 		int val1 = atoi(str1);
 		int val2 = atoi(str2);
@@ -391,12 +397,15 @@ void CReadFiles::ReadCompRate()
 		if (ret == NULL)
 			break;
 
-		char str1[128];
-		char str2[128];
-		char str3[128];
+		char str1[128] = { 0 };
+		char str2[128] = { 0 };
+		char str3[128] = { 0 };
 		// char str4[128];
 
-		sscanf(temp, "%s %s %s", str1, str2, str3);
+		// A blank or malformed line leaves the buffers empty; atoi/_strupr
+		// must never see uninitialized stack data.
+		if (sscanf(temp, "%s %s %s", str1, str2, str3) < 1)
+			continue;
 
 		int val1 = atoi(str1);
 		int val2 = atoi(str2);

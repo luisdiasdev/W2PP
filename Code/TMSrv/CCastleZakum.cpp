@@ -467,13 +467,13 @@ int  CCastleZakum::ParseCastleString(int Num, char *str)
 	STRUCT_ITEM Item;
 	memset(&Item, 0, sizeof(STRUCT_ITEM));
 
-	char item_str1[256];
-	char item_str2[256];
-	char item_str3[256];
-	char item_str4[256];
-	char item_str5[256];
-	char item_str6[256];
-	char item_str7[256];
+	char item_str1[256] = { 0 };
+	char item_str2[256] = { 0 };
+	char item_str3[256] = { 0 };
+	char item_str4[256] = { 0 };
+	char item_str5[256] = { 0 };
+	char item_str6[256] = { 0 };
+	char item_str7[256] = { 0 };
 
 	int item_value[7] = { 0, 0, 0, 0, 0, 0, 0 };
 
