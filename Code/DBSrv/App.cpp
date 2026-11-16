@@ -28,6 +28,10 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <io.h>
+#endif
+
 net::Connection AdminClient;
 
 static std::shared_ptr<net::Acceptor> ListenSocket;
@@ -46,6 +50,29 @@ void PlatformDiagnosticSink(const char *line)
 
 	char systemTag[] = "-system";
 	Log(buffer, systemTag, 0);
+}
+
+void PlatformStatusSink(const char *line)
+{
+	// Echo the status/log line to the console only when one is attached (or
+	// the test harness forces it), matching the headless TMSrv host.
+	bool attached = false;
+
+#ifdef _WIN32
+	attached = _isatty(_fileno(stdout)) != 0;
+#endif
+
+	const char *force = std::getenv("W2PP_FORCE_CONSOLE");
+
+	if (force != nullptr && force[0] != '\0' && force[0] != '0')
+		attached = true;
+
+	if (!attached)
+		return;
+
+	std::fputs(line != NULL ? line : "", stdout);
+	std::fputc('\n', stdout);
+	std::fflush(stdout);
 }
 
 unsigned int PeerIp(const std::string &peer)
@@ -486,6 +513,7 @@ int main()
 
 	StartLog("A");
 	platform::SetDiagnosticSink(PlatformDiagnosticSink);
+	platform::SetStatusSink(PlatformStatusSink);
 	Log("start log", "-system", 0);
 
 	memset(g_pGuildWar, 0, sizeof(g_pGuildWar));

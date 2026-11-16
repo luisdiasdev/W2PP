@@ -1270,7 +1270,7 @@ void Log(char *str1, char *str2, unsigned int ip)
 		fflush(fLogFile);
 	}
 
-	SetWindowText(hWndMain, LogTemp);
+	platform::PublishStatus(LogTemp);
 }
 
 void DayLog_ExpLog()
