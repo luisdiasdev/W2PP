@@ -21,6 +21,8 @@
 bld/
 [Bb]in/
 [Oo]bj/
+# ...but OpenSpec capability specs legitimately live in a "build/" directory
+!openspec/**/specs/[Bb]uild/
 
 # Visual Studio 2015 cache/options directory
 .vs/
