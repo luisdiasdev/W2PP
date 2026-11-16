@@ -5970,7 +5970,13 @@ void Log(char *str1, char *str2, unsigned int ip)
 	sprintf(LogTemp, "%s %s %s \n", LogTemp, str2, str1);
 
 	if (fLogFile)
+	{
 		fprintf(fLogFile, LogTemp);
+
+		// Headless operators read the log while the process runs; do not wait
+		// for the stdio buffer to fill or for the process to exit.
+		fflush(fLogFile);
+	}
 
 	platform::PublishStatus(LogTemp);
 	

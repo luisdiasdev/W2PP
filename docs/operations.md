@@ -210,3 +210,32 @@ pwsh -NoProfile -File tests/integration/tmsrv_smoke.ps1 `
   -CommonDir build/Common
 ```
 
+## Connection diagnostics
+
+Every log line is flushed as it is written, so the dated file under `Log/`
+shows what the running process is doing. A client connection produces:
+
+| Log line | Meaning |
+|---|---|
+| `sys,game listener <ip>:8281 db <ip>:7514` | Listener and DB endpoint chosen at startup. |
+| `sys,accept slot=N ip=<ip>` | TCP connection reached the game listener. |
+| `sys,login account=<name> client=<version> size=<n>` | A decoded `_MSG_AccountLogin` frame. |
+| `err,login rejected account=... client=... server=...` | Build/version mismatch; the client is told to rerun. |
+| `err,client link N: init code mismatch` | The peer did not send the `INITCODE` handshake. |
+| `err,db link: ...` / `err,db read fail` | The TMSrv -> DBSrv link failed; the two-attempt ladder runs. |
+
+If a client shows "connecting" and **no `sys,accept` line appears**, the TCP
+connection never reached the process. The listener binds the address in
+`localip.txt`; a `127.0.0.1` value only accepts connections from the same
+machine, so a remote client needs the machine's LAN address there (and in
+`serverlist.txt`). If `sys,accept` appears without a `sys,login` line, the
+handshake or the client build is the next thing to check.
+
+`tests/tools/login_probe.cpp` (target `login_probe`) plays one real
+`_MSG_AccountLogin` against a running server and prints every reply, which
+separates a TMSrv/DBSrv problem from a client problem:
+
+```powershell
+.\login_probe.exe 127.0.0.1 8281 ADMIN <password>
+```
+

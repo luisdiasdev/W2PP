@@ -156,6 +156,13 @@ void StartGameServices()
 			Log(temp, "-system", 0);
 		});
 
+	{
+		char temp[256];
+		snprintf(temp, sizeof(temp), "sys,game listener %s:%d db %s:%d",
+			LocalAddressString().c_str(), GAME_PORT, DBServerAddress, DBServerPort);
+		Log(temp, "-system", 0);
+	}
+
 	GuildZoneReport();
 
 	if (KefraLive == 0)
@@ -292,6 +299,12 @@ void AcceptGameConnection(asio::ip::tcp::socket socket, const std::string &peer)
 		return;
 	}
 
+	{
+		char temp[256];
+		snprintf(temp, sizeof(temp), "sys,accept slot=%d ip=%s", user, peer.c_str());
+		Log(temp, "-system", 0);
+	}
+
 	pUser[user].IP = ip;
 	pUser[user].Mode = USER_ACCEPT;
 	pUser[user].Unk3 = 0;
@@ -351,6 +364,10 @@ void AcceptGameConnection(asio::ip::tcp::socket socket, const std::string &peer)
 
 	if (user >= MAX_USER - ADMIN_RESERV)
 	{
+		char temp[256];
+		snprintf(temp, sizeof(temp), "sys,reject slot=%d reserved band", user);
+		Log(temp, "-system", 0);
+
 		SendClientMessage(user, g_pMessageStringTable[_NN_Reconnect]);
 
 		CloseUser(user);
@@ -359,6 +376,10 @@ void AcceptGameConnection(asio::ip::tcp::socket socket, const std::string &peer)
 
 	if (ServerDown != -1000)
 	{
+		char temp[256];
+		snprintf(temp, sizeof(temp), "sys,reject slot=%d server down %d", user, ServerDown);
+		Log(temp, "-system", 0);
+
 		SendClientMessage(user, g_pMessageStringTable[_NN_ServerReboot_Cant_Connect]);
 
 		CloseUser(user);

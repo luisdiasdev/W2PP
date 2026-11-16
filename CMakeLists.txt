@@ -324,5 +324,12 @@ if(BUILD_TESTING)
     tests/tools/capture_legacy_fixture.cpp
   )
   target_link_libraries(capture_legacy_fixture PRIVATE w2pp_core)
+
+  # Login probe: developer tool that plays one _MSG_AccountLogin against a
+  # running server and prints the replies.
+  add_executable(login_probe
+    tests/tools/login_probe.cpp
+  )
+  target_link_libraries(login_probe PRIVATE w2pp_core)
 endif()
 
