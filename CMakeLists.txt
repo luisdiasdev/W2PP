@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(w2pp VERSION 1.0.0 LANGUAGES CXX RC)
+project(w2pp VERSION 1.0.0 LANGUAGES CXX)
 
 # The servers are 32-bit binaries and the on-disk / on-wire layouts depend on
 # the Win32 x86 ABI. Refuse any other architecture instead of emitting a
@@ -179,13 +179,11 @@ set(TMSRV_HEADERS
   Code/TMSrv/ProcessDBMessage.h
   Code/TMSrv/SendFunc.h
   Code/TMSrv/Server.h
-  Code/TMSrv/resource.h
 )
 
 add_executable(tmsrv
   ${TMSRV_SOURCES}
   ${TMSRV_HEADERS}
-  Code/TMSrv/TMSrv.rc
 )
 
 target_include_directories(tmsrv PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Code/TMSrv)
@@ -212,13 +210,11 @@ set(DBSRV_HEADERS
   Code/DBSrv/CReadFiles.h
   Code/DBSrv/CUser.h
   Code/DBSrv/Server.h
-  Code/DBSrv/resource.h
 )
 
 add_executable(dbsrv
   ${DBSRV_SOURCES}
   ${DBSRV_HEADERS}
-  Code/DBSrv/DBSrv.rc
 )
 
 target_include_directories(dbsrv PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Code/DBSrv)

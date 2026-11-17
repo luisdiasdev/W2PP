@@ -62,12 +62,12 @@
 
 ## 7. Cleanup, documentation and final verification
 
-- [ ] 7.1 Delete `W2PP Code Project.sln`, both `.vcxproj`/`.vcxproj.user`, `TMSrv.rc`, `DBSrv.rc`, `resource.h` (both), `icon1.ico` and `.aps`, and verify a clean configure/build from the repository root.
-- [ ] 7.2 Add `build/`, `vcpkg_installed/` and `out/` to `.gitignore`, remove stale untracked build directories from the working tree, and verify `git status` shows only intended source changes.
-- [ ] 7.3 Update `README.md` with the headless operation model, CMake/vcpkg workflow, dependency pinning, console commands and the intentional behavior deviations from design D12.
-- [ ] 7.4 Perform a clean-checkout verification: configure, build Debug and Release, run `ctest`, confirm Release imports no debug CRT, start both servers with a test runtime tree, and shut them down with the console command and with an interrupt.
-- [ ] 7.5 Replay the task 2.7 fixture and its recorded keywords through the new codec/transport and verify header, transform, checksum and payload match the captured legacy bytes byte-for-byte.
-- [ ] 7.6 Record the intentional deviations (no window/menu, non-blocking reconnect, full-buffer close, checksum rejection, observable send errors, drain-before-close, monotonic epoch) in the change notes for reviewers and operators.
+- [x] 7.1 Delete `W2PP Code Project.sln`, both `.vcxproj`/`.vcxproj.user`, `TMSrv.rc`, `DBSrv.rc`, `resource.h` (both), `icon1.ico` and `.aps`, and verify a clean configure/build from the repository root.
+- [x] 7.2 Add `build/`, `vcpkg_installed/` and `out/` to `.gitignore`, remove stale untracked build directories from the working tree, and verify `git status` shows only intended source changes.
+- [x] 7.3 Update `README.md` with the headless operation model, CMake/vcpkg workflow, dependency pinning, console commands and the intentional behavior deviations from design D12.
+- [x] 7.4 Perform a clean-checkout verification: configure, build Debug and Release, run `ctest`, confirm Release imports no debug CRT, start both servers with a test runtime tree, and shut them down with the console command and with an interrupt.
+- [x] 7.5 Replay the task 2.7 fixture and its recorded keywords through the new codec/transport and verify header, transform, checksum and payload match the captured legacy bytes byte-for-byte.
+- [x] 7.6 Record the intentional deviations (no window/menu, non-blocking reconnect, full-buffer close, checksum rejection, observable send errors, drain-before-close, monotonic epoch) in the change notes for reviewers and operators.
 
 ## Workflow follow-up
 

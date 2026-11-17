@@ -14,7 +14,9 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <fstream>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
@@ -23,6 +25,27 @@ namespace
 {
 
 using asio::ip::tcp;
+
+std::vector<std::uint8_t> ReadAllBytes(const std::string &path)
+{
+	std::ifstream stream(path, std::ios::binary);
+	REQUIRE(stream.good());
+	return std::vector<std::uint8_t>(std::istreambuf_iterator<char>(stream),
+	                                 std::istreambuf_iterator<char>());
+}
+
+std::vector<std::uint8_t> ReadKeywords(const std::string &path)
+{
+	std::ifstream stream(path);
+	REQUIRE(stream.good());
+
+	std::vector<std::uint8_t> keywords;
+	int value = 0;
+	while (stream >> value)
+		keywords.push_back(static_cast<std::uint8_t>(value));
+
+	return keywords;
+}
 
 std::vector<std::uint8_t> MakeEncodedFrame(std::int16_t type, std::int16_t id,
                                            std::size_t size,
@@ -514,6 +537,70 @@ TEST_CASE("transport connection facade sends and drops on a full queue", "[trans
 	REQUIRE(RunUntil(pair.context, [&]() { return !connection.IsOpen(); }, 4000));
 
 	serverSession->ForceClose();
+	pair.context.restart();
+	pair.context.poll();
+}
+
+TEST_CASE("transport replays the captured legacy fixture byte-for-byte", "[transport]")
+{
+	const std::string fixtureDir = std::string(W2PP_SOURCE_DIR) + "/tests/fixtures/";
+	const std::vector<std::uint8_t> stream = ReadAllBytes(fixtureDir + "legacy_stream.bin");
+	const std::vector<std::uint8_t> keywords = ReadKeywords(fixtureDir + "legacy_keywords.txt");
+
+	REQUIRE_FALSE(stream.empty());
+	REQUIRE_FALSE(keywords.empty());
+
+	LoopbackPair pair;
+
+	auto client = std::make_shared<net::Session>(
+		pair.context, std::move(pair.client), net::SessionMode::Framed, false);
+	auto server = std::make_shared<net::Session>(
+		pair.context, std::move(pair.server), net::SessionMode::Framed, false);
+
+	std::vector<std::vector<std::uint8_t>> frames;
+	server->SetFrameHandler(
+		[&](std::uint8_t *frame, std::size_t size)
+		{
+			frames.emplace_back(frame, frame + size);
+		});
+
+	client->Start();
+	server->Start();
+
+	REQUIRE(client->QueueAndFlush(stream.data(), stream.size()));
+	REQUIRE(RunUntil(pair.context,
+	                 [&]() { return frames.size() == keywords.size(); }, 5000));
+	REQUIRE(frames.size() == keywords.size());
+
+	std::size_t offset = 0;
+
+	for (std::size_t step = 0; step < keywords.size(); ++step)
+	{
+		const std::uint16_t size =
+			static_cast<std::uint16_t>(stream[offset] | (stream[offset + 1] << 8));
+
+		// The recorded keyword must match the captured header and the decoded frame.
+		REQUIRE(stream[offset + 2] == keywords[step]);
+		REQUIRE(frames[step].size() == size);
+		REQUIRE(frames[step][2] == keywords[step]);
+
+		const net::HeaderFields fields = net::ParseHeader(frames[step].data());
+		REQUIRE(fields.size == size);
+		REQUIRE(fields.keywordIndex == keywords[step]);
+
+		// Re-encoding the decoded frame must reproduce the captured legacy bytes,
+		// which pins the header, transform, checksum and payload at once.
+		std::vector<std::uint8_t> reencoded = frames[step];
+		reencoded[3] = net::EncodePayload(reencoded.data(), reencoded.size(), keywords[step]);
+		REQUIRE(std::memcmp(reencoded.data(), stream.data() + offset, size) == 0);
+
+		offset += size;
+	}
+
+	REQUIRE(offset == stream.size());
+
+	client->ForceClose();
+	server->ForceClose();
 	pair.context.restart();
 	pair.context.poll();
 }

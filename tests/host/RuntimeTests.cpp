@@ -3,6 +3,7 @@
 #include "../../Code/host/Runtime.h"
 
 #include <chrono>
+#include <csignal>
 #include <thread>
 #include <vector>
 
@@ -91,6 +92,26 @@ TEST_CASE("runtime retimes a scheduled tick", "[runtime]")
 
 	REQUIRE(ticks == 3);
 	REQUIRE(runtime.IsShuttingDown());
+}
+
+TEST_CASE("runtime handles a shutdown signal", "[runtime]")
+{
+	host::Runtime runtime;
+	int shutdownCalls = 0;
+
+	runtime.SetShutdownHandler([&]() { ++shutdownCalls; });
+	runtime.StartSignals();
+
+	// Raise the same SIGINT the console maps Ctrl+C to. The asio signal set
+	// dispatches it on the event loop and the runtime takes the shutdown path.
+	runtime.Post([]() { std::raise(SIGINT); });
+
+	runtime.Run();
+
+	REQUIRE(shutdownCalls == 1);
+	REQUIRE(runtime.IsShuttingDown());
+
+	runtime.StopSignals();
 }
 
 TEST_CASE("runtime status snapshot is available without a window", "[runtime]")

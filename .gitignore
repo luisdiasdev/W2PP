@@ -21,6 +21,10 @@
 bld/
 [Bb]in/
 [Oo]bj/
+# CMake/vcpkg build and staging outputs
+build/
+vcpkg_installed/
+out/
 # ...but OpenSpec capability specs legitimately live in a "build/" directory
 !openspec/**/specs/[Bb]uild/
 
