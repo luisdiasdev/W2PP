@@ -18,19 +18,11 @@
 */
 
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <windows.h>
-#include <windowsx.h>
 #include <stdlib.h>
-#include <stdio.h> 
-#include <fcntl.h>
-#include <io.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/timeb.h>
-#include <string.h>        
+#include <stdio.h>
+#include <string.h>
 #include <time.h>
+#include <errno.h>
 #include <vector>
 
 #include "../Basedef.h"
@@ -42,8 +34,6 @@
 #include "Server.h"
 #include "CRanking.h"
 #include "CReadFiles.h"
-
-HWND hWndMain = nullptr;
 
 int ServerIndex = -1;
 int CurrentTransInfo = 0;
@@ -135,12 +125,12 @@ int ReadTrandGuildInfo()
 	FILE *fp = fopen("Trans.txt", "rt");
 
 	if(fp == NULL)
-		return FALSE;
+		return false;
 
 	int ret = fscanf(fp, "%d", &CurrentTransInfo);
 
 	if(!ret)
-		return FALSE;
+		return false;
 
 	int i = 0;
 
@@ -164,7 +154,7 @@ int ReadTrandGuildInfo()
 
 	CurrentTransInfo = i;
 
-	return TRUE;
+	return true;
 }
 
 int WriteTransGuildInfo()
@@ -174,7 +164,7 @@ int WriteTransGuildInfo()
 	int ret = fprintf(fp, "%d\n", CurrentTransInfo);
 
 	if(!ret)
-		return FALSE;
+		return false;
 
 	for(int i = 0; i < CurrentTransInfo; i++)
 	{
@@ -186,7 +176,7 @@ int WriteTransGuildInfo()
 
 	fclose(fp);
 
-	return TRUE;
+	return true;
 }
 
 void ConvertGuildNumber(int group, struct STRUCT_ITEM *sour)
@@ -210,7 +200,7 @@ void ConvertGuildNumber(int group, struct STRUCT_ITEM *sour)
 	unsigned short targetguild = (i + MAX_TRANS*2);
 
 	sour->stEffect[0].cEffect = EF_HWORDGUILD;
-	sour->stEffect[0].cValue = HIBYTE(targetguild);
+	sour->stEffect[0].cValue = HighByte(targetguild);
 	sour->stEffect[1].cEffect = EF_LWORDGUILD;
 	sour->stEffect[1].cValue = targetguild % 256;
 }
@@ -225,7 +215,7 @@ int SendAdminSignal(int svr, unsigned short id, unsigned short signal)
 
 	pAdmin[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
-	return TRUE;
+	return true;
 }
 
 int SendAdminMessage(int svr, unsigned short id, char *message)
@@ -240,7 +230,7 @@ int SendAdminMessage(int svr, unsigned short id, char *message)
 
 	pAdmin[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
-	return TRUE;
+	return true;
 }
 
 int SendAdminParm(int svr, unsigned short id, unsigned short signal, int parm)
@@ -254,7 +244,7 @@ int SendAdminParm(int svr, unsigned short id, unsigned short signal, int parm)
 
 	pAdmin[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
-	return TRUE;
+	return true;
 }
 
 int SendAdminState(int svr, unsigned short id, unsigned short signal, char *pass)
@@ -271,7 +261,7 @@ int SendAdminState(int svr, unsigned short id, unsigned short signal, char *pass
 
 	pAdmin[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
-	return TRUE;
+	return true;
 }
 
 void ReadAdmin()
@@ -320,9 +310,9 @@ int ReadConfig()
 	
 	if(fp == NULL) 
 	{ 
-		platform::ReportFatal(hWndMain, "cant find Config.txt", "BOOTING ERROR", NULL);
+		platform::ReportFatal("cant find Config.txt", "BOOTING ERROR");
 
-		return FALSE; 
+		return false; 
 	}
 
 	fscanf(fp, "Sapphire %d\n", &Sapphire);
@@ -330,7 +320,7 @@ int ReadConfig()
 
 	fclose(fp);
 
-	return TRUE;
+	return true;
 }
 
 int WriteConfig()
@@ -338,14 +328,14 @@ int WriteConfig()
 	FILE * fp= fopen("Config.txt", "wt");
 
 	if(fp == NULL)
-		return FALSE;
+		return false;
 
 	fprintf(fp, "Sapphire %d\n", Sapphire);
 	fprintf(fp, "LastCapsule %d\n", LastCapsule);
 
 	fclose(fp);
 
-	return TRUE;
+	return true;
 }
 
 int ProcessAdminClientMessage(char *msg)
@@ -359,7 +349,7 @@ int ProcessAdminClientMessage(char *msg)
 
 		Log(temp,"-system",0);
 
-		return FALSE;
+		return false;
 	} 
 
     switch(std->Type)    
@@ -393,7 +383,7 @@ int ProcessAdminClientMessage(char *msg)
 
 				int ret = cFileDB.DBReadAccount(&file);
 
-				if(ret == FALSE)
+				if(ret == false)
 				{	
 					char tt[256]; 
 					sprintf(tt, "etc tranper_FAILED!!!!!(read) %s %s", m->Account, m->Name);
@@ -406,7 +396,7 @@ int ProcessAdminClientMessage(char *msg)
 						pUser[svr].cSock.SendOneMessage((char*)&sm, sm.Size);
 					}
 
-					return TRUE;
+					return true;
 				}
 
 				char tt[256]; 
@@ -420,7 +410,7 @@ int ProcessAdminClientMessage(char *msg)
 
 				ret = cFileDB.DBWriteAccount(&file);
 
-	            if(ret == FALSE)
+	            if(ret == false)
 				{	
 					char tt[256]; 
 					sprintf(tt, "etc tranper_FAILED!!!!!(write) %s %s", m->Account, m->Name);
@@ -433,7 +423,7 @@ int ProcessAdminClientMessage(char *msg)
 						pUser[svr].cSock.SendOneMessage((char*)&sm, sm.Size);
 					}
 
-					return TRUE;
+					return true;
 				}
 
 				if(IdxName)
@@ -462,7 +452,7 @@ int ProcessAdminClientMessage(char *msg)
 		break;	
 	}
 	
-	return TRUE;
+	return true;
 }
 
 
@@ -498,7 +488,7 @@ void DisableAccount(int conn, char *account, int Year, int YearDay)
 
 	int iret = cFileDB.DBReadAccount(&file); 
 
-	if(iret == FALSE) 
+	if(iret == false) 
 	{	
 		if(conn >= 0) 
 			SendAdminSignal(conn, 0, _MSG_NPNotFound);
@@ -558,7 +548,7 @@ void EnableAccount(int conn, char *account)
 
 	int iret = cFileDB.DBReadAccount(&file);  
 
-	if(iret == FALSE) 
+	if(iret == false) 
 	{	
 		if(conn >= 0) 
 			SendAdminSignal(conn, 0, _MSG_NPNotFound);
@@ -603,7 +593,7 @@ int ProcessAdminMessage(int conn, char *msg)
 
 		Log(temp,"-system",0);
 
-		return FALSE;
+		return false;
 	} 
 
 	switch(std->Type)
@@ -633,7 +623,7 @@ int ProcessAdminMessage(int conn, char *msg)
 
 				pAdmin[conn].cSock.SendOneMessage((char*)&sm, sm.Size);
 
-				return TRUE;
+				return true;
 			}
 
 			STRUCT_ACCOUNTFILE file;
@@ -642,7 +632,7 @@ int ProcessAdminMessage(int conn, char *msg)
 
 			int ret = cFileDB.DBReadAccount(&file);
 
-			if(ret == FALSE)
+			if(ret == false)
 			{	
 				char tt[256]; 
 				sprintf(tt, "etc,tranper_FAILED!!!!!(read) %s %s", m->Account, m->Mob.MobName);
@@ -652,7 +642,7 @@ int ProcessAdminMessage(int conn, char *msg)
 
 				pAdmin[conn].cSock.SendOneMessage((char*)&sm, sm.Size);
 
-				return TRUE;
+				return true;
 			}
 
 			int empty;
@@ -669,18 +659,18 @@ int ProcessAdminMessage(int conn, char *msg)
 				
 				pAdmin[conn].cSock.SendOneMessage((char*)&sm, sm.Size);
 
-				return TRUE;
+				return true;
 			}
 
 			ret = cFileDB.CreateCharacter(m->Account, m->Mob.MobName);
 
-			if(ret == FALSE)
+			if(ret == false)
 			{	
 				sm.Result = 1;
 
 				pAdmin[conn].cSock.SendOneMessage((char*)&sm, sm.Size);
 
-				return TRUE;
+				return true;
 			}
 
 			for(int i = 0; i < MAX_EQUIP + MAX_CARRY -1 ; i++)
@@ -708,7 +698,7 @@ int ProcessAdminMessage(int conn, char *msg)
 
 			ret = cFileDB.DBWriteAccount(&file);
 
-			if(ret == FALSE)
+			if(ret == false)
 			{	
 				char tt[256]; 
 				sprintf(tt, "etc,tranper_FAILED!!!!!(write) %s %s", m->Account, m->Mob.MobName);
@@ -718,7 +708,7 @@ int ProcessAdminMessage(int conn, char *msg)
 				
 				pAdmin[conn].cSock.SendOneMessage((char*)&sm, sm.Size);
 
-				return TRUE;
+				return true;
 			}
 
 			sm.Result = 0;
@@ -739,7 +729,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			if(m->AccountName[0] == 0 && m->Parm1 == 1)
 			{
 				if(pAdmin[conn].Level < 2)
-					return TRUE;
+					return true;
 
 				for (int i = 0; i < MAX_SERVER; i++)
 				{	
@@ -764,11 +754,11 @@ int ProcessAdminMessage(int conn, char *msg)
 					pUser[i].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 				}
 
-				return TRUE;
+				return true;
 			}
 
 			if(pAdmin[conn].Level <= 0)
-				return TRUE;
+				return true;
 
 			int IdxName = cFileDB.GetIndex(m->AccountName);
 
@@ -776,7 +766,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			{   
 				SendAdminMessage(conn, 0, "Specified user not connected. can't send notice.");
 
-				return TRUE;
+				return true;
 			}
 
 			int svr = IdxName / MAX_USER;
@@ -786,7 +776,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			{	
 				SendAdminMessage(conn, 0, "Wrong SVR and ID");
 
-				return TRUE;
+				return true;
 			}
 
 			MSG_NPNotice sm;
@@ -803,7 +793,7 @@ int ProcessAdminMessage(int conn, char *msg)
 
 			pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
-			return TRUE;
+			return true;
 
 		} break;
 
@@ -814,10 +804,10 @@ int ProcessAdminMessage(int conn, char *msg)
 			_strupr(m->Account);
 
 			if(pAdmin[conn].Encode1 != m->Encode1 || pAdmin[conn].Encode2 != m->Encode2) 
-				return FALSE;
+				return false;
 
 			if(pAdmin[conn].Level != -1) 
-				return TRUE;
+				return true;
 
 			STRUCT_ACCOUNTFILE file;
 
@@ -825,20 +815,20 @@ int ProcessAdminMessage(int conn, char *msg)
 
 			int iret = cFileDB.DBReadAccount(&file);  
 
-			if(iret == FALSE) 
-				return TRUE;
+			if(iret == false) 
+				return true;
 
 			if(file.Info.AccountPass[0] == '_') 
-				return FALSE;
+				return false;
 			if(file.Info.AccountPass[0] == '@') 
-				return FALSE; 
+				return false; 
 
 			char *p = (char*)file.Info.AccountPass;
 
 			iret = strncmp(m->Pass, p, ACCOUNTPASS_LENGTH);
 
 			if(iret) 
-				return FALSE;
+				return false;
 
 			int maxlevel = 0;
 
@@ -849,7 +839,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			}
 
 			if(maxlevel < 1000) 
-				return FALSE;
+				return false;
 
 			int admin = maxlevel -  1000;
 
@@ -870,7 +860,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			MSG_NPReqAccount *m = (MSG_NPReqAccount*)msg;
 
 			if(pAdmin[conn].Level <= 0)
-				return TRUE;
+				return true;
 
 			_strupr(m->Account);
 			_strupr(m->Char);
@@ -884,7 +874,7 @@ int ProcessAdminMessage(int conn, char *msg)
 				SendAdminSignal(conn, 0, _MSG_NPNotFound);
 				SendAdminMessage(conn, 0, "There's no account with that character name");
 
-				return TRUE;
+				return true;
 			}  
 
 			STRUCT_ACCOUNTFILE file;
@@ -893,12 +883,12 @@ int ProcessAdminMessage(int conn, char *msg)
 
 			int iret = cFileDB.DBReadAccount(&file);
 
-			if(iret == FALSE)
+			if(iret == false)
 			{	
 				SendAdminSignal(conn, 0, _MSG_NPNotFound);
 				SendAdminMessage(conn, 0, "There's no account with that account name");
 
-				return TRUE;
+				return true;
 			}
 
 			MSG_NPAccountInfo sm; 
@@ -925,7 +915,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			file.Info.AccountName[ACCOUNTNAME_LENGTH-2] = 0;
 
 			if(pAdmin[conn].Level <= 0)
-				return TRUE;
+				return true;
 
 			int maxlevel = 0;
 
@@ -983,7 +973,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			{
 				SendAdminMessage(conn, 0, "Not allowed");
 
-				return TRUE;
+				return true;
 			}
 
 			MSG_NPAccountInfo *m = (MSG_NPAccountInfo*)msg;
@@ -994,7 +984,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			{	
 				SendAdminMessage(conn, 0, "For saving, account should be disabled.");
 
-				return TRUE;
+				return true;
 			}
 
 			int maxlevel = 0;
@@ -1015,14 +1005,14 @@ int ProcessAdminMessage(int conn, char *msg)
 				{
 					SendAdminMessage(conn, 0, "Set admin level error.");
 
-					return TRUE;
+					return true;
 				}
 
 				if(pAdmin[conn].Level == admin && strcmp(pAdmin[conn].Name, m->account.Info.AccountName))
 				{
 					SendAdminMessage(conn, 0, "Set admin level error.");
 
-					return TRUE;
+					return true;
 				}
 
 			}
@@ -1037,7 +1027,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			{
 				SendAdminMessage(conn, 0, "There's no account with that account name");
 
-				return TRUE;
+				return true;
 			}
 
 			memcpy(m->account.Info.AccountPass, tmpact.Info.AccountPass, ACCOUNTPASS_LENGTH);
@@ -1057,7 +1047,7 @@ int ProcessAdminMessage(int conn, char *msg)
 	case _MSG_NPDisable:
 		{
 			if(pAdmin[conn].Level <= 2) 
-				return TRUE;
+				return true;
 
 			MSG_NPEnable *m = (MSG_NPEnable*)msg;
 
@@ -1072,7 +1062,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			{	
 				DisableAccount(conn, m->AccountName, m->Year, m->YearDay);
 
-				return TRUE;
+				return true;
 			}	
 			else
 			{	
@@ -1087,7 +1077,7 @@ int ProcessAdminMessage(int conn, char *msg)
 	case _MSG_NPEnable:
 		{
 			if(pAdmin[conn].Level <= 2) 
-				return TRUE;
+				return true;
 
 			MSG_NPEnable *m = (MSG_NPEnable*)msg;
 
@@ -1102,7 +1092,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			{	
 				SendAdminMessage(conn, 0, "Check session. already playing.");
 
-				return TRUE;
+				return true;
 			}
 
 			EnableAccount(conn, m->AccountName);	
@@ -1136,7 +1126,7 @@ int ProcessAdminMessage(int conn, char *msg)
 		} break;
 	}
 
-	return TRUE;
+	return true;
 
 }
 
@@ -1413,7 +1403,7 @@ void DayLog_ItemLog()
 	fclose(fp);
 }
 
-BOOL file_exists(char *s, ...)
+bool file_exists(char *s, ...)
 {
 	char buf[1024];
 
@@ -1428,8 +1418,8 @@ BOOL file_exists(char *s, ...)
 	if (fp)
 	{
 		fclose(fp);
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }

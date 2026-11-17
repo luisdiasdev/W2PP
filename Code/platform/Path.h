@@ -10,6 +10,9 @@ namespace platform
 // be determined.
 std::string ExecutablePath();
 
+// File name of the running executable (no directory), or an empty string.
+std::string ExecutableFileName();
+
 // Directory that contains the running executable, or an empty string.
 std::string ExecutableDirectory();
 

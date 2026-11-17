@@ -17,25 +17,22 @@
 *   Contact at:
 */
 
-#include <windows.h>
-#include <windowsx.h>
 #include <stdlib.h>
 #include <stdio.h> 
-#include <fcntl.h>
-#include <io.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/timeb.h>
 #include <string.h>        
 #include <time.h>
 
 #include "CReadFiles.h"
-#include "../platform/FileSystem.h"
 #include "CFileDB.h"
 #include "CUser.h"
 #include "Server.h"
 
 #include "CRanking.h"
+
+// Included last: the asio headers pull in the Windows headers, which define
+// DeleteFile as a macro. FileSystem.h undefines it so platform::DeleteFile
+// resolves.
+#include "../platform/FileSystem.h"
 
 const char* const CReadFiles::UPDATE_CONNECTION_PATH = "C:/wamp/www/serv%2.2d.htm";
 const char* const CReadFiles::UPDATE_CONNECTION_DATA_PATH = "../../Common/data%2.2d.csv";
@@ -257,7 +254,7 @@ void CReadFiles::ImportItem()
 		{
 			int retsour = BASE_CanCargo(&tempsour, file.Cargo, i % 9, i / 9); // 0041E0AF  |.  E8 D32FFEFF   ||CALL DBsrv.00401087
 
-			if (retsour != TRUE)
+			if (retsour != 1)
 				continue;
 
 			Pos = i;
@@ -283,8 +280,6 @@ void CReadFiles::ImportItem()
 
 			if (iret != platform::FsResult::Ok)
 			{
-				int err = GetLastError();
-
 				Log(temp, "-IMPORT no space, move failed", 0);
 			}
 
@@ -584,7 +579,7 @@ void CReadFiles::ReadGuildInfo()
 
 	if (!guildFile.OpenRead(GUILD_INFO_PATH))
 	{
-		platform::ReportWarning(hWndMain, "no GuildInfo file", "BOOTING ERROR", MB_OK);
+		platform::ReportWarning("no GuildInfo file", "BOOTING ERROR");
 
 		return;
 	}
@@ -599,7 +594,7 @@ void CReadFiles::WriteGuildInfo()
 
 	if (!guildFile.OpenReadWrite(GUILD_INFO_PATH))
 	{
-		platform::ReportWarning(hWndMain, "no GuildInfo file", "BOOTING ERROR", MB_OK);
+		platform::ReportWarning("no GuildInfo file", "BOOTING ERROR");
 
 		return;
 	}

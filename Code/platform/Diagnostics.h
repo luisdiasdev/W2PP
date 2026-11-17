@@ -12,17 +12,22 @@ void SetDiagnosticSink(DiagnosticSink sink);
 void SetStatusSink(DiagnosticSink sink);
 
 // Non-fatal warning: log the line and continue.
-// The owner and flags parameters preserve the legacy dialog call shape.
-int ReportWarning(void *owner, const char *message, const char *caption,
-                  unsigned int flags);
+int ReportWarning(const char *message, const char *caption);
 
 // Fatal initialization failure: log the line, write it to standard error and
 // terminate with a non-zero exit code.
-[[noreturn]] void ReportFatal(void *owner, const char *message,
-                              const char *caption, unsigned int flags);
+[[noreturn]] void ReportFatal(const char *message, const char *caption);
 
 // Status text that used to be pushed to the window caption.
 void PublishStatus(const char *line);
+
+// True when standard input is an interactive terminal. The headless hosts use
+// this to decide whether to start the console command reader.
+bool StandardInputIsTerminal();
+
+// True when standard output is an interactive terminal. Used to decide whether
+// status/log lines are echoed to the console.
+bool StandardOutputIsTerminal();
 
 } // namespace platform
 

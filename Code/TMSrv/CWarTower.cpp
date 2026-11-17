@@ -16,13 +16,9 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include <io.h>
-#include <errno.h>
 
 #include "..\Basedef.h"
 #include "..\net\Connection.h"
@@ -144,13 +140,13 @@ void CWarTower::GGenerateMob(int index, int PosX, int PosY, int tmob)
 	}
 }
 
-BOOL CWarTower::TowerAttack(int conn, int idx)
+bool CWarTower::TowerAttack(int conn, int idx)
 {
 	if (pMob[idx].GenerateIndex != GTORRE)
-		return TRUE;
+		return true;
 
 	if (pMob[conn].MOB.Guild == 0 || pMob[conn].MOB.Guild == pMob[idx].MOB.Guild)
-		return FALSE;
+		return false;
 
-	return TRUE;
+	return true;
 }

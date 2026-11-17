@@ -34,6 +34,16 @@ std::string ExecutableDirectory()
 	return fs::path(path).parent_path().string();
 }
 
+std::string ExecutableFileName()
+{
+	const std::string path = ExecutablePath();
+
+	if (path.empty())
+		return {};
+
+	return fs::path(path).filename().string();
+}
+
 bool SetWorkingDirectoryToExecutable()
 {
 	const std::string path = ExecutablePath();

@@ -16,7 +16,6 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
 
 #include "../ItemEffect.h"
 
@@ -55,7 +54,7 @@ void CMob::ProcessorSecTimer()
 
 int  CMob::StandingByProcessor(void)
 {
-	int rt = FALSE;
+	int rt = false;
 
 	if (RouteType == 5 || Affect[0].Type == 24)
 	{

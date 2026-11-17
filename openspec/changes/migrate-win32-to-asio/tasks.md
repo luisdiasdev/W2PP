@@ -54,11 +54,11 @@
 
 ## 6. Remove Win32 from shared code and headers
 
-- [ ] 6.1 Delete the legacy `Code/CPSock.{h,cpp}` now that both servers use `net::Connection`, update includes, and verify no `CPSock` symbol remains in `Code/`.
-- [ ] 6.2 Remove `<Windows.h>` and the other platform includes from `Basedef.h`, `Server.h` (both), `ProcessClientMessage.h`, `ProcessDBMessage.h`, `GetFunc.h` and all per-TU includes; replace `BOOL`/`TRUE`/`FALSE`/`UINT`/`LONG` with standard types and verify both servers compile.
-- [ ] 6.3 Delete `hWndMain`, `hMainMenu`, `hFont`, `hDC`, `hInst` and `MainWndProc` declarations/definitions, and verify no `HWND`/`HDC`/`HFONT`/`HMENU`/`HINSTANCE` remains in `Code/`.
-- [ ] 6.4 Add the dependency-check script that fails on Windows/Winsock headers and API symbols in `Code/` (excluding `Code/platform/`), register it with CTest, and verify it fails on an injected `<windows.h>` include and passes on the clean tree.
-- [ ] 6.5 Run the full Debug and Release build plus the whole test suite, and verify both servers start, accept a loopback connection and shut down gracefully.
+- [x] 6.1 Delete the legacy `Code/CPSock.{h,cpp}` now that both servers use `net::Connection`, update includes, and verify no `CPSock` symbol remains in `Code/`.
+- [x] 6.2 Remove `<Windows.h>` and the other platform includes from `Basedef.h`, `Server.h` (both), `ProcessClientMessage.h`, `ProcessDBMessage.h`, `GetFunc.h` and all per-TU includes; replace `BOOL`/`TRUE`/`FALSE`/`UINT`/`LONG` with standard types and verify both servers compile.
+- [x] 6.3 Delete `hWndMain`, `hMainMenu`, `hFont`, `hDC`, `hInst` and `MainWndProc` declarations/definitions, and verify no `HWND`/`HDC`/`HFONT`/`HMENU`/`HINSTANCE` remains in `Code/`.
+- [x] 6.4 Add the dependency-check script that fails on Windows/Winsock headers and API symbols in `Code/` (excluding `Code/platform/`), register it with CTest, and verify it fails on an injected `<windows.h>` include and passes on the clean tree.
+- [x] 6.5 Run the full Debug and Release build plus the whole test suite, and verify both servers start, accept a loopback connection and shut down gracefully.
 
 ## 7. Cleanup, documentation and final verification
 

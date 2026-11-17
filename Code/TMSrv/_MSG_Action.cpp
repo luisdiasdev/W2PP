@@ -74,7 +74,7 @@ void Exec_MSG_Action(int conn, char *pMsg)
 		if (pMob[conn].MOB.Class != 3 || (pMob[conn].MOB.LearnedSkill & 2) == 0)
 		{
 			if (pMob[conn].MOB.CurrentScore.Level < MAX_LEVEL)
-				if (AddCrackError(conn, 10, 28) == TRUE)
+				if (AddCrackError(conn, 10, 28) == true)
 					return;
 		}
 

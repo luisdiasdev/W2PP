@@ -260,7 +260,7 @@ TEST_CASE("platform diagnostics records status without a window", "[platform]")
 	platform::PublishStatus("status line");
 	REQUIRE(lastStatus == "status line");
 
-	REQUIRE(platform::ReportWarning(nullptr, "warning text", "caption", 0) == 1);
+	REQUIRE(platform::ReportWarning("warning text", "caption") == 1);
 	REQUIRE(sawWarning);
 
 	platform::SetStatusSink(nullptr);

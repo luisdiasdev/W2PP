@@ -395,7 +395,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 			isFrag = 1;
 
 
-		if (CWarTower::TowerAttack(conn, idx) == FALSE)
+		if (CWarTower::TowerAttack(conn, idx) == false)
 		{
 			m->Dam[i].TargetID = 0;
 			m->Dam[i].Damage = 0;
@@ -477,7 +477,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				dam += skilldam;
 			}
 
-			if ((DoubleCritical & 1) != FALSE)
+			if ((DoubleCritical & 1) != false)
 				dam *= 2;
 
 			m->DoubleCritical = DoubleCritical;
@@ -917,7 +917,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				if (PosY > pMob[idx].TargetY)
 					PosY--;
 
-				if (GetEmptyMobGrid(idx, &PosX, &PosY) == FALSE)
+				if (GetEmptyMobGrid(idx, &PosX, &PosY) == false)
 					break;
 
 				int kind2 = pMob[conn].MOB.CurrentScore.Special[1];
@@ -1182,7 +1182,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 						SameLeaderGuild = 0;
 				}
 
-				if ((pMob[idx].MOB.Rsv & 0x80) != FALSE)
+				if ((pMob[idx].MOB.Rsv & 0x80) != false)
 					SameLeaderGuild = 0;
 
 				if (conn < MAX_USER && pMob[idx].MOB.Clan == 6)
@@ -1213,12 +1213,12 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				}
 
 				if (SetAffect(idx, skillnum, Delay, Special) != 0)
-					UNK2 = TRUE;
+					UNK2 = true;
 
 				if (SetTick(idx, skillnum, Delay, Special) != 0)
-					UNK2 = TRUE;
+					UNK2 = true;
 
-				if (UNK2 != FALSE)
+				if (UNK2 != false)
 				{
 					pMob[idx].GetCurrentScore(idx);
 					SendScore(idx);
@@ -1319,7 +1319,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 		if (leader == mobleader || Guild == MobGuild)
 			dam = 0;
 
-		if (idx >= MAX_USER && isFrag != FALSE)
+		if (idx >= MAX_USER && isFrag != false)
 			dam = 0;
 
 		int Summoner = idx;
@@ -1357,7 +1357,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				MapPK = 1;
 
 
-			if (arena == MAX_GUILDZONE && village == MAX_GUILDZONE && MapPK == FALSE && isWar == FALSE)
+			if (arena == MAX_GUILDZONE && village == MAX_GUILDZONE && MapPK == false && isWar == false)
 			{
 				if (pointPK <= 10 && SummonerPointPK > 10)
 				{
@@ -1544,7 +1544,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					tDamage = ((tDamage >> 1) + (tDamage << 4)) / abs;
 					m->Dam[i].Damage = tDamage;
 
-					if ((DoubleCritical & 4) != FALSE)
+					if ((DoubleCritical & 4) != false)
 						m->Dam[1].Damage = tDamage;
 
 				}

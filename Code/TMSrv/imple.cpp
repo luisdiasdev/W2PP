@@ -15,7 +15,6 @@
 *   along with this program.  If not, see [http://www.gnu.org/licenses/].
 *
 */
-#include <windows.h>
 
 #include "..\Basedef.h"
 #include "..\net\Connection.h"
@@ -926,7 +925,7 @@ void ProcessImple(int conn, int level, char * str)
 			}
 			StatSapphire = ival1;
 			SendClientMessage(conn, "CHANGE STAT SAPPHIRE");
-			RefreshStatus(TRUE);
+			RefreshStatus(true);
 		}
 		else if (!strcmp(cmd, "battleroyal"))
 		{
@@ -937,7 +936,7 @@ void ProcessImple(int conn, int level, char * str)
 			}
 			BRItem = ival1;
 			SendClientMessage(conn, "CHANGE BATTLE ROYAL REWARD");
-			RefreshStatus(TRUE);
+			RefreshStatus(true);
 		}
 		else if (!strcmp(cmd, "set"))
 		{
@@ -948,7 +947,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evend"))
 			{
@@ -957,7 +956,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evitem"))
 			{
@@ -966,7 +965,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evrate"))
 			{
@@ -975,7 +974,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evindex"))
 			{
@@ -984,7 +983,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evdelete"))
 			{
@@ -993,7 +992,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 			
 				SendClientMessage(conn, temp);
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evon"))
 			{
@@ -1009,7 +1008,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evnotice"))
 			{
@@ -1018,13 +1017,13 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "double"))
 			{
 				DOUBLEMODE = ival2;
 				SendClientMessage(conn, "SET DOUBLEMODE");
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "deadpoint"))
 			{
@@ -1035,7 +1034,7 @@ void ProcessImple(int conn, int level, char * str)
 				else
 					SendClientMessage(conn, "SET DEADPOINT 0");
 
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "dungeonevent"))
 			{
@@ -1046,7 +1045,7 @@ void ProcessImple(int conn, int level, char * str)
 				else
 					SendClientMessage(conn, "SET DUNGEON EVENT OFF");
 
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "champ"))
 			{
@@ -1113,7 +1112,7 @@ void ProcessImple(int conn, int level, char * str)
 					return;
 				}
 				SendClientMessage(conn, "SET DROP BONUS");
-				RefreshStatus(TRUE);
+				RefreshStatus(true);
 			}
 		}
 	}
@@ -1728,7 +1727,7 @@ void ProcessImple(int conn, int level, char * str)
 			for(int xx = KEFRA_MOB_INITIAL; xx <= KEFRA_MOB_END; xx++)
 				GenerateMob(xx, 0, 0);
 
-			RefreshStatus(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "CREATE KEFRA");
 		}
@@ -1737,7 +1736,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			PARTY_DIF = ival1;
 
-			RefreshStatus(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "PARTY DIF");
 		}
@@ -1746,7 +1745,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			RvRHour = ival1;
 
-			RefreshStatus(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "RVR HOUR");
 		}
@@ -1756,7 +1755,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			GTorreHour = ival1;
 
-			RefreshStatus(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "GTorre HOUR");
 		}
@@ -1765,7 +1764,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			isDropItem = ival1;
 
-			RefreshStatus(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "DROP ITEM");
 		}
@@ -1774,7 +1773,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			maxNightmare = ival1;
 
-			RefreshStatus(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "MAXNIGHTMARE");
 		}

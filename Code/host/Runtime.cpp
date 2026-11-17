@@ -8,10 +8,6 @@
 #include <iostream>
 #include <utility>
 
-#ifdef _WIN32
-#include <io.h>
-#endif
-
 namespace host
 {
 
@@ -163,10 +159,8 @@ bool Runtime::StartConsole(CommandHandler onCommand)
 	if (const char *force = std::getenv("W2PP_FORCE_CONSOLE"))
 		forceConsole = force[0] != '\0' && force[0] != '0';
 
-#ifdef _WIN32
-	if (!forceConsole && !_isatty(_fileno(stdin)))
+	if (!forceConsole && !platform::StandardInputIsTerminal())
 		return false;
-#endif
 
 	if (consoleRunning_.exchange(true))
 		return true;

@@ -29,7 +29,6 @@
 #include <vector>
 
 #ifdef _WIN32
-#include <io.h>
 #endif
 
 net::Connection AdminClient;
@@ -56,11 +55,7 @@ void PlatformStatusSink(const char *line)
 {
 	// Echo the status/log line to the console only when one is attached (or
 	// the test harness forces it), matching the headless TMSrv host.
-	bool attached = false;
-
-#ifdef _WIN32
-	attached = _isatty(_fileno(stdout)) != 0;
-#endif
+	bool attached = platform::StandardOutputIsTerminal();
 
 	const char *force = std::getenv("W2PP_FORCE_CONSOLE");
 
@@ -113,13 +108,13 @@ bool LoadBaseMobSet()
 	{
 		if (!file.OpenRead(item.path))
 		{
-			platform::ReportFatal(hWndMain, item.message, "BOOTING ERROR", 0);
+			platform::ReportFatal(item.message, "BOOTING ERROR");
 			return false;
 		}
 
 		if (!file.Read(&g_pBaseSet[item.index], sizeof(STRUCT_MOB)))
 		{
-			platform::ReportFatal(hWndMain, item.message, "READ ERROR", 0);
+			platform::ReportFatal(item.message, "READ ERROR");
 			return false;
 		}
 
@@ -328,7 +323,7 @@ void AcceptAdminConnection(asio::ip::tcp::socket socket, const std::string &peer
 
 			CurrentTime = platform::MonotonicMs();
 
-			if (ProcessAdminMessage(user, reinterpret_cast<char *>(frame)) == FALSE)
+			if (ProcessAdminMessage(user, reinterpret_cast<char *>(frame)) == false)
 			{
 				pAdmin[user].cSock.CloseSocket();
 				pAdmin[user].Mode = USER_EMPTY;
@@ -535,9 +530,7 @@ int main()
 
 	if (match.group < 0)
 	{
-		platform::ReportFatal(hWndMain,
-			"Can't get Server Group Index. LocalIP / ServerList.txt",
-			"BOOTING ERROR", 0);
+		platform::ReportFatal("Can't get Server Group Index. LocalIP / ServerList.txt", "BOOTING ERROR");
 		return EXIT_FAILURE;
 	}
 
@@ -556,8 +549,7 @@ int main()
 
 	if (!ListenSocket->Listen("0.0.0.0", DB_PORT, listenError))
 	{
-		platform::ReportFatal(hWndMain, listenError.c_str(),
-			"DB listener", 0);
+		platform::ReportFatal(listenError.c_str(), "DB listener");
 		return EXIT_FAILURE;
 	}
 
@@ -574,8 +566,7 @@ int main()
 
 	if (!AdminSocket->Listen("0.0.0.0", ADMIN_PORT, listenError))
 	{
-		platform::ReportFatal(hWndMain, listenError.c_str(),
-			"admin listener", 0);
+		platform::ReportFatal(listenError.c_str(), "admin listener");
 		return EXIT_FAILURE;
 	}
 

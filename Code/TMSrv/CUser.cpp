@@ -59,5 +59,5 @@ int CUser::CloseUser()
 
 	AccountName[0] = 0;
 
-	return TRUE;
+	return true;
 }

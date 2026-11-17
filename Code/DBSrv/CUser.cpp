@@ -17,7 +17,6 @@
 *   Contact at:
 */
 
-#include <Windows.h>
 
 #include "CUser.h"
 

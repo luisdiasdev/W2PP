@@ -46,14 +46,14 @@ bool Connection::AddMessage(char *msg, int size)
 	    size > MAX_MESSAGE_SIZE)
 	{
 		std::snprintf(temp, sizeof(temp), "err,add message size %d", size);
-		platform::ReportWarning(nullptr, temp, nullptr, 0);
+		platform::ReportWarning(temp, nullptr);
 		return false;
 	}
 
 	if (!IsOpen())
 	{
 		std::snprintf(temp, sizeof(temp), "err,add buffer invalid %d", size);
-		platform::ReportWarning(nullptr, temp, nullptr, 0);
+		platform::ReportWarning(temp, nullptr);
 		return false;
 	}
 
@@ -64,7 +64,7 @@ bool Connection::AddMessage(char *msg, int size)
 		std::snprintf(temp, sizeof(temp),
 		              "err,add buffer full %d %d %d",
 		              static_cast<int>(QueuedBytes()), size, header->Type);
-		platform::ReportWarning(nullptr, temp, nullptr, 0);
+		platform::ReportWarning(temp, nullptr);
 		return false;
 	}
 
@@ -85,7 +85,7 @@ bool Connection::AddMessage(char *msg, int size)
 	if (!session_->Queue(frame.data(), frame.size()))
 	{
 		std::snprintf(temp, sizeof(temp), "err,add queue rejected %d", size);
-		platform::ReportWarning(nullptr, temp, nullptr, 0);
+		platform::ReportWarning(temp, nullptr);
 		return false;
 	}
 

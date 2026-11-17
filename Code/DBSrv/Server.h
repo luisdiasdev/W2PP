@@ -65,10 +65,7 @@ int  GetEmptyUser(); // Last updated 15/01/2013
 void DayLog_ReadAccountInDir(char *dir, FILE *log);
 void DayLog_ItemLog();
 
-BOOL file_exists(char *s, ...);
-
-
-extern HWND		hWndMain;
+bool file_exists(char *s, ...);
 
 extern int ServerIndex;
 extern int CurrentTransInfo;

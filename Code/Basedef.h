@@ -22,13 +22,23 @@
 #define _BASEDEF_
 
 #include <time.h>
-#include <winsock2.h>
-#include <Windows.h>
 
 #include "net/Protocol.h"
 #include "platform/Clock.h"
 #include "platform/Diagnostics.h"
 #include "platform/File.h"
+
+// Byte accessors for the low/high 8 bits of a value. These replace the Win32
+// LOBYTE/HIBYTE macros and keep the same two's-complement byte selection.
+inline unsigned char LowByte(unsigned long value)
+{
+	return static_cast<unsigned char>(value & 0xFFu);
+}
+
+inline unsigned char HighByte(unsigned long value)
+{
+	return static_cast<unsigned char>((value >> 8) & 0xFFu);
+}
 
 #pragma region Defines
 
@@ -2427,7 +2437,7 @@ int  BASE_GetHttpRequest(char *httpname, char *Request, int MaxBuffer);
 int  BASE_GetSkillDamage(int skillnum, STRUCT_MOB *mob, int weather, int weapondamage);
 int  BASE_GetEnglish(char *name);
 int  BASE_GetWeekNumber();
-int  BASE_CheckPacket(struct MSG_STANDARD *m);
+bool BASE_CheckPacket(struct MSG_STANDARD *m);
 
 int  BASE_VisualItemCode(STRUCT_ITEM *Item, int mnt);
 int  BASE_VisualAnctCode(STRUCT_ITEM *Item);

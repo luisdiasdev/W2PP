@@ -19,15 +19,8 @@
 #ifndef __SERVER_H__
 #define	__SERVER_H__
 
-#include <windows.h>
-#include <windowsx.h>
 #include <stdlib.h>
 #include <stdio.h> 
-#include <fcntl.h>
-#include <io.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/timeb.h>
 #include <string.h>        
 #include <time.h>
 #include <string>
@@ -42,8 +35,6 @@
 
 
 // Externs
-extern HWND hWndMain;
-
 extern int ServerGroup;
 
 extern unsigned int CurrentTime;
@@ -68,8 +59,8 @@ extern STRUCT_BLOCKMAC pMac[MAX_MAC];
 // Funcs
 
 void  ClearCrown(int conn);
-BOOL  AddCrackError(int conn, int val, int Type);
-BOOL  PutItem(int conn, STRUCT_ITEM *item);
+bool  AddCrackError(int conn, int val, int Type);
+bool  PutItem(int conn, STRUCT_ITEM *item);
 void  GuildZoneReport();
 void  ReadConfig();
 
@@ -160,8 +151,8 @@ void  DoRanking(int tDuel, int conn, int enemy);
 void  DoRemoveHide(int conn);      
 void  DoTeleport(int mob, int x, int y);     
 void  DoSummon(int target, int x, int y);       
-int   SetAffect(int conn, int skillnum, int time, int Level);
-int   SetTick(int mob, int skillnum, int Delay, int Level); 
+bool  SetAffect(int conn, int skillnum, int time, int Level);
+bool  SetTick(int mob, int skillnum, int Delay, int Level); 
 void  ProcessDecayItem();
 int   CombineTreasureMap(int conn);
 void  Combine(int conn, int item, int PrizeItem);
@@ -219,8 +210,6 @@ extern short weapon[32][9];
 extern net::Connection BillServerSocket;
 extern char   BillServerAddress[32];
 extern int	   BillServerPort;
-
-extern HWND  hWndMain;
 
 extern FILE *fLogFile;
 extern FILE *fChatLogFile;

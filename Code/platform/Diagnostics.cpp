@@ -4,6 +4,12 @@
 #include <cstdlib>
 #include <string>
 
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
 namespace platform
 {
 namespace
@@ -55,22 +61,14 @@ void SetStatusSink(DiagnosticSink sink)
 	g_statusSink = sink;
 }
 
-int ReportWarning(void *owner, const char *message, const char *caption,
-                  unsigned int flags)
+int ReportWarning(const char *message, const char *caption)
 {
-	(void)owner;
-	(void)flags;
-
 	Emit(message, caption);
 	return 1; // IDOK
 }
 
-void ReportFatal(void *owner, const char *message, const char *caption,
-                 unsigned int flags)
+void ReportFatal(const char *message, const char *caption)
 {
-	(void)owner;
-	(void)flags;
-
 	Emit(message, caption);
 	std::exit(EXIT_FAILURE);
 }
@@ -84,6 +82,24 @@ void PublishStatus(const char *line)
 	}
 
 	WriteLine(line);
+}
+
+bool StandardInputIsTerminal()
+{
+#ifdef _WIN32
+	return _isatty(_fileno(stdin)) != 0;
+#else
+	return isatty(fileno(stdin)) != 0;
+#endif
+}
+
+bool StandardOutputIsTerminal()
+{
+#ifdef _WIN32
+	return _isatty(_fileno(stdout)) != 0;
+#else
+	return isatty(fileno(stdout)) != 0;
+#endif
 }
 
 } // namespace platform

@@ -16,13 +16,9 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include <io.h>
-#include <errno.h>
 
 #include "..\Basedef.h"
 #include "..\net\Connection.h"
@@ -52,7 +48,7 @@ void ProcessSecTimer()
 			BILLING = 0;
 		}
 
-		while (TRUE)
+		while (true)
 		{
 			if (UserCount >= MAX_USER)
 			{
@@ -163,7 +159,7 @@ lbl_PST1:
 		{
 			if (pUser[bb].cSock.QueuedBytes())
 			{
-				BOOL bSend = pUser[bb].cSock.SendMessageA();
+				bool bSend = pUser[bb].cSock.SendMessageA();
 				if (!bSend)
 				{
 					sprintf(temp, "err,send fail close %d/%d %d/%d",
@@ -1425,7 +1421,7 @@ lbl_PST1:
 					{
 						MSG_Action sm;
 
-						if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == FALSE)
+						if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == false)
 							continue;
 
 						GetAction(index, pMob[index].NextX, pMob[index].NextY, (MSG_Action*)&sm);
@@ -1478,7 +1474,7 @@ lbl_PST1:
 
 							MSG_Action sm;
 
-							if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == FALSE)
+							if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == false)
 								continue;
 
 
@@ -1521,7 +1517,7 @@ lbl_PST1:
 		int flag = 0;
 
 		if (pMob[index].MOB.Clan == 4)
-			flag = FALSE;
+			flag = false;
 
 		if (pMob[index].MOB.CurrentScore.Hp <= 0)
 		{
@@ -1684,15 +1680,15 @@ lbl_PST1:
 				if (kind >= 1 && kind <= 3)
 				{
 					int special = pMob[index].MOB.CurrentScore.Special[kind];
-					BOOL NeedUpdate = FALSE;
+					bool NeedUpdate = false;
 					
 					if (SetAffect(Target, skill, 100, special))
-						NeedUpdate = TRUE;
+						NeedUpdate = true;
 
 					if (SetTick(Target, skill, 100, special))
-						NeedUpdate = TRUE;
+						NeedUpdate = true;
 
-					if (NeedUpdate == TRUE)
+					if (NeedUpdate == true)
 						SendScore(Target);
 				}
 			}
@@ -1920,7 +1916,7 @@ KefraAttackLabel:
 				continue;
 
 			MSG_Action sm;
-			if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == FALSE)
+			if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == false)
 				continue;
 
 			GetAction(index, pMob[index].NextX, pMob[index].NextY, (MSG_Action*)&sm);
@@ -1940,7 +1936,7 @@ KefraAttackLabel:
 				continue;
 
 			MSG_Action sm;
-			if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == FALSE)
+			if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == false)
 				continue;
 
 			GetAction(index, pMob[index].NextX, pMob[index].NextY, (MSG_Action*)&sm);
@@ -1958,7 +1954,7 @@ KefraAttackLabel:
 		{
 			MSG_Action sm;
 			
-			if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == FALSE)
+			if (GetEmptyMobGrid(index, &pMob[index].NextX, &pMob[index].NextY) == false)
 				continue;
 
 			GetAction(index, pMob[index].NextX, pMob[index].NextY, (MSG_Action*)&sm);

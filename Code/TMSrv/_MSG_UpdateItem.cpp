@@ -48,7 +48,7 @@ void Exec_MSG_UpdateItem(int conn, char *pMsg)
 		return;
 	}
 
-	if (CCastleZakum::OpenCastleGate(conn, gateid, m) == TRUE)
+	if (CCastleZakum::OpenCastleGate(conn, gateid, m) == true)
 		return;
 		
 	int state = pItem[gateid].State;
@@ -90,7 +90,7 @@ void Exec_MSG_UpdateItem(int conn, char *pMsg)
 	SendItem(conn, ITEM_PLACE_CARRY, i, &pMob[conn].MOB.Carry[i]);
 NoNeedKey:
 
-	/*if (CEncampment::OpenTreasureBox(conn, gateid) == TRUE)
+	/*if (CEncampment::OpenTreasureBox(conn, gateid) == true)
 		return;*/
 
 	int heigth = 0;

@@ -16,13 +16,9 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include <io.h>
-#include <errno.h>
 
 #include "..\Basedef.h"
 #include "..\net\Connection.h"
@@ -35,7 +31,7 @@
 #include "GetFunc.h"
 #include "SendFunc.h"
 
-void  ProcessClientMessage(int conn, char *pMsg, BOOL isServer)
+void  ProcessClientMessage(int conn, char *pMsg, bool isServer)
 {
 	MSG_STANDARD *std = (MSG_STANDARD *)pMsg;
 
@@ -60,7 +56,7 @@ void  ProcessClientMessage(int conn, char *pMsg, BOOL isServer)
 		return;
 
 	// Checa se o pacote foi enviado por algum jogador e possui o timestamp de controle interno.
-	if (isServer == FALSE && std->ClientTick == SKIPCHECKTICK)
+	if (isServer == false && std->ClientTick == SKIPCHECKTICK)
 		return;
 
 	switch(std->Type)

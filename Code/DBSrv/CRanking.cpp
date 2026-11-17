@@ -23,6 +23,8 @@
 #include "CReadFiles.h"
 #include "../platform/FileSystem.h"
 
+#include <errno.h>
+
 extern CUser pUser[MAX_SERVER]; // Server.cpp
 extern CUser pAdmin[MAX_ADMIN]; // Server.cpp
 
@@ -99,9 +101,9 @@ RankingSystem::RankingSystem()
 
 void RankingSystem::loadRanking()
 {
-	unsigned int startClock = GetTickCount();
+	unsigned int startClock = platform::MonotonicMs();
 	int entryCount = readAccountsInDir("./account/*");
-	unsigned int resultClock = GetTickCount() - startClock;
+	unsigned int resultClock = platform::MonotonicMs() - startClock;
 
 	char tt[1024];
 

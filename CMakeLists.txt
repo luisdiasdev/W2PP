@@ -35,9 +35,8 @@ add_compile_options(/W3 /permissive /Zc:strictStrings-)
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS _MBCS WIN32 _WINDOWS _WIN32_WINNT=0x0601 WIN32_LEAN_AND_MEAN _WINSOCK_DEPRECATED_NO_WARNINGS ASIO_STANDALONE ASIO_USE_TS_EXECUTOR_AS_DEFAULT)
 add_compile_definitions($<$<CONFIG:Debug>:_PACKET_DEBUG>)
 
-# Transitional system libraries. These disappear as the Win32 host code is
-# removed (phases 5 and 6 of the migration).
-set(W2PP_TRANSITIONAL_LIBS ws2_32 winmm user32 gdi32)
+# No transitional Win32 libraries: the servers and the shared code no longer
+# call user32, gdi32 or winmm. Winsock is linked by the asio headers.
 
 # ---------------------------------------------------------------------------
 # Shared core: code compiled into both servers.
@@ -45,7 +44,6 @@ set(W2PP_TRANSITIONAL_LIBS ws2_32 winmm user32 gdi32)
 
 add_library(w2pp_core STATIC
   Code/Basedef.cpp
-  Code/CPSock.cpp
   Code/AbiGuards.h
   Code/net/FrameCodec.cpp
   Code/net/FrameCodec.h
@@ -82,7 +80,7 @@ target_include_directories(w2pp_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/Code
 )
 
-target_link_libraries(w2pp_core PUBLIC ${W2PP_TRANSITIONAL_LIBS} asio::asio)
+target_link_libraries(w2pp_core PUBLIC asio::asio)
 
 # ---------------------------------------------------------------------------
 # TMSrv (game server)
@@ -167,7 +165,6 @@ set(TMSRV_SOURCES
 
 set(TMSRV_HEADERS
   Code/Basedef.h
-  Code/CPSock.h
   Code/ItemEffect.h
   Code/TMSrv/CCastleZakum.h
   Code/TMSrv/CItem.h
@@ -209,14 +206,12 @@ set(DBSRV_SOURCES
 
 set(DBSRV_HEADERS
   Code/Basedef.h
-  Code/CPSock.h
   Code/ItemEffect.h
   Code/DBSrv/CFileDB.h
   Code/DBSrv/CRanking.h
   Code/DBSrv/CReadFiles.h
   Code/DBSrv/CUser.h
   Code/DBSrv/Server.h
-  Code/DBSrv/stdafx.h
   Code/DBSrv/resource.h
 )
 
@@ -294,6 +289,17 @@ if(BUILD_TESTING)
     endif()
 
     add_test(
+      NAME platform-dependency-check
+      COMMAND ${W2PP_PWSH} -NoProfile -ExecutionPolicy Bypass
+              -File "${CMAKE_SOURCE_DIR}/tests/tools/check_platform_dependencies.ps1"
+              -CodeDir "${CMAKE_SOURCE_DIR}/Code"
+    )
+    set_tests_properties(platform-dependency-check PROPERTIES
+      LABELS static
+      TIMEOUT 120
+    )
+
+    add_test(
       NAME dbsrv-loopback
       COMMAND ${W2PP_PWSH} -NoProfile -ExecutionPolicy Bypass
               -File "${CMAKE_SOURCE_DIR}/tests/integration/dbsrv_loopback.ps1"
@@ -317,13 +323,6 @@ if(BUILD_TESTING)
       TIMEOUT 120
     )
   endif()
-
-  # Fixture capture is a developer tool, not a test: run it manually before
-  # the legacy transport is cut over.
-  add_executable(capture_legacy_fixture
-    tests/tools/capture_legacy_fixture.cpp
-  )
-  target_link_libraries(capture_legacy_fixture PRIVATE w2pp_core)
 
   # Login probe: developer tool that plays one _MSG_AccountLogin against a
   # running server and prints the replies.

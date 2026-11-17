@@ -18,22 +18,17 @@
 */
 
 
-#include <windows.h>
-#include <windowsx.h>
 #include <stdlib.h>
 #include <stdio.h> 
-#include <fcntl.h>
-#include <io.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/timeb.h>
 #include <string.h>        
 #include <time.h>
 #include <mbstring.h>
+#include <string>
 
 #include "Basedef.h"
 #include "ItemEffect.h"
 #include "AbiGuards.h"
+#include "platform/Path.h"
 
 #pragma region Defines
 
@@ -769,15 +764,15 @@ int BASE_NeedLog(struct STRUCT_ITEM *item, int money)
 	int idx = item->sIndex;
 
 	if(idx < 0 || idx >= MAX_ITEMLIST)
-		return FALSE;
+		return false;
 
 	if(money >= 0)
-		return TRUE;
+		return true;
 
 	int sanc = BASE_GetItemSanc(item);
 
 	if(sanc >= 3)
-		return TRUE;
+		return true;
 
 	int npos = g_pItemList[idx].nPos;
 
@@ -789,23 +784,23 @@ int BASE_NeedLog(struct STRUCT_ITEM *item, int money)
 	if(npos == 64 || npos == 192)
 	{
 		 if(magic >= 12 || dam >= 27)
-			return TRUE;
+			return true;
 	}
 	else  if(magic >= 8 || dam >= 12)
-		return TRUE;
+		return true;
 
 	if(guild > 0 || idx == 419 || idx == 420 || idx == 412 || idx == 413 || idx == 753 || idx == 657 || (idx >= 470 && idx < 500) || idx == 522)
-		return TRUE;
+		return true;
 
 	if((idx >= 551 || idx <= 562) || item->stEffect[0].cEffect != 0 || item->stEffect[0].cEffect != 59|| item->stEffect[1].cEffect != 0 || item->stEffect[1].cEffect != 59)
-		return TRUE;
+		return true;
 
 	int price = g_pItemList[idx].Price;
 
 	if(price >= 100)
-		return TRUE;
+		return true;
 
-	return FALSE;
+	return false;
 }
 
 int BASE_GetBonusSkillPoint(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra)
@@ -831,7 +826,7 @@ int BASE_GetBonusSkillPoint(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra)
 	int cls = mob->Class;
 
 	if(cls < 0 || cls >= MAX_CLASS)
-		return FALSE;
+		return false;
 
 	int spelluse = 0;
 	int skillbit = 1;
@@ -850,10 +845,10 @@ int BASE_GetBonusSkillPoint(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra)
 	{
 		mob->SkillBonus = rest;
 
-		return FALSE;
+		return false;
 	}
 	
-	return TRUE;
+	return true;
 }
 
 int BASE_GetBonusScorePoint(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra)
@@ -861,7 +856,7 @@ int BASE_GetBonusScorePoint(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra)
 	int cls = mob->Class;
 
 	if(cls < 0 || cls >= MAX_CLASS)
-		return FALSE;
+		return false;
 
 	int usestr = mob->BaseScore.Str - BaseSIDCHM[cls][0];
 	int useint = mob->BaseScore.Int - BaseSIDCHM[cls][1];
@@ -1169,7 +1164,7 @@ int BASE_GetBonusScorePoint(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra)
 		}
 		mob->ScoreBonus = leveluse - totaluse;
 	}
-	return TRUE;
+	return true;
 }
 
 int BASE_GetHpMp(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra)
@@ -1177,7 +1172,7 @@ int BASE_GetHpMp(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra)
 	int cls = mob->Class;
 
 	if(cls < 0 || cls >= MAX_CLASS)
-		return FALSE;
+		return false;
 
 
 	int basehp = BaseSIDCHM[cls][4];	
@@ -1205,7 +1200,7 @@ int BASE_GetHpMp(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra)
 	mob->BaseScore.MaxMp = t_mp;
 	mob->CurrentScore.MaxMp = t_mp;
 
-	return TRUE;
+	return true;
 }
 
 int BASE_GetSpeed(STRUCT_SCORE *score)
@@ -1507,7 +1502,7 @@ int BASE_GetItemAbilityNosanc(STRUCT_ITEM *item, unsigned char Type)
 	int nPos = g_pItemList[idx].nPos;
 
 	if((Type == EF_DAMAGEADD || Type == EF_MAGICADD) && (nUnique < 41 || nUnique > 50))
-		return FALSE;
+		return false;
 	if(Type == EF_CRITICAL && (item->stEffect[1].cEffect == EF_CRITICAL2 || item->stEffect[2].cEffect == EF_CRITICAL2))
 		Type = EF_CRITICAL2;
 	
@@ -1994,7 +1989,7 @@ int BASE_GetStaticItemAbility(STRUCT_ITEM *item, unsigned char Type)
 int BASE_GetBonusItemAbility(STRUCT_ITEM *item, unsigned char Type)
 {
 	if(item->sIndex >= 2330 && item->sIndex < 2390)
-		return FALSE;
+		return false;
 
 	int value = 0;
 
@@ -2053,7 +2048,7 @@ int BASE_GetBonusItemAbility(STRUCT_ITEM *item, unsigned char Type)
 int BASE_GetBonusItemAbilityNosanc(STRUCT_ITEM *item, unsigned char Type)
 {
 	if(item->sIndex >= 2330 && item->sIndex < 2390)
-		return FALSE;
+		return false;
 
 	int value = 0;
 
@@ -2096,7 +2091,7 @@ int BASE_GetBonusItemAbilityNosanc(STRUCT_ITEM *item, unsigned char Type)
 int BASE_GetItemSanc(STRUCT_ITEM *item)
 {
 	if(item->sIndex >= 2330 && item->sIndex < 2390)
-		return FALSE;
+		return false;
 
 	unsigned char sanc = 0;
 
@@ -2144,7 +2139,7 @@ int BASE_GetItemSanc(STRUCT_ITEM *item)
 int BASE_GetItemGem(STRUCT_ITEM *item)
 {
 	if (item->sIndex >= 2330 && item->sIndex < 2390)
-		return FALSE;
+		return false;
 
 	unsigned char sanc = 0;
 
@@ -2178,7 +2173,7 @@ int BASE_GetItemGem(STRUCT_ITEM *item)
 int BASE_GetItemSancSuccess(STRUCT_ITEM *item)
 {
 	 if(item->sIndex >= 2330 && item->sIndex < 2390)
-		 return FALSE;
+		 return false;
 
 	 unsigned char sanc = 0;
 
@@ -2203,10 +2198,10 @@ int BASE_GetItemSancSuccess(STRUCT_ITEM *item)
 int BASE_GetSuccessRate(STRUCT_ITEM *item, int OriLacto)
 {
 	if(item->sIndex >= 2330 && item->sIndex < 2390)
-		return FALSE;
+		return false;
 
 	if(OriLacto != 0 && OriLacto != 1 && OriLacto != 2)
-		return FALSE;
+		return false;
 	
 	int sanc = BASE_GetItemSanc(item);
 
@@ -2228,7 +2223,7 @@ int BASE_GetSuccessRate(STRUCT_ITEM *item, int OriLacto)
 int BASE_GetGrowthRate(STRUCT_ITEM *item)
 {
 	if(item->sIndex < 2360 || item->sIndex >= 2390)
-		return FALSE;
+		return false;
 
 	int sanc = item->stEffect[1].cEffect;
 	sanc /= 10;
@@ -2277,12 +2272,12 @@ int BASE_SetItemSanc(STRUCT_ITEM *dest, int sanc, int success)
 	else
 	{
 		if (dest->stEffect[2].cEffect != EF_SANC && (dest->stEffect[2].cEffect < 116 || dest->stEffect[2].cEffect > 125))
-			return FALSE;
+			return false;
 
 		dest->stEffect[2].cValue = sc;
 	}
 
-	return TRUE;
+	return true;
 }
 
 int BASE_GetItemAmount(STRUCT_ITEM *item)
@@ -2525,12 +2520,12 @@ bool BASE_CheckValidString(char *name)
 	int l = strlen(name);
 
 	if (l < 4 || l >= NAME_LENGTH)  
-		return FALSE;
+		return false;
 
 	if(strcmp(name, "Reino") == 0 || strcmp(name, "subcreate") == 0 || strcmp(name, "create") == 0 || strcmp(name, "gritar") == 0 || strcmp(name, "king") == 0 || strcmp(name, "kingdom") == 0 ||
 	   strcmp(name, "getout") == 0 || strcmp(name, "gfame") == 0 || strcmp(name, "expulsar") == 0 || strcmp(name, "summonguild") == 0 || strcmp(name, "summon") == 0 || strcmp(name, "time") == 0 ||
 	   strcmp(name, "relo") == 0 || strcmp(name, "stopally") == 0 || strcmp(name, "stopwar") == 0)
-	   return FALSE;
+	   return false;
 
 	for(int j = 0; j < l; j++)
 	{	 
@@ -2608,25 +2603,7 @@ void BASE_ApplyAttribute(char *pHeight, int size)
 
 void BASE_InitModuleDir()
 {
-	char String[256];
-	
-	GetModuleFileName(NULL, String, 256);
-
-	int len = strlen(String);
-
-	len--;
-
-	for(int i = len; i > 0; i--)
-	{
-		if(String[i] == '\\')
-		{
-			String[i] = 0;
-
-			break;
-		}
-	}
-
-	SetCurrentDirectory(String);	
+	platform::SetWorkingDirectoryToExecutable();
 }
 
 int BASE_GetSum(char * p ,int size)
@@ -2750,7 +2727,7 @@ void BASE_WriteItemList(int nItemList)
 
 		if(fp == NULL)
 		{
-			platform::ReportFatal(NULL, "ItemList.binÀ» »ý¼ºÇÒ¼ö ¾ø½À´Ï´Ù. ", "ERROR", NULL);
+			platform::ReportFatal("ItemList.binÀ» »ý¼ºÇÒ¼ö ¾ø½À´Ï´Ù. ", "ERROR");
 			return;
 		}
 
@@ -2807,15 +2784,15 @@ int BASE_ReadSkillBin()
 	}
 	else
 	{
-		platform::ReportFatal(NULL, "Can't read SkillData.bin", "ERROR", NULL);
-		return FALSE;
+		platform::ReportFatal("Can't read SkillData.bin", "ERROR");
+		return false;
 	}
 
 	int sum = BASE_GetSum2((char*)g_pSpell, size);
 
 #ifndef _DEBUG
 	//if(SKILL_CHECKSUM != sum) 
-	//	return FALSE;
+	//	return false;
 #endif
 
 	for(int i = 0; i < size;i++)
@@ -2823,7 +2800,7 @@ int BASE_ReadSkillBin()
 		temp[i] = temp[i] ^ 0x5A;
 	}
 
-	return TRUE;
+	return true;
 }
 
 int BASE_ReadItemList()
@@ -2837,9 +2814,9 @@ int BASE_ReadItemList()
 
 	if(fp == NULL) 
 	{
-		platform::ReportFatal(NULL, "Can't read ItemList.bin", "ERROR", NULL);
+		platform::ReportFatal("Can't read ItemList.bin", "ERROR");
 
-		return FALSE;
+		return false;
 	}
 
 	fread(g_pItemList, sizeof(STRUCT_ITEMLIST)*MAX_ITEMLIST, 1, fp);
@@ -2851,7 +2828,7 @@ int BASE_ReadItemList()
 
 #ifndef _DEBUG
 	//if (ITEM_CHECKSUM != sum)
-	//	return FALSE;
+	//	return false;
 #endif
 
 	for(int i = 0; i < size; i++)
@@ -2892,7 +2869,7 @@ int BASE_ReadItemList()
 		int sum = BASE_GetSum2((char*)g_pItemList, size);
 
 		//if(ITEM_CHECKSUM2 != sum) 
-		//	return FALSE;
+		//	return false;
 
 		for(int i = 0; i < size; i++)
 		{
@@ -2901,7 +2878,7 @@ int BASE_ReadItemList()
 #endif
 	}
 
-	return TRUE;
+	return true;
 }
 
 void BASE_SpaceToUnderBar(char *szStr)
@@ -4292,12 +4269,12 @@ void BASE_ClearItem(STRUCT_ITEM *item)
 int BASE_CanEquip(STRUCT_ITEM *item, STRUCT_SCORE *score, int Pos, int Class, STRUCT_ITEM *pBaseEquip, STRUCT_MOBEXTRA *extra)
 {
 	if(item->sIndex <= 0 || item->sIndex >= MAX_ITEMLIST)
-		return FALSE;
+		return false;
 
 	int nUnique = g_pItemList[item->sIndex].nUnique;
 
 	if(Pos == 15)
-		return FALSE;
+		return false;
 
 	if(Pos != -1)
 	{
@@ -4305,7 +4282,7 @@ int BASE_CanEquip(STRUCT_ITEM *item, STRUCT_SCORE *score, int Pos, int Class, ST
 		int pos = (tpos >> Pos) & 1;
 
 		if(pos == 0)
-			return FALSE;
+			return false;
 
 		if(Pos == 6 || Pos == 7)
 		{
@@ -4322,15 +4299,15 @@ int BASE_CanEquip(STRUCT_ITEM *item, STRUCT_SCORE *score, int Pos, int Class, ST
 					if(nUnique == 46)
 					{
 						if(otherpos != 128)
-							return FALSE;
+							return false;
 					}
 					else if(nUnique2 == 46)
 					{
 						if(tpos != 128)
-							return FALSE;
+							return false;
 					}
 					else
-						return FALSE;
+						return false;
 				}
 			}
 		}
@@ -4344,25 +4321,25 @@ int BASE_CanEquip(STRUCT_ITEM *item, STRUCT_SCORE *score, int Pos, int Class, ST
 	cls = (cls >> Class) & 1;
 
 	if (cls == 0 && extra->ClassMaster == MORTAL)
-		return FALSE;
+		return false;
 
 	if (cls == 0 && extra->ClassMaster != MORTAL && Pos != 6 && Pos != 7)
-		return FALSE;
+		return false;
 
 	if (BASE_GetItemAbility(item, EF_MOBTYPE) == ARCH && extra->ClassMaster == MORTAL)
-		return FALSE;
+		return false;
 
 	if (BASE_GetItemAbility(item, EF_MOBTYPE) == MORTAL && extra->ClassMaster != MORTAL)
-		return FALSE;
+		return false;
 
 	if (BASE_GetItemAbility(item, EF_MOBTYPE) == MORTAL && extra->ClassMaster != MORTAL)
-		return FALSE;
+		return false;
 
 	if (BASE_GetItemAbility(item, EF_MOBTYPE) == CELESTIAL && (extra->ClassMaster == MORTAL || extra->ClassMaster == ARCH))
-		return FALSE;
+		return false;
 
 	if(extra->ClassMaster != MORTAL && Pos == 1 && item->sIndex != 747 && (item->sIndex < 3500 || item->sIndex > 3507))
-		return FALSE;
+		return false;
 
 	int lvl = extra->ClassMaster == MORTAL ? BASE_GetItemAbility(item, EF_LEVEL) : 0;
 	int str = extra->ClassMaster == MORTAL ? BASE_GetItemAbility(item, EF_REQ_STR) : 0;
@@ -4392,21 +4369,21 @@ int BASE_CanEquip(STRUCT_ITEM *item, STRUCT_SCORE *score, int Pos, int Class, ST
 	}
 
 	if(lvl > score->Level)
-		return FALSE;
+		return false;
 
 	if(str > score->Str)
-		return FALSE;
+		return false;
 
 	if(spt > score->Int)
-		return FALSE;
+		return false;
 
 	if(agi > score->Dex)
-		return FALSE;
+		return false;
 
 	if(con > score->Con)
-		return FALSE;
+		return false;
 
-	return TRUE;
+	return true;
 }
 
 int BASE_CanCarry(STRUCT_ITEM *item, STRUCT_ITEM *carry, int DestX, int DestY, int *error)
@@ -4461,19 +4438,19 @@ int BASE_CanCarry(STRUCT_ITEM *item, STRUCT_ITEM *carry, int DestX, int DestY, i
 			{
 				*error = -1;
 
-				return FALSE;
+				return false;
 			}
 
 			if(CarryGrid[(yy + DestY) * CARRYGRIDY + xx + DestX] != 0)
 			{
 				*error = CarryGrid[(yy + DestY) * CARRYGRIDY + xx + DestX];
 
-				return FALSE;
+				return false;
 			}
 		}
 	}
 
-	return TRUE;
+	return true;
 }
 
 int BASE_CanCargo(STRUCT_ITEM *item, STRUCT_ITEM *cargo, int DestX, int DestY)
@@ -4525,14 +4502,14 @@ int BASE_CanCargo(STRUCT_ITEM *item, STRUCT_ITEM *cargo, int DestX, int DestY)
 				continue;
 
 			if(yy + DestY < 0 || xx + DestX < 0 || yy + DestY >= CARGOGRIDY || xx + DestX >= CARGOGRIDX)
-				return FALSE;
+				return false;
 
 			if(CargoGrid[(yy + DestY) * CARGOGRIDY + xx + DestX] == 1)
-				return FALSE;
+				return false;
 		}
 	}
 
-	return TRUE;
+	return true;
 }
 
 void BASE_SortTradeItem(STRUCT_ITEM *Item, int Type)
@@ -4627,10 +4604,10 @@ int BASE_CanTrade(STRUCT_ITEM *Dest, STRUCT_ITEM *Carry, unsigned char *MyTrade,
 		}
 
 		if (j == MaxCarry)
-			return FALSE;
+			return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 void BASE_InitializeMessage(char *file)
@@ -4676,7 +4653,7 @@ void BASE_InitializeMessage(char *file)
 
 		if(TabPos == 0)
 		{  
-			platform::ReportWarning(NULL, str, "Can't parse String", MB_OK);
+			platform::ReportWarning(str, "Can't parse String");
 
 		   continue;
 		}
@@ -4697,7 +4674,7 @@ void BASE_InitializeMessage(char *file)
 
 		if(len <= 0 || len >= 128)
 		{  
-			platform::ReportWarning(NULL, str, "Empty or Long String", MB_OK);
+			platform::ReportWarning(str, "Empty or Long String");
 
 			continue;
 		}
@@ -4752,7 +4729,7 @@ void BASE_InitializeMobname(char *file, int offset)
 
 			if(TabPos == 0)
 			{  
-				platform::ReportWarning(NULL, str, "Can't parse String", MB_OK);
+				platform::ReportWarning(str, "Can't parse String");
 
 				continue;
 			}
@@ -4774,7 +4751,7 @@ void BASE_InitializeMobname(char *file, int offset)
 
 			if(len <= 0 || len >= 16)
 			{  
-				platform::ReportWarning(NULL, str, "Empty or Long String-1st", MB_OK);
+				platform::ReportWarning(str, "Empty or Long String-1st");
 
 				continue;
 			}
@@ -4783,7 +4760,7 @@ void BASE_InitializeMobname(char *file, int offset)
 
 			if(len <= 0 || len >= 16)
 			{  
-				platform::ReportWarning(NULL, str, "Empty or Long String-2nd", MB_OK);
+				platform::ReportWarning(str, "Empty or Long String-2nd");
 
 				continue;
 			}
@@ -4791,7 +4768,7 @@ void BASE_InitializeMobname(char *file, int offset)
 
 			if(Index < 0 || Index >= MAX_STRING) 
 			{
-				platform::ReportWarning(NULL, str, "Too much items in mobname.txt", MB_OK);
+				platform::ReportWarning(str, "Too much items in mobname.txt");
 
 				break;
 			}
@@ -4832,7 +4809,7 @@ void BASE_InitializeMobname(char *file, int offset)
 
 			if(TabPos == 0)
 			{  
-				platform::ReportWarning(NULL, str, "Can't parse String", MB_OK);
+				platform::ReportWarning(str, "Can't parse String");
 
 				continue;
 			}
@@ -4854,7 +4831,7 @@ void BASE_InitializeMobname(char *file, int offset)
 
 			if(len <= 0 || len >= NAME_LENGTH)
 			{  
-				platform::ReportWarning(NULL, str, "Empty or Long String-1st", MB_OK);
+				platform::ReportWarning(str, "Empty or Long String-1st");
 
 				continue;
 			}
@@ -4863,7 +4840,7 @@ void BASE_InitializeMobname(char *file, int offset)
 
 			if(len <= 0 || len >= NAME_LENGTH)
 			{  
-				platform::ReportWarning(NULL, str, "Empty or Long String-2nd", MB_OK);
+				platform::ReportWarning(str, "Empty or Long String-2nd");
 
 				continue;
 			}
@@ -4871,7 +4848,7 @@ void BASE_InitializeMobname(char *file, int offset)
 
 			if(Index < 0 || Index >= MAX_STRING) 
 			{
-				platform::ReportWarning(NULL, str, "Too much items in mobname.txt", MB_OK);
+				platform::ReportWarning(str, "Too much items in mobname.txt");
 
 				break;
 			}
@@ -4888,7 +4865,7 @@ void BASE_InitializeMobname(char *file, int offset)
 
 			if(Index == MAX_STRING)
 			{
-                platform::ReportWarning(NULL, str, "Can't Find match mobname", MB_OK);
+                platform::ReportWarning(str, "Can't Find match mobname");
 
                 break;
 			}
@@ -4949,14 +4926,14 @@ int BASE_ReadMessageBin()
 	int sum = BASE_GetSum((char*)g_pMessageStringTable, size);
 	/*
 	if(sum != tsum) 
-		return FALSE;
+		return false;
 	*/
 	for(int i = 0; i < size; i++)
 	{ 
 		temp[i] = temp[i] ^ 0x5A;
 	}
 
-	return TRUE;
+	return true;
 }
 
 void BASE_InitializeItemList()
@@ -4969,9 +4946,9 @@ void BASE_InitializeItemList()
 
 	ret = BASE_ReadItemListFile("../../Common/itemlist.csv", 1);
 
-	if(ret == FALSE)
+	if(ret == false)
 	{
-		platform::ReportFatal(NULL, "There is no file.", "itemlist.csv", MB_OK);
+		platform::ReportFatal("There is no file.", "itemlist.csv");
 
 		return;
 	}
@@ -4995,9 +4972,9 @@ int BASE_ReadItemListFile(char *filename, int Build)
 
 		if(wfp == NULL)
 		{
-			platform::ReportFatal(NULL, "Can't write extraitem.bin", "ERROR", MB_OK);
+			platform::ReportFatal("Can't write extraitem.bin", "ERROR");
 
-			return FALSE;
+			return false;
 		}
 	}
 
@@ -5015,7 +4992,7 @@ int BASE_ReadItemListFile(char *filename, int Build)
 	}
 
 	if(fp == NULL)
-		return FALSE;
+		return false;
 
 	while(1)
 	{
@@ -5066,7 +5043,7 @@ int BASE_ReadItemListFile(char *filename, int Build)
 
 		if(Index >= MAX_ITEMLIST)
 		{
-			platform::ReportWarning(NULL, str, "check MAX_ITEMLIST", MB_OK);
+			platform::ReportWarning(str, "check MAX_ITEMLIST");
 
 			continue;
 		}
@@ -5075,7 +5052,7 @@ int BASE_ReadItemListFile(char *filename, int Build)
 
         if (len >= ITEMNAME_LENGTH-1)
 		{
-			platform::ReportWarning(NULL, "too long Item Name", Name, MB_OK);
+			platform::ReportWarning("too long Item Name", Name);
 
 			Name[ITEMNAME_LENGTH-1] = 0;
 			Name[ITEMNAME_LENGTH-2] = 0;
@@ -5132,7 +5109,7 @@ int BASE_ReadItemListFile(char *filename, int Build)
 
 		    if (j == MAX_EFFECTINDEX)
 			{
-				platform::ReportWarning(0, nE[j], "Unregisterd effect", 0);
+				platform::ReportWarning(nE[j], "Unregisterd effect");
 
                 continue;
 			}   
@@ -5156,7 +5133,7 @@ int BASE_ReadItemListFile(char *filename, int Build)
 		BASE_WriteItemList(0);
 	}
 
-	return TRUE;
+	return true;
 }
 
 void BASE_InitializeEffectName()
@@ -5173,7 +5150,7 @@ void BASE_InitializeEffectName()
 
 	if(fp == NULL)
 	{
-		platform::ReportFatal(NULL, "There is no file", "ItemEffect", MB_OK);
+		platform::ReportFatal("There is no file", "ItemEffect");
 
 		return;
 	}
@@ -5220,14 +5197,14 @@ void BASE_InitializeEffectName()
 
 		if(val < 0 || val > MAX_EFFECTINDEX)
 		{
-			platform::ReportWarning(NULL, temp,"Effect.hÀÇ Define Value°¡ ¼ýÀÚ°¡ ¾Æ´Ï°Å³ª 0ÀÌÇÏ ¶Ç´Â MAX_EFFECTINDEXÀÌ»óÀÌ´Ù", MB_OK);
+			platform::ReportWarning(temp, "Effect.hÀÇ Define Value°¡ ¼ýÀÚ°¡ ¾Æ´Ï°Å³ª 0ÀÌÇÏ ¶Ç´Â MAX_EFFECTINDEXÀÌ»óÀÌ´Ù");
 
 			continue;
 		}
 
 		if(EffectNameTable[val][0] != 0)
 		{
-			platform::ReportWarning(NULL, temp, EffectNameTable[val], MB_OK);
+			platform::ReportWarning(temp, EffectNameTable[val]);
 
 			continue;
 		}
@@ -5294,7 +5271,7 @@ int BASE_UpdateItem(int maskidx, int CurrentState, int NextState, int xx, int yy
 	int delta = 0;
 
 	if(maskidx >= MAX_GROUNDMASK || maskidx < 0)
-		return FALSE;
+		return false;
 
 	if(CurrentState == 1 && (NextState == 3 || NextState == 2))
 		delta = 1;
@@ -5302,7 +5279,7 @@ int BASE_UpdateItem(int maskidx, int CurrentState, int NextState, int xx, int yy
 		delta = -1;
 
 	if(delta == 0)
-		return FALSE;
+		return false;
 
 	for(int y = 0; y <= MAX_GROUNDMASK-1; y++)
 	{
@@ -5334,7 +5311,7 @@ int BASE_UpdateItem(int maskidx, int CurrentState, int NextState, int xx, int yy
 		}
 	}
 
-	return TRUE;
+	return true;
 }
 
 int BASE_UpdateItem2(int maskidx, int CurrentState, int NextState, int xx, int yy, char *pHeight, int rotate, int height)
@@ -5342,7 +5319,7 @@ int BASE_UpdateItem2(int maskidx, int CurrentState, int NextState, int xx, int y
 	int delta = 0;
 
 	if(maskidx >= MAX_GROUNDMASK || maskidx < 0)
-		return FALSE;
+		return false;
 
 	for(int y = 0; y <= MAX_GROUNDMASK-1; y++)
 	{
@@ -5360,7 +5337,7 @@ int BASE_UpdateItem2(int maskidx, int CurrentState, int NextState, int xx, int y
 		}
 	}
 
-	return TRUE;
+	return true;
 }
 
 void BASE_GetDestByAction(unsigned short *x, unsigned short *y, MSG_Action *mv)
@@ -5467,7 +5444,7 @@ int BASE_GetDoubleCritical(STRUCT_MOB *mob, unsigned short *sProgress, unsigned 
 	*bDoubleCritical = 0;
 
 	if(cProgress == 0)
-		return FALSE;
+		return false;
 
 	if(*cProgress >= 1024)
 	{	
@@ -5861,7 +5838,7 @@ void BASE_WriteInitItem()
 
 	if(fp == NULL) 
 	{
-		platform::ReportFatal(NULL, "Can't write inititem.bin", "ERROR", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportFatal("Can't write inititem.bin", "ERROR");
 
 		return;
 	}
@@ -5878,25 +5855,14 @@ void BASE_WriteInitItem()
 
 int BASE_ReadInitItem()
 {
-	char szPathName[256];
 	char szFileName[256];
 
-	memset(szPathName, 0, 256);
 	memset(szFileName, 0, 256);
 
-	GetModuleFileName(NULL, szPathName, 256);
+	const std::string exeName = platform::ExecutableFileName();
 
-	int len = strlen(szPathName);
-
-	for(int nIndex = len-1; nIndex > 0; nIndex--)
-	{
-		if(szPathName[nIndex]=='\\')
-		{
-			sprintf(szFileName, "%s", &szPathName[nIndex+1]);
-
-			break;
-		}
-	}
+	if (!exeName.empty())
+		strncpy(szFileName, exeName.c_str(), sizeof(szFileName) - 1);
 
 #ifdef _ADMIN_TOOL
 #ifdef _CHINESESIMPLE
@@ -5915,9 +5881,9 @@ int BASE_ReadInitItem()
 
 	if(fp == NULL) 
 	{
-		platform::ReportFatal(NULL, "Can't read inititem", "ERROR", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportFatal("Can't read inititem", "ERROR");
 
-		return FALSE;
+		return false;
 	}
 
 	fseek(fp, -size, SEEK_END);
@@ -5940,7 +5906,7 @@ int BASE_ReadInitItem()
 		}
 	}
 
-	return TRUE;
+	return true;
 } 
 
 void BASE_InitializeInitItem()
@@ -5954,7 +5920,7 @@ void BASE_InitializeInitItem()
 
 	if(fp == NULL)
 	{
-		platform::ReportFatal(NULL, "There is no file", "InitItem.csv", MB_OK);
+		platform::ReportFatal("There is no file", "InitItem.csv");
 
 		return;
 	}
@@ -6006,7 +5972,7 @@ void BASE_InitializeSkill()
 
 	 if(fp == NULL)
 	 {
-		 platform::ReportFatal(NULL, "There is no file", "SkillData.csv", NULL);
+		 platform::ReportFatal("There is no file", "SkillData.csv");
 
 		 return;
 	 }	
@@ -6072,14 +6038,14 @@ void BASE_InitializeSkill()
 int IsClearString3(char *str, int nTarget)
 {
 	if(str == NULL)
-		return TRUE;
+		return true;
 
-	char *pNextRightChar = CharNext(&str[nTarget]);
+	const unsigned char *pNextRightChar = _mbsinc(reinterpret_cast<const unsigned char *>(&str[nTarget]));
 
-	if	(str+nTarget+1 != pNextRightChar)
-		return FALSE;
+	if	(reinterpret_cast<const char *>(&str[nTarget]) + 1 != reinterpret_cast<const char *>(pNextRightChar))
+		return false;
 
-	return TRUE;
+	return true;
 }
 
 void BASE_InitializeClientGuildName(int group)
@@ -6118,7 +6084,7 @@ void BASE_InitializeClientGuildName(int group)
 
 		if((Group < 0 || Group >= MAX_SERVERGROUP || Server < 0 || Server >= 16) || (Guild < 0 || Guild >= MAX_GUILD) || szGuild[0][0] == 0)
 		{
-			platform::ReportWarning(NULL, str, "Can`t parse string in Guilds.txt", MB_OK);
+			platform::ReportWarning(str, "Can`t parse string in Guilds.txt");
 			continue;
 		}
 
@@ -6161,7 +6127,7 @@ void BASE_InitializeGuildName()
 
 	if(fp == NULL)
 	{
-		platform::ReportFatal(0, "can't find guilds.txt", "error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportFatal("can't find guilds.txt", "error");
 		memset(g_pGuildName, 0, sizeof(g_pGuildName));
 
 		return;
@@ -6189,7 +6155,7 @@ void BASE_InitializeGuildName()
 
 		if((Group < 0 || Group >= MAX_SERVERGROUP) || (Server < 0 || Server >= 16) || (Guild < 0 || Guild >= MAX_GUILD) || szGuild[0] == 0)
 		{
-			platform::ReportWarning(0, str, "Can't parse string in Guilds.txt", 0);
+			platform::ReportWarning(str, "Can't parse string in Guilds.txt");
 
 			break;
 		}
@@ -6225,9 +6191,9 @@ int BASE_InitializeServerList()
 
 	if(fp == NULL)
 	{
-		platform::ReportFatal(NULL, "Can't open server list.txt", "adress", MB_OK);
+		platform::ReportFatal("Can't open server list.txt", "adress");
 
-		return FALSE;
+		return false;
 	}
 	
 	memset(g_pServerList, 0, sizeof(g_pServerList));
@@ -6299,7 +6265,7 @@ int BASE_InitializeServerList()
 
 	}
 
-	return TRUE;
+	return true;
 		
 }
 
@@ -6321,16 +6287,16 @@ int BASE_InitializeAttribute()
 	
 	if(fp == NULL)
 	{
-		platform::ReportFatal(NULL, "There is no file", "AttributeMap.dat", MB_OK);
+		platform::ReportFatal("There is no file", "AttributeMap.dat");
 
-		return FALSE;
+		return false;
 	}
 
 	fread(g_pAttribute, 1024, 1024, fp);
 
 	fclose(fp);
 
-	return TRUE;
+	return true;
 }
 
 int BASE_GetHttpRequest(char *httpname, char *Request, int MaxBuffer)
@@ -6451,11 +6417,11 @@ int BASE_GetEnglish(char *name)
 		{ 
 			strcpy(name, g_pEnglish[i][2]);
 
-		   return TRUE;
+		   return true;
 		}
 	}
 
-    return FALSE;
+    return false;
 }
 
 int BASE_GetWeekNumber()
@@ -6471,7 +6437,7 @@ int BASE_GetWeekNumber()
 	return ret;
 }
 
-BOOL BASE_CheckPacket(MSG_STANDARD *m)
+bool BASE_CheckPacket(MSG_STANDARD *m)
 {/*
 	if (m == NULL)
 		return 0;
@@ -6591,7 +6557,7 @@ BOOL BASE_CheckPacket(MSG_STANDARD *m)
 	
 	return code;
 	*/
-	return FALSE;
+	return false;
 }
 
 int  BASE_VisualItemCode(STRUCT_ITEM *Item, int mnt)

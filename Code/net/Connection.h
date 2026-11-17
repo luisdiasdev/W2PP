@@ -10,8 +10,9 @@ namespace net
 
 // Legacy send-surface facade over net::Session.
 //
-// The names match CPSock's public methods so the existing SendOneMessage /
-// AddMessage / SendMessageA / CloseSocket call sites do not change.
+// The names match the legacy transport's public methods so the existing
+// SendOneMessage / AddMessage / SendMessageA / CloseSocket call sites do not
+// change.
 class Connection
 {
 public:

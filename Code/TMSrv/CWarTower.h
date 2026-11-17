@@ -33,5 +33,5 @@ public:
 
 	static void MobKilled(int target, int conn, int PosX, int PosY);
 	static void GGenerateMob(int index, int PosX, int PosY, int tmob);
-	static BOOL TowerAttack(int conn, int idx);
+	static bool TowerAttack(int conn, int idx);
 };

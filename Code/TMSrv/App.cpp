@@ -34,7 +34,6 @@
 #include <string>
 
 #ifdef _WIN32
-#include <io.h>
 #endif
 
 namespace
@@ -70,11 +69,7 @@ void PlatformStatusSink(const char *line)
 {
 	// The former window showed the last log line; headless runs echo it to the
 	// console only when one is attached.
-	bool attached = false;
-
-#ifdef _WIN32
-	attached = _isatty(_fileno(stdout)) != 0;
-#endif
+	bool attached = platform::StandardOutputIsTerminal();
 
 	const char *force = std::getenv("W2PP_FORCE_CONSOLE");
 
@@ -143,7 +138,7 @@ void StartGameServices()
 
 	if (!g_gameAcceptor->Listen(LocalAddressString(), GAME_PORT, listenError))
 	{
-		platform::ReportFatal(hWndMain, listenError.c_str(), "game listener", 0);
+		platform::ReportFatal(listenError.c_str(), "game listener");
 		return;
 	}
 
@@ -186,8 +181,7 @@ void OnDBExhausted()
 	if (!g_servicesStarted)
 	{
 		g_bootFailure = true;
-		platform::ReportWarning(hWndMain,
-			"Não foi possivel se conectar a DBServer", "Erro ao iniciar", 0);
+		platform::ReportWarning("Não foi possivel se conectar a DBServer", "Erro ao iniciar");
 	}
 
 	g_runtime->RequestShutdown();
@@ -334,7 +328,7 @@ void AcceptGameConnection(asio::ip::tcp::socket socket, const std::string &peer)
 			}
 #endif
 
-			ProcessClientMessage(user, reinterpret_cast<char *>(frame), FALSE);
+			ProcessClientMessage(user, reinterpret_cast<char *>(frame), false);
 		});
 
 	session->SetCloseHandler(
@@ -504,9 +498,7 @@ bool LoadLocalAddress()
 
 	if (fp == NULL)
 	{
-		platform::ReportFatal(hWndMain,
-			"Não foi possivel encontrar o arquivo LocalIP.txt",
-			"Erro ao iniciar", 0);
+		platform::ReportFatal("Não foi possivel encontrar o arquivo LocalIP.txt", "Erro ao iniciar");
 		return false;
 	}
 
@@ -517,9 +509,7 @@ bool LoadLocalAddress()
 	{
 		fclose(fp);
 
-		platform::ReportFatal(hWndMain,
-			"Não foi possivel ler o arquivo LocalIP.txt",
-			"Erro ao iniciar", 0);
+		platform::ReportFatal("Não foi possivel ler o arquivo LocalIP.txt", "Erro ao iniciar");
 		return false;
 	}
 
@@ -561,9 +551,7 @@ bool LoadLocalAddress()
 
 	if (DBServerAddress[0] == 0)
 	{
-		platform::ReportFatal(hWndMain,
-			"Não foi possivel pegar o ServerGroup. LocalIP.txt / ServerList.txt",
-			"Erro ao iniciar", 0);
+		platform::ReportFatal("Não foi possivel pegar o ServerGroup. LocalIP.txt / ServerList.txt", "Erro ao iniciar");
 		return false;
 	}
 

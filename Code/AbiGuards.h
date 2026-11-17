@@ -10,9 +10,9 @@
 #define _ABIGUARDS_
 
 #include "Basedef.h"
-#include "CPSock.h"
+#include "net/Protocol.h"
 
-// Wire protocol header (Code/CPSock.h).
+// Wire protocol header (Code/net/Protocol.h).
 static_assert(sizeof(HEADER) == 12,
 	"HEADER must stay 12 bytes for wire compatibility");
 

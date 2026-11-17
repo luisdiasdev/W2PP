@@ -28,9 +28,9 @@ private:
 	static const char* const CASTLE_QUEST_PATH;
 
 public:
-	static BOOL OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m);
+	static bool OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m);
 	static void MobKilled(int target, int conn, int PosX, int PosY);
-	static BOOL KeyDrop(int target, int conn, int PosX, int PosY, STRUCT_ITEM *Key);
+	static bool KeyDrop(int target, int conn, int PosX, int PosY, STRUCT_ITEM *Key);
 
 	static void ProcessSecTimer();
 	static void ProcessMinTimer();

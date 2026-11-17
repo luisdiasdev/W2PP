@@ -16,13 +16,9 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include <io.h>
-#include <errno.h>
 
 #include "..\Basedef.h"
 #include "..\net\Connection.h"
@@ -250,8 +246,6 @@ short weapon[32][9];
 net::Connection BillServerSocket;
 char   BillServerAddress[32] = { 0, };
 int	   BillServerPort = 0;
-
-HWND  hWndMain = nullptr;
 
 std::string g_statusText;
 
@@ -495,7 +489,7 @@ void ClearCrown(int conn)
 	int GLevel = pMob[conn].MOB.GuildLevel;
 	int Guild = pMob[conn].MOB.Guild;
 
-	int IsCrownGuild = FALSE;
+	int IsCrownGuild = false;
 
 	int i = 0;
 
@@ -505,7 +499,7 @@ void ClearCrown(int conn)
 
 		if ((Guild != 0) && (CrownGuild != 0) && (CrownGuild == Guild && GLevel == 9))
 		{
-			IsCrownGuild = TRUE;
+			IsCrownGuild = true;
 
 			break;
 		}
@@ -677,7 +671,7 @@ void ClearCrown(int conn)
 	}
 }
 
-BOOL AddCrackError(int conn, int val, int Type)
+bool AddCrackError(int conn, int val, int Type)
 {
 	if (Type != 3 && Type != 8 && Type != 15)
 	{
@@ -696,19 +690,19 @@ BOOL AddCrackError(int conn, int val, int Type)
 		sprintf(temp, "cra char logout type: %d", Type);
 		Log(temp, pUser[conn].AccountName, pUser[conn].IP);
 
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
-BOOL PutItem(int conn, STRUCT_ITEM *item)
+bool PutItem(int conn, STRUCT_ITEM *item)
 {
 	if (conn <= 0 || conn >= MAX_USER)
-		return FALSE;
+		return false;
 
 	if (pUser[conn].Mode != USER_PLAY)
-		return FALSE;
+		return false;
 
 	int pos = 0;
 
@@ -727,9 +721,9 @@ BOOL PutItem(int conn, STRUCT_ITEM *item)
 	else
 	{
 		SendClientMessage(conn, g_pMessageStringTable[_NN_You_Have_No_Space_To_Trade]);
-		return FALSE;
+		return false;
 	}
-	return TRUE;
+	return true;
 }
 
 void GuildZoneReport(void)
@@ -756,7 +750,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (fp == NULL)
 	{
-		platform::ReportWarning(hWndMain, "no gameconfig.txt, server will generate default setting.", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("no gameconfig.txt, server will generate default setting.", "Error");
 
 		ConfigReady = 1;
 
@@ -773,7 +767,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Drop Item Event Settings:\n"))
 	{
-		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line1", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game-server generated gameconfig.txt - Line1", "Error");
 
 		fclose(fp);
 
@@ -793,7 +787,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(parm[0], "evindex") || strcmp(parm[1], "evdelete") || strcmp(parm[2], "evon") || strcmp(parm[3], "evitem") || strcmp(parm[4], "evrate") || strcmp(parm[5], "evstart"))
 	{
-		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line2", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game-server generated gameconfig.txt - Line2", "Error");
 
 		fclose(fp);
 
@@ -802,7 +796,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (value[0] == -1 || value[1] == -1 || value[2] == -1 || value[3] == -1 || value[4] == -1 || value[5] == -1 || value[6] == -1 || value[7] == -1)
 	{
-		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line2", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game-server generated gameconfig.txt - Line2", "Error");
 
 		fclose(fp);
 
@@ -823,7 +817,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Etc Event Settings:\n"))
 	{
-		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line3", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game server generated gameconfig.txt - Line3", "Error");
 
 		fclose(fp);
 
@@ -843,7 +837,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(parm[0], "double") || strcmp(parm[1], "deadpoint") || strcmp(parm[2], "dungeonevent") || strcmp(parm[3], "statsapphire"))
 	{
-		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line4", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game-server generated gameconfig.txt - Line4", "Error");
 
 		fclose(fp);
 
@@ -852,7 +846,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (value[0] == -1 || value[1] == -1 || value[2] == -1 || value[3] == -1)
 	{
-		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line4", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game-server generated gameconfig.txt - Line4", "Error");
 
 		fclose(fp);
 
@@ -869,7 +863,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Billing Settings:\n"))
 	{
-		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line5", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game server generated gameconfig.txt - Line5", "Error");
 
 		fclose(fp);
 
@@ -889,7 +883,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(parm[0], "billmode") || strcmp(parm[1], "freeexp"))
 	{
-		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line6", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game-server generated gameconfig.txt - Line6", "Error");
 
 		fclose(fp);
 
@@ -898,7 +892,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (value[0] == -1 || value[1] == -1)
 	{
-		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line6", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game-server generated gameconfig.txt - Line6", "Error");
 
 		fclose(fp);
 
@@ -919,7 +913,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Item Drop Bonus Settings:\n"))
 	{
-		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line7", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game server generated gameconfig.txt - Line7", "Error");
 
 		return;
 	}
@@ -932,7 +926,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 	{
 		if (value[k] < 0 || value[k] > 9999)
 		{
-			platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line8", "Error", MB_OK | MB_SYSTEMMODAL);
+			platform::ReportWarning("not game-server generated gameconfig.txt - Line8", "Error");
 
 			fclose(fp);
 
@@ -951,7 +945,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 	{
 		if (value[k] < 0 || value[k] > 9999)
 		{
-			platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line9", "Error", MB_OK | MB_SYSTEMMODAL);
+			platform::ReportWarning("not game-server generated gameconfig.txt - Line9", "Error");
 
 			fclose(fp);
 
@@ -972,7 +966,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 	{
 		if (value[k] < 0 || value[k] > 9999)
 		{
-			platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line10", "Error", MB_OK | MB_SYSTEMMODAL);
+			platform::ReportWarning("not game-server generated gameconfig.txt - Line10", "Error");
 
 			fclose(fp);
 
@@ -992,7 +986,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 	{
 		if (value[k] < 0 || value[k] > 9999)
 		{
-			platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line11", "Error", MB_OK | MB_SYSTEMMODAL);
+			platform::ReportWarning("not game-server generated gameconfig.txt - Line11", "Error");
 
 			fclose(fp);
 
@@ -1008,7 +1002,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Treasure Settings:\n"))
 	{
-		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line12", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game server generated gameconfig.txt - Line12", "Error");
 
 		fclose(fp);
 
@@ -1057,7 +1051,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(tmp, "Etc Settings:\n"))
 	{
-		platform::ReportWarning(hWndMain, "not game server generated gameconfig.txt - Line13", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game server generated gameconfig.txt - Line13", "Error");
 
 		fclose(fp);
 
@@ -1077,7 +1071,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (strcmp(parm[0], "partydif") || strcmp(parm[1], "kefrastatus") || strcmp(parm[2], "GTorreHour") || strcmp(parm[3], "RVRHour") || strcmp(parm[4], "DropItem") || strcmp(parm[5], "BRHour") || strcmp(parm[6], "maxNightmare") || strcmp(parm[7], "PotionDelay"))
 	{
-		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line13", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game-server generated gameconfig.txt - Line13", "Error");
 
 		fclose(fp);
 
@@ -1086,7 +1080,7 @@ void ReadConfig(void) // TODO : EVERYTHING
 
 	if (value[0] == -1 || value[1] == -1 || value[2] == -1 || value[3] == -1 || value[4] == -1 || value[5] == -1 || value[6] == -1 || value[7] == -1)
 	{
-		platform::ReportWarning(hWndMain, "not game-server generated gameconfig.txt - Line13", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportWarning("not game-server generated gameconfig.txt - Line13", "Error");
 
 		fclose(fp);
 
@@ -1294,12 +1288,15 @@ int  IsFree(STRUCT_SELCHAR *sel)
 
 int  SendBilling(int a1, char *a2, int a3, int a4)
 {
-	return TRUE;
+	return true;
 }
 
 int  SendBilling2(_AUTH_GAME *m, int hostlong)
 {
-	*(u_long*)&m->Unk = htonl(hostlong);
+	m->Unk[0] = static_cast<char>((hostlong >> 24) & 0xFF);
+	m->Unk[1] = static_cast<char>((hostlong >> 16) & 0xFF);
+	m->Unk[2] = static_cast<char>((hostlong >> 8) & 0xFF);
+	m->Unk[3] = static_cast<char>(hostlong & 0xFF);
 
 	sprintf(m->Unk, "%d", ServerIndex + 10 * ServerGroup);
 
@@ -1362,7 +1359,7 @@ void SetItemBonus(STRUCT_ITEM *Dest, int Level, int a3, int DropBonus)
 	if ( a3 && lvdif >= 3 )
 		lvdif = 2;
 
-	if (nPos & 0xFE && !LOBYTE(Dest->stEffect[0].sValue) && nPos != 128 )
+	if (nPos & 0xFE && !LowByte(Dest->stEffect[0].sValue) && nPos != 128 )
 	{
     
 	int v38 = 59;
@@ -1823,11 +1820,11 @@ void SetItemBonus(STRUCT_ITEM *Dest, int Level, int a3, int DropBonus)
     v28 += v37;
     if ( a3 && !v28 )
       v28 = 1;
-    if ( LOBYTE(Dest->stEffect[1].sValue) || v28 <= 0 )
+    if ( LowByte(Dest->stEffect[1].sValue) || v28 <= 0 )
     {
-      if ( LOBYTE(Dest->stEffect[1].sValue) || v28 > 0 || nPos != 32 )
+      if ( LowByte(Dest->stEffect[1].sValue) || v28 > 0 || nPos != 32 )
       {
-        if ( !LOBYTE(Dest->stEffect[1].sValue) )
+        if ( !LowByte(Dest->stEffect[1].sValue) )
         {
 			Dest->stEffect[1].cEffect = 59;
           int v4 = rand() & 0x8000007F;
@@ -1990,9 +1987,9 @@ void SetItemBonus(STRUCT_ITEM *Dest, int Level, int a3, int DropBonus)
       v27 = addDropBonus;
     if ( a3 && !v27 )
       v27 = 1;
-    if ( v27 <= 0 || LOBYTE(Dest->stEffect[2].sValue) )
+    if ( v27 <= 0 || LowByte(Dest->stEffect[2].sValue) )
     {
-      if ( !LOBYTE(Dest->stEffect[2].sValue) )
+      if ( !LowByte(Dest->stEffect[2].sValue) )
       {
         Dest->stEffect[2].cEffect = 59;
         int v5 = rand() & 0x8000007F;
@@ -2008,7 +2005,7 @@ void SetItemBonus(STRUCT_ITEM *Dest, int Level, int a3, int DropBonus)
     }
     g_dLevel2 = v27;
 
-    if ( !LOBYTE(Dest->stEffect[0].sValue) )
+    if ( !LowByte(Dest->stEffect[0].sValue) )
     {
       int v26 = rand() % 100;
       if ( a3 )
@@ -2200,7 +2197,7 @@ void SetItemBonus(STRUCT_ITEM *Dest, int Level, int a3, int DropBonus)
         break;
       case 0x3D:
         Dest->stEffect[0].cEffect = 61;
-        Dest->stEffect[0].cValue = LOBYTE(g_pItemList[ItemId].stEffect[i].sValue);
+        Dest->stEffect[0].cValue = LowByte(g_pItemList[ItemId].stEffect[i].sValue);
         break;
       case 0x4E:
         Dest->stEffect[0].cEffect = 78;
@@ -2539,7 +2536,7 @@ int GenerateSummon(int conn, int SummonID, STRUCT_ITEM *sItem, int Num)
 		SummonNum++;
 
 
-		if (GetEmptyMobGrid(partyconn, &posX, &posY) != 0 && GetInView(conn, partyconn) == FALSE)
+		if (GetEmptyMobGrid(partyconn, &posX, &posY) != 0 && GetInView(conn, partyconn) == false)
 		{
 			MSG_Action sm;
 			memset(&sm, 0, sizeof(MSG_Action));
@@ -2907,7 +2904,7 @@ int CreateMob(char *MobName, int PosX, int PosY, char *folder, int Type)
 
 	GridMulticast(px, py, (MSG_STANDARD*)&sm, 0);
 
-	return TRUE;
+	return true;
 }
 
 void GenerateMob(int index, int PosX, int PosY)
@@ -3869,7 +3866,7 @@ int  ProcessAffect(int idx)
 									sm.Dam[0].TargetID = currentTarget;
 									sm.Dam[0].Damage = -1;
 
-									ProcessClientMessage(idx, (char*)&sm, TRUE);
+									ProcessClientMessage(idx, (char*)&sm, true);
 								}
 								else
 									pMob[idx].CurrentTarget = 0;
@@ -4309,7 +4306,7 @@ LABEL_59:
 
 
 					if(idx < MAX_USER)
-						ProcessClientMessage(idx, (char*)&sm, TRUE);
+						ProcessClientMessage(idx, (char*)&sm, true);
 			  }
 		}
 #pragma endregion
@@ -4618,7 +4615,7 @@ LABEL_59:
 
 
 					if(idx < MAX_USER)
-						ProcessClientMessage(idx, (char*)&sm, TRUE);
+						ProcessClientMessage(idx, (char*)&sm, true);
 			  }
 		}
 #pragma endregion
@@ -4676,7 +4673,7 @@ LABEL_59:
 		if (FaceChange)
 			SendEquip(idx, 0);
 
-		return TRUE;
+		return true;
 	}
 	else
 		return 0;
@@ -6227,7 +6224,7 @@ int  ReadMob(STRUCT_MOB *mob, char *dir)
 			sprintf(temp, "err,ReadMob UNKNOW %s", mob->MobName);
 
 		Log(temp, "-system", 0);
-		return FALSE;
+		return false;
 	}
 
 	strncpy(temp, mob->MobName, NAME_LENGTH);
@@ -6236,7 +6233,7 @@ int  ReadMob(STRUCT_MOB *mob, char *dir)
 	{
 		mobFile.Close();
 
-		return FALSE;
+		return false;
 	}
 
 	mobFile.Close();
@@ -6247,7 +6244,7 @@ int  ReadMob(STRUCT_MOB *mob, char *dir)
 
 	mob->BaseScore = mob->CurrentScore;
 
-	return TRUE;
+	return true;
 }
 
 void DeleteMob(int conn, int Type)
@@ -6487,20 +6484,20 @@ void SetBattle(int mob, int target)
 int  CreateItem(int x, int y, STRUCT_ITEM *item, int rotate, int Create)
 {
 	if (item->sIndex <= 0 || item->sIndex >= MAX_ITEMLIST)
-		return FALSE;
+		return false;
 
 	GetEmptyItemGrid(&x, &y);
 
 //	if (pHeightGrid[y][x] >= -15 || pHeightGrid[y][x] >= 90)
-//		return FALSE;
+//		return false;
 
 	if (pItemGrid[y][x])
-		return FALSE;
+		return false;
 
 	int empty = GetEmptyItem();
 
 	if (empty == 0)
-		return FALSE;
+		return false;
 
 	pItem[empty].Mode = 1;
 
@@ -6546,7 +6543,7 @@ int  CreateItem(int x, int y, STRUCT_ITEM *item, int rotate, int Create)
 
 	GridMulticast(x, y, (MSG_STANDARD*)&sm, 0);
 
-	return TRUE;
+	return true;
 }
 
 void RemoveTrade(int conn)
@@ -6694,7 +6691,7 @@ void RemoveParty(int conn)
 
 						pMob[partyconn].LastReqParty = novolider;
 
-						ProcessClientMessage(partyconn, (char*)&sm, TRUE);
+						ProcessClientMessage(partyconn, (char*)&sm, true);
 					}
 				}
 			}
@@ -6709,7 +6706,7 @@ int UpdateItem(int Gate, int state, int *height)
 	int update = BASE_UpdateItem(pItem[Gate].GridCharge, pItem[Gate].State, state, pItem[Gate].PosX, pItem[Gate].PosY, (char*)&pHeightGrid, rotate, height);
 
 	if (update == 0)
-		return FALSE;
+		return false;
 
 	pItem[Gate].State = state;
 	pItem[Gate].Height = *height;
@@ -6722,7 +6719,7 @@ int UpdateItem(int Gate, int state, int *height)
 	if (GridCharge >= 6 || GridCharge < 0)
 	{
 		Log("err,updateItem maskidx illegal", "-system", 0);
-		return TRUE;
+		return true;
 	}
 
 	if (itemstate == state)
@@ -6734,7 +6731,7 @@ int UpdateItem(int Gate, int state, int *height)
 
 		pItem[Gate].State = state;
 
-		return TRUE;
+		return true;
 	}
 
 	int posX = pItem[Gate].PosX;
@@ -6785,7 +6782,7 @@ int UpdateItem(int Gate, int state, int *height)
 		}
 	}
 
-	return TRUE;
+	return true;
 }
 
 void DoRecall(int conn)
@@ -7013,7 +7010,7 @@ void DoDeprivate(int conn, int target)
 	}
 
 	int sub = pMob[conn].MOB.GuildLevel;
-	int Disqualified = FALSE;
+	int Disqualified = false;
 
 
 	int gGuild = pMob[target].MOB.Guild;
@@ -7023,7 +7020,7 @@ void DoDeprivate(int conn, int target)
 
 	if (sub >= 6 && sub <= 8 && pMob[target].MOB.GuildLevel < 6 || sub == 9)
 	{
-		Disqualified = TRUE;
+		Disqualified = true;
 
 		if(pMob[target].MOB.GuildLevel >= 6 && pMob[target].MOB.GuildLevel <= 8)
 		{
@@ -7064,7 +7061,7 @@ void DoDeprivate(int conn, int target)
 	}
 
 
-	if (Disqualified == FALSE)
+	if (Disqualified == false)
 	{
 		SendClientMessage(conn, g_pMessageStringTable[_NN_Deprivate]);
 
@@ -7500,21 +7497,21 @@ void DoGreatTeleport(int mob, int x, int y)
 	}
 }
 
-BOOL SetAffect(int conn, int skillnum, int time, int Level)
+bool SetAffect(int conn, int skillnum, int time, int Level)
 {
 	if (pMob[conn].MOB.Merchant == 1 || conn > MAX_USER)
-		return FALSE;
+		return false;
 
 	int sAffectType = g_pSpell[skillnum].AffectType;
 	int sAggressive = g_pSpell[skillnum].Aggressive;
 
 	if (pMob[conn].MOB.Rsv & RSV_BLOCK && sAggressive)
-		return FALSE;
+		return false;
 
 	int EmptyAffect = GetEmptyAffect(conn, sAffectType);
 
 	if (sAffectType <= 0 || EmptyAffect  < 0 || EmptyAffect >= MAX_AFFECT)
-		return FALSE;
+		return false;
 
 	int sType = pMob[conn].Affect[EmptyAffect].Type;
 
@@ -7544,13 +7541,13 @@ BOOL SetAffect(int conn, int skillnum, int time, int Level)
 	pMob[conn].GetCurrentScore(conn);
 
 
-	return TRUE;
+	return true;
 }
 
-BOOL SetTick(int mob, int skillnum, int Delay, int Level)
+bool SetTick(int mob, int skillnum, int Delay, int Level)
 {
 	if (pMob[mob].MOB.Merchant == 1 && mob > MAX_USER)
-		return FALSE;
+		return false;
 
 	int sTickType = g_pSpell[skillnum].TickType;
 	int sAggressive = g_pSpell[skillnum].Aggressive;
@@ -7577,10 +7574,10 @@ BOOL SetTick(int mob, int skillnum, int Delay, int Level)
 		pMob[mob].GetCurrentScore(mob);
 
 		
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 void ProcessDecayItem()
@@ -7715,7 +7712,7 @@ int  CombineTreasureMap(int conn)
 
 		SendClientMessage(conn, g_pMessageStringTable[_NN_Treasure_Map]);
 
-		return TRUE;
+		return true;
 	}
 
 	int itemCount = 0;
@@ -7736,7 +7733,7 @@ int  CombineTreasureMap(int conn)
 		return 0;
 
 	SendClientMessage(conn, g_pMessageStringTable[_NN_Congratulations]);
-	return TRUE;
+	return true;
 }
 
 void Combine(int conn, int item, int PrizeItem)
@@ -7823,7 +7820,7 @@ void Combine(int conn, int item, int PrizeItem)
 
 int ApplyHp(int conn)
 {
-	int retnValue = FALSE;
+	int retnValue = false;
 
 	if(pUser[conn].ReqHp > pMob[conn].MOB.CurrentScore.MaxHp)
 		pUser[conn].ReqHp = pMob[conn].MOB.CurrentScore.MaxHp;
@@ -7847,17 +7844,17 @@ int ApplyHp(int conn)
 		if(pMob[conn].MOB.CurrentScore.Hp > reqhp)
 			pMob[conn].MOB.CurrentScore.Hp = reqhp;
 
-		retnValue = TRUE;
+		retnValue = true;
 	}
 	else
-		retnValue = FALSE;
+		retnValue = false;
 
 	return retnValue;
 }
 
 int ApplyMp(int conn)
 {
-	int retnValue = FALSE;
+	int retnValue = false;
 
 	if (pUser[conn].ReqMp > pMob[conn].MOB.CurrentScore.MaxMp)
 		pUser[conn].ReqMp = pMob[conn].MOB.CurrentScore.MaxMp;
@@ -7881,10 +7878,10 @@ int ApplyMp(int conn)
 		if (pMob[conn].MOB.CurrentScore.Mp > reqmp)
 			pMob[conn].MOB.CurrentScore.Mp = reqmp;
 
-		retnValue = TRUE;
+		retnValue = true;
 	}
 	else
-		retnValue = FALSE;
+		retnValue = false;
 
 	return retnValue;
 }
@@ -7968,7 +7965,7 @@ void ReadLevelItemConfig(void)
 
 	if (fp == NULL)
 	{
-		platform::ReportFatal(hWndMain, "no LevelItem.txt", "Error", MB_OK | MB_SYSTEMMODAL);
+		platform::ReportFatal("no LevelItem.txt", "Error");
 
 		return;
 	}
@@ -8205,10 +8202,10 @@ void MobAttack(int attacker, MSG_Attack sm)
 						
 				int NeedUpdate = 0;
 						
-				if (SetAffect(Target, skill, 100, special) != FALSE)
+				if (SetAffect(Target, skill, 100, special) != false)
 					NeedUpdate = 1;
 
-				if (SetTick(Target, skill, 100, special) != FALSE)
+				if (SetTick(Target, skill, 100, special) != false)
 					NeedUpdate = 1;
 
 				if (NeedUpdate)
@@ -8533,10 +8530,10 @@ int  ParseMobMercString(int Num, char *str)
 	sscanf(str, "%s %s %s", str1, str2, str3);
 
 	if (str[0] == 47)
-		return FALSE;
+		return false;
 
 	if (str[0] == 0)
-		return FALSE;
+		return false;
 
 	STRUCT_ITEM Item;
 	memset(&Item, 0, sizeof(STRUCT_ITEM));
@@ -8566,7 +8563,7 @@ int  ParseMobMercString(int Num, char *str)
 	secondvalue = atoi(str3);
 
 	if (strlen(str2) > 80)
-		return FALSE;
+		return false;
 
 	_strupr(str1);
 
@@ -8601,11 +8598,11 @@ int  ParseMobMercString(int Num, char *str)
 				pMobMerc[Num].MaxStock[i] = item_value[7];
 				pMobMerc[Num].Stock[i] = item_value[7];
 
-				return TRUE;
+				return true;
 			}
 		}
 	}
-	return TRUE;
+	return true;
 }
 
 void DeleteGenerateMob(int generate)
@@ -8625,18 +8622,18 @@ void DeleteGenerateMob(int generate)
 int  CreateTreasureBox(int x, int y, STRUCT_ITEM *item, int rotate, int State)
 {
 	if (item->sIndex <= 0 || item->sIndex >= MAX_ITEMLIST)
-		return FALSE;
+		return false;
 
 	GetEmptyItemGrid(&x, &y);
 
 
 	if (pItemGrid[y][x])
-		return FALSE;
+		return false;
 
 	int empty = GetEmptyItem();
 
 	if (empty == 0)
-		return FALSE;
+		return false;
 
 	pItem[empty].Mode = 2;
 
@@ -8678,5 +8675,5 @@ int  CreateTreasureBox(int x, int y, STRUCT_ITEM *item, int rotate, int State)
 
 	GridMulticast(x, y, (MSG_STANDARD*)&sm, 0);
 
-	return TRUE;
+	return true;
 }
