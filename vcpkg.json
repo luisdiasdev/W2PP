@@ -1,0 +1,10 @@
+{
+  "name": "w2pp",
+  "version-string": "1.0.0",
+  "description": "W2PP game and DB servers",
+  "dependencies": [
+    "asio",
+    "catch2"
+  ],
+  "builtin-baseline": "ec48c11eae9448c8c6e7739d93e06fa2433aa95f"
+}

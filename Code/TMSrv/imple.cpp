@@ -15,10 +15,9 @@
 *   along with this program.  If not, see [http://www.gnu.org/licenses/].
 *
 */
-#include <windows.h>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 #include "..\ItemEffect.h"
 #include "Language.h"
 
@@ -513,14 +512,15 @@ void ProcessImple(int conn, int level, char * str)
 
 			strcat(temp, sval1);
 
-			int handle = _open(temp, _O_CREAT | _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
-			if (handle == -1)
+			platform::File file;
+			bool opened = file.OpenReadWrite(temp);
+			if (!opened)
 			{
 				SendClientMessage(conn, "fail - save file");
 				return;
 			}
-			_write(handle, (void*)&pMob[conn].MOB, sizeof(pMob[conn].MOB));
-			_close(handle);
+			file.Write((void*)&pMob[conn].MOB, sizeof(pMob[conn].MOB));
+			file.Close();
 			sprintf(temp, "npc: %s saved", sval1);
 			SendClientMessage(conn, temp);
 		}
@@ -530,15 +530,16 @@ void ProcessImple(int conn, int level, char * str)
 
 			strcat(temp, sval1);
 
-			int handle = _open(temp, _O_RDONLY | _O_BINARY, NULL);
-			if (handle == -1)
+			platform::File file;
+			bool opened = file.OpenRead(temp);
+			if (!opened)
 			{
 				SendClientMessage(conn, "fail - open file");
 				return;
 			}
 
-			_read(handle, &pMob[conn].MOB, sizeof(pMob[conn].MOB));
-			_close(handle);
+			file.Read(&pMob[conn].MOB, sizeof(pMob[conn].MOB));
+			file.Close();
 
 			sprintf(temp, "npc: %s read.", sval1);
 			SendClientMessage(conn, temp);
@@ -575,7 +576,7 @@ void ProcessImple(int conn, int level, char * str)
 				SendClientMessage(conn, "SET TIMER can't be less than 5 sec");
 				return;
 			}
-			SetTimer(hWndMain, TIMER_MIN, ival1, NULL);
+			SetMinuteTickInterval(ival1);
 			SendClientMessage(conn, "SET TIMER");
 		}
 		else if (!strcmp(cmd, "saveall"))
@@ -594,7 +595,7 @@ void ProcessImple(int conn, int level, char * str)
 			{
 				if (ival2 == 2 || ival2 == 3)
 				{
-					if (BillServerSocket.Sock == NULL)
+					if (!BillServerSocket.IsOpen())
 					{
 						SendClientMessage(conn, "not connected to billing server.+billconnect first");
 						return;
@@ -602,43 +603,43 @@ void ProcessImple(int conn, int level, char * str)
 				}
 				BILLING = ival2;
 				SendClientMessage(conn, "set billing");
-				DrawConfig(1);
+				RefreshStatus(1);
 			}
 			else if (!strcmp(sval1, "billfree"))
 			{
 				FREEEXP = ival2;
 				SendClientMessage(conn, "SET FREE LEVEL");
-				DrawConfig(1);
+				RefreshStatus(1);
 			}
 			else if (!strcmp(sval1, "charselbill"))
 			{
 				CHARSELBILL = ival2;
 				SendClientMessage(conn, "SET CHARSELL BILL");
-				DrawConfig(1);
+				RefreshStatus(1);
 			}
 			else if (!strcmp(sval1, "potioncount"))
 			{
 				POTIONCOUNT = ival2;
 				SendClientMessage(conn, "SET POTIONCOUNT BILL");
-				DrawConfig(1);
+				RefreshStatus(1);
 			}
 			else if (!strcmp(sval1, "potiondelay"))
 			{
 				PotionDelay = ival2;
 				SendClientMessage(conn, "SET POTIONDELAY");
-				DrawConfig(1);
+				RefreshStatus(1);
 			}
 			else if (!strcmp(sval1, "partybonus"))
 			{
 				PARTYBONUS = ival2;
 				SendClientMessage(conn, "SET PARTYBONUS");
-				DrawConfig(1);
+				RefreshStatus(1);
 			}
 			else if (!strcmp(sval1, "guildboard"))
 			{
 				GUILDBOARD = ival2;
 				SendClientMessage(conn, "SET PARTYBONUS");
-				DrawConfig(1);
+				RefreshStatus(1);
 			}
 
 		}
@@ -881,7 +882,7 @@ void ProcessImple(int conn, int level, char * str)
 			g_pTreasure[idx].Target[tgt].stEffect[2].cEffect = 0;
 			g_pTreasure[idx].Target[tgt].stEffect[2].cValue = 0;
 
-			DrawConfig(1);
+			RefreshStatus(1);
 			SendClientMessage(conn, "+troktarget success");
 		}
 		else if (!strcmp(cmd, "trsource"))
@@ -893,7 +894,7 @@ void ProcessImple(int conn, int level, char * str)
 			}
 			int idx = ival1 - 1;
 			g_pTreasure[idx].Source = ival2;
-			DrawConfig(1);
+			RefreshStatus(1);
 			SendClientMessage(conn, "+trsource success");
 		}
 		else if (!strcmp(cmd, "trrate"))
@@ -912,7 +913,7 @@ void ProcessImple(int conn, int level, char * str)
 			int tgt = ival2 - 1;
 
 			g_pTreasure[idx].Rate[tgt] = ival3;
-			DrawConfig(1);
+			RefreshStatus(1);
 			SendClientMessage(conn, "+trrate success");
 		}
 		else if (!strcmp(cmd, "statsapphire"))
@@ -924,7 +925,7 @@ void ProcessImple(int conn, int level, char * str)
 			}
 			StatSapphire = ival1;
 			SendClientMessage(conn, "CHANGE STAT SAPPHIRE");
-			DrawConfig(TRUE);
+			RefreshStatus(true);
 		}
 		else if (!strcmp(cmd, "battleroyal"))
 		{
@@ -935,7 +936,7 @@ void ProcessImple(int conn, int level, char * str)
 			}
 			BRItem = ival1;
 			SendClientMessage(conn, "CHANGE BATTLE ROYAL REWARD");
-			DrawConfig(TRUE);
+			RefreshStatus(true);
 		}
 		else if (!strcmp(cmd, "set"))
 		{
@@ -946,7 +947,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evend"))
 			{
@@ -955,7 +956,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evitem"))
 			{
@@ -964,7 +965,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evrate"))
 			{
@@ -973,7 +974,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evindex"))
 			{
@@ -982,7 +983,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evdelete"))
 			{
@@ -991,7 +992,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 			
 				SendClientMessage(conn, temp);
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evon"))
 			{
@@ -1007,7 +1008,7 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "evnotice"))
 			{
@@ -1016,13 +1017,13 @@ void ProcessImple(int conn, int level, char * str)
 				sprintf(temp, "item:%d index:%d-%d(%d) rate:1/%d [I:%d D:%d O:%d N:%d]", evItem, evStartIndex, evEndIndex, evCurrentIndex, evRate, evIndex, evDelete, evOn, evNotice);
 				
 				SendClientMessage(conn, temp);
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "double"))
 			{
 				DOUBLEMODE = ival2;
 				SendClientMessage(conn, "SET DOUBLEMODE");
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "deadpoint"))
 			{
@@ -1033,7 +1034,7 @@ void ProcessImple(int conn, int level, char * str)
 				else
 					SendClientMessage(conn, "SET DEADPOINT 0");
 
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "dungeonevent"))
 			{
@@ -1044,7 +1045,7 @@ void ProcessImple(int conn, int level, char * str)
 				else
 					SendClientMessage(conn, "SET DUNGEON EVENT OFF");
 
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 			else if (!strcmp(sval1, "champ"))
 			{
@@ -1111,7 +1112,7 @@ void ProcessImple(int conn, int level, char * str)
 					return;
 				}
 				SendClientMessage(conn, "SET DROP BONUS");
-				DrawConfig(TRUE);
+				RefreshStatus(true);
 			}
 		}
 	}
@@ -1133,24 +1134,13 @@ void ProcessImple(int conn, int level, char * str)
 		}
 		else if (!strcmp(cmd, "billconnect"))
 		{
-			if (BillServerSocket.Sock != NULL)
+			if (BillServerSocket.IsOpen())
 			{
 				SendClientMessage(conn, "already connected");
 				return;
 			}
-			FILE * fp = fopen("biserver.txt", "rt");
-			if (fp == NULL)
-			{
-				SendClientMessage(conn, "no biserver.txt");
-				return;
-			}
-			fscanf(fp, "%s %d", BillServerAddress, &BillServerPort);
-			fclose(fp);
-			
-			int * pip = (int*)LocalIP;
-			int	ret = BillServerSocket.ConnectBillServer(BillServerAddress, BillServerPort, *pip, WSA_READBILL);
-			
-			if (ret == NULL)
+
+			if (!ConnectBillingFromConfig())
 			{
 				SendClientMessage(conn, "set connect fails");
 				return;
@@ -1158,7 +1148,7 @@ void ProcessImple(int conn, int level, char * str)
 
 			BILLING = 3;
 			SendClientMessage(conn, "set connect billing");
-			DrawConfig(1);
+			RefreshStatus(1);
 		}
 	}
 	if (level >= 1) ////////////////// 0ÀÌÇÏ¸é ¿©±â µé¾î¿ÀÁö¸¦ ¾Ê´Â´Ù.//////////////////////////////////////////////////////////////
@@ -1224,8 +1214,9 @@ void ProcessImple(int conn, int level, char * str)
 
 					strcat(tt, name);
 
-					int handle = _open(tt, _O_CREAT | _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
-					if (handle == -1)
+					platform::File file;
+					bool opened = file.OpenReadWrite(tt);
+					if (!opened)
 					{
 						Log("-system", "fail - save npc", 0);
 						return;
@@ -1233,8 +1224,8 @@ void ProcessImple(int conn, int level, char * str)
 
 					mNPCGen.pList[i].Leader.Exp = xp * mNPCGen.pList[i].Leader.BaseScore.Level / FREEEXP;
 
-					_write(handle, (void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
-					_close(handle);
+					file.Write((void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
+					file.Close();
 				}
 			}
 
@@ -1257,8 +1248,9 @@ void ProcessImple(int conn, int level, char * str)
 
 					strcat(tt, name);
 
-					int handle = _open(tt, _O_CREAT | _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
-					if (handle == -1)
+					platform::File file;
+					bool opened = file.OpenReadWrite(tt);
+					if (!opened)
 					{
 						Log("-system", "fail - save npc", 0);
 						return;
@@ -1266,8 +1258,8 @@ void ProcessImple(int conn, int level, char * str)
 
 					mNPCGen.pList[i].Leader.Exp = xp * mNPCGen.pList[i].Leader.BaseScore.Level / FREEEXP;
 
-					_write(handle, (void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
-					_close(handle);
+					file.Write((void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
+					file.Close();
 				}
 			}
 
@@ -1290,8 +1282,9 @@ void ProcessImple(int conn, int level, char * str)
 
 					strcat(tt, name);
 
-					int handle = _open(tt, _O_CREAT | _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
-					if (handle == -1)
+					platform::File file;
+					bool opened = file.OpenReadWrite(tt);
+					if (!opened)
 					{
 						Log("-system", "fail - save npc", 0);
 						return;
@@ -1299,8 +1292,8 @@ void ProcessImple(int conn, int level, char * str)
 
 					mNPCGen.pList[i].Leader.Exp = xp * mNPCGen.pList[i].Leader.BaseScore.Level / FREEEXP;
 
-					_write(handle, (void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
-					_close(handle);
+					file.Write((void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
+					file.Close();
 				}
 			}
 
@@ -1342,8 +1335,9 @@ void ProcessImple(int conn, int level, char * str)
 
 				strcat(tt, name);
 
-				int handle = _open(tt, _O_CREAT | _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
-				if (handle == -1)
+				platform::File file;
+				bool opened = file.OpenReadWrite(tt);
+				if (!opened)
 				{
 					Log("-system", "fail - save npc", 0);
 					return;
@@ -1351,8 +1345,8 @@ void ProcessImple(int conn, int level, char * str)
 
 				mNPCGen.pList[i].Leader.Exp = mNPCGen.pList[i].Leader.BaseScore.Level < lv ? xp : xp * mNPCGen.pList[i].Leader.BaseScore.Level / lv;
 
-				_write(handle, (void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
-				_close(handle);
+				file.Write((void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
+				file.Close();
 
 				strcpy(tt, "./npc/");
 
@@ -1366,8 +1360,8 @@ void ProcessImple(int conn, int level, char * str)
 
 				strcat(tt, name);
 
-				handle = _open(tt, _O_CREAT | _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
-				if (handle == -1)
+				opened = file.OpenReadWrite(tt);
+				if (!opened)
 				{
 					Log("-system", "fail - save npc", 0);
 					return;
@@ -1375,8 +1369,8 @@ void ProcessImple(int conn, int level, char * str)
 
 				mNPCGen.pList[i].Follower.Exp = xp * mNPCGen.pList[i].Follower.BaseScore.Level / lv;
 
-				_write(handle, (void*)&mNPCGen.pList[i].Follower, sizeof(STRUCT_MOB));
-				_close(handle);
+				file.Write((void*)&mNPCGen.pList[i].Follower, sizeof(STRUCT_MOB));
+				file.Close();
 			}
 			
 
@@ -1408,8 +1402,9 @@ void ProcessImple(int conn, int level, char * str)
 
 					strcat(tt, name);
 
-					int handle = _open(tt, _O_CREAT | _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
-					if (handle == -1)
+					platform::File file;
+					bool opened = file.OpenReadWrite(tt);
+					if (!opened)
 					{
 						Log("-system", "fail - save npc", 0);
 						return;
@@ -1417,8 +1412,8 @@ void ProcessImple(int conn, int level, char * str)
 
 					mNPCGen.pList[i].Leader.Exp = xp * mNPCGen.pList[i].Leader.BaseScore.Level / FREEEXP;
 
-					_write(handle, (void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
-					_close(handle);
+					file.Write((void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
+					file.Close();
 				}
 			}
 
@@ -1441,8 +1436,9 @@ void ProcessImple(int conn, int level, char * str)
 
 					strcat(tt, name);
 
-					int handle = _open(tt, _O_CREAT | _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
-					if (handle == -1)
+					platform::File file;
+					bool opened = file.OpenReadWrite(tt);
+					if (!opened)
 					{
 						Log("-system", "fail - save npc", 0);
 						return;
@@ -1450,8 +1446,8 @@ void ProcessImple(int conn, int level, char * str)
 
 					mNPCGen.pList[i].Leader.Exp = xp * mNPCGen.pList[i].Leader.BaseScore.Level / FREEEXP;
 
-					_write(handle, (void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
-					_close(handle);
+					file.Write((void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
+					file.Close();
 				}
 			}
 
@@ -1474,8 +1470,9 @@ void ProcessImple(int conn, int level, char * str)
 
 					strcat(tt, name);
 
-					int handle = _open(tt, _O_CREAT | _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
-					if (handle == -1)
+					platform::File file;
+					bool opened = file.OpenReadWrite(tt);
+					if (!opened)
 					{
 						Log("-system", "fail - save npc", 0);
 						return;
@@ -1483,8 +1480,8 @@ void ProcessImple(int conn, int level, char * str)
 
 					mNPCGen.pList[i].Leader.Exp = xp * mNPCGen.pList[i].Leader.BaseScore.Level / FREEEXP;
 
-					_write(handle, (void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
-					_close(handle);
+					file.Write((void*)&mNPCGen.pList[i].Leader, sizeof(STRUCT_MOB));
+					file.Close();
 				}
 			}
 
@@ -1730,7 +1727,7 @@ void ProcessImple(int conn, int level, char * str)
 			for(int xx = KEFRA_MOB_INITIAL; xx <= KEFRA_MOB_END; xx++)
 				GenerateMob(xx, 0, 0);
 
-			DrawConfig(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "CREATE KEFRA");
 		}
@@ -1739,7 +1736,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			PARTY_DIF = ival1;
 
-			DrawConfig(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "PARTY DIF");
 		}
@@ -1748,7 +1745,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			RvRHour = ival1;
 
-			DrawConfig(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "RVR HOUR");
 		}
@@ -1758,7 +1755,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			GTorreHour = ival1;
 
-			DrawConfig(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "GTorre HOUR");
 		}
@@ -1767,7 +1764,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			isDropItem = ival1;
 
-			DrawConfig(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "DROP ITEM");
 		}
@@ -1776,7 +1773,7 @@ void ProcessImple(int conn, int level, char * str)
 		{
 			maxNightmare = ival1;
 
-			DrawConfig(TRUE);
+			RefreshStatus(true);
 
 			SendClientMessage(conn, "MAXNIGHTMARE");
 		}

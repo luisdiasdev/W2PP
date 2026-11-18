@@ -20,7 +20,6 @@
 #define __GETFUNC__
 
 #include "..\Basedef.h"
-#include <Windows.h>
 
 int	 GetMatchCombine		(STRUCT_ITEM *item);
 int  GetMatchCombineEhre	(STRUCT_ITEM *Item);
@@ -47,8 +46,8 @@ void GetAttack             (int mob, int target, MSG_AttackOne *sm);
 void GetAttackArea			(int mob, MSG_Attack *sm);
 void GetGuild				(int conn);
 int  GetGuild				(STRUCT_ITEM *item);
-int  GetEmptyItemGrid		(int *gridx, int *gridy);
-int	 GetEmptyMobGrid        (int conn, int  *tx, int *ty);
+bool GetEmptyItemGrid		(int *gridx, int *gridy);
+bool GetEmptyMobGrid        (int conn, int  *tx, int *ty);
 int  GetCurKill				(int conn);
 int	 GetTotKill				(int conn);
 void SetCurKill				(int conn, int value);
@@ -57,7 +56,7 @@ int  GetPKPoint				(int conn);
 int	 GetGuilty				(int conn);
 void SetGuilty				(int conn, int value);
 void SetPKPoint				(int conn, int value);
-BOOL GetEmptyMobGridGreat	(int mob, int *tx, int *ty);
+bool GetEmptyMobGridGreat	(int mob, int *tx, int *ty);
 
 #endif
 

@@ -19,20 +19,14 @@
 #ifndef __SERVER_H__
 #define	__SERVER_H__
 
-#include <windows.h>
-#include <windowsx.h>
 #include <stdlib.h>
 #include <stdio.h> 
-#include <fcntl.h>
-#include <io.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/timeb.h>
 #include <string.h>        
 #include <time.h>
+#include <string>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 
 #include "CItem.h"
 #include "CMob.h"
@@ -41,8 +35,6 @@
 
 
 // Externs
-extern HWND hWndMain;
-
 extern int ServerGroup;
 
 extern unsigned int CurrentTime;
@@ -67,12 +59,22 @@ extern STRUCT_BLOCKMAC pMac[MAX_MAC];
 // Funcs
 
 void  ClearCrown(int conn);
-BOOL  AddCrackError(int conn, int val, int Type);
-BOOL  PutItem(int conn, STRUCT_ITEM *item);
+bool  AddCrackError(int conn, int val, int Type);
+bool  PutItem(int conn, STRUCT_ITEM *item);
 void  GuildZoneReport();
-HFONT__ *  GetAFont();
 void  ReadConfig();
-void  DrawConfig(int wb);
+
+// Headless replacements for the former window hosts.
+std::string BuildStatusText();
+void  RefreshStatus(int writeConfig);
+void  ApproveGameConfig();
+void  SetSecondTickInterval(int milliseconds);
+void  SetMinuteTickInterval(int milliseconds);
+void  RequestServerShutdown();
+void  ProcessBillingRetry();
+void  BillingResetRetry();
+bool  ConnectBillingFromConfig();
+
 void  AddFailAccount(char *Account);
 int   CheckFailAccount(char *Account);
 int   IsFree(STRUCT_SELCHAR *sel);
@@ -84,13 +86,10 @@ int   GenerateSummon(int conn, int SummonID, STRUCT_ITEM *sItem, int Num);
 int   CreateMob(char *MobName, int PosX, int PosY, char *folder, int Type); 
 void  GenerateMob(int index, int PosX, int PosY);
 void  RebuildGenerator();
-BOOL  InitApplication(HANDLE hInstance);
-BOOL  InitInstance(HANDLE hInstance, int nCmdShow);
 FILE* WriteHeader(char *fileName);
 void  WriteArmor(FILE *fp);
 void  WriteWeapon(FILE *fp);
 void  BuildList();
-LONG  APIENTRY MainWndProc(HWND hWnd, UINT message, UINT wParam, LONG lParam);
 int   GetUserInArea(int x1, int y1, int x2, int y2, char *MobName);
 void  MountProcess(int conn, STRUCT_ITEM *Mount);
 void  LinkMountHp(int mobConn);
@@ -122,7 +121,6 @@ void  GuildProcess();
 void  StartLog();
 void  CrackLog(int conn, char *str);
 void  Log(char *str1, char *str2, unsigned int ip);
-int   GetUserFromSocket(int Sock);
 int   GetEmptyUser();
 int   GetEmptyItem();
 int   GetEmptyNPCMob();
@@ -153,8 +151,8 @@ void  DoRanking(int tDuel, int conn, int enemy);
 void  DoRemoveHide(int conn);      
 void  DoTeleport(int mob, int x, int y);     
 void  DoSummon(int target, int x, int y);       
-int   SetAffect(int conn, int skillnum, int time, int Level);
-int   SetTick(int mob, int skillnum, int Delay, int Level); 
+bool  SetAffect(int conn, int skillnum, int time, int Level);
+bool  SetTick(int mob, int skillnum, int Delay, int Level); 
 void  ProcessDecayItem();
 int   CombineTreasureMap(int conn);
 void  Combine(int conn, int item, int PrizeItem);
@@ -209,19 +207,15 @@ extern int WaterScrollPosition[3][10][2];
 
 extern short weapon[32][9];
 
-extern CPSock BillServerSocket;
+extern net::Connection BillServerSocket;
 extern char   BillServerAddress[32];
 extern int	   BillServerPort;
-
-extern HWND  hWndMain;
-extern HMENU hMainMenu;
-extern HFONT hFont;
 
 extern FILE *fLogFile;
 extern FILE *fChatLogFile;
 extern FILE *fItemLogFile;
 
-extern CPSock DBServerSocket;
+extern net::Connection DBServerSocket;
 
 extern CNPCGenerator mNPCGen;
 extern CNPCSummon mSummon;
@@ -314,7 +308,6 @@ extern unsigned char LocalIP[4];
 
 extern char FailAccount[16][16];
 
-extern CPSock ListenSocket;
 extern unsigned int pAdminIP[MAX_ADMIN];
 
 extern char DBServerAddress[32];
@@ -325,6 +318,8 @@ extern int TESTSERVER;
 extern int LOCALSERVER;
 
 extern int TransperCharacter;
+
+extern std::string g_statusText;
 
 extern unsigned int SecCounter;
 extern unsigned int MinCounter;

@@ -22,7 +22,23 @@
 #define _BASEDEF_
 
 #include <time.h>
-#include <Windows.h>
+
+#include "net/Protocol.h"
+#include "platform/Clock.h"
+#include "platform/Diagnostics.h"
+#include "platform/File.h"
+
+// Byte accessors for the low/high 8 bits of a value. These replace the Win32
+// LOBYTE/HIBYTE macros and keep the same two's-complement byte selection.
+inline unsigned char LowByte(unsigned long value)
+{
+	return static_cast<unsigned char>(value & 0xFFu);
+}
+
+inline unsigned char HighByte(unsigned long value)
+{
+	return static_cast<unsigned char>((value >> 8) & 0xFFu);
+}
 
 #pragma region Defines
 
@@ -40,10 +56,6 @@
 
 
 #define		APP_VERSION				6975
-
-#define		GAME_PORT				8281	  // Game server listening port, client connects to it
-#define		DB_PORT					7514      // DB server listening port, Game server connects to it
-#define		ADMIN_PORT				8895	  // DB server listening port, NPTool connects to it
 
 #define		MAX_SERVER				10      // Max number of game servers that can connect to DB server
 #define		MAX_SERVERGROUP			10		// Max number of servers that can exist
@@ -63,7 +75,7 @@
 #pragma region Account related defines
 
 #define		ACCOUNTNAME_LENGTH		16		// Max length of the account login
-#define		ACCOUNTPASS_LENGTH		12      // Max length of the account password
+#define		ACCOUNTPASS_LENGTH		16      // Max length of the account password
 #define		REALNAME_LENGTH			24      // Max length of the name of the account owner
 #define		EMAIL_LENGTH			48      // Max length of the email address of the account owner
 #define		ADDRESS_LENGTH			78      // Max length of the real address of the account owner
@@ -839,13 +851,13 @@ struct STRUCT_RANKING
 
 struct STRUCT_ACCOUNTFILE
 {
-	STRUCT_ACCOUNTINFO Info; // 0 - 216
+	STRUCT_ACCOUNTINFO Info; // 0 - 224
 
-	STRUCT_MOB	Char[MOB_PER_ACCOUNT]; // 216 - 3480
-	STRUCT_ITEM Cargo[MAX_CARGO]; // 3480 - 4504
-	int			Coin; // 4504 - 4508
+	STRUCT_MOB	Char[MOB_PER_ACCOUNT]; // 224 - 3488
+	STRUCT_ITEM Cargo[MAX_CARGO]; // 3488 - 4512
+	int			Coin; // 4512 - 4516
 
-	unsigned char ShortSkill[MOB_PER_ACCOUNT][16]; // 4508 - 4572
+	unsigned char ShortSkill[MOB_PER_ACCOUNT][16]; // 4516 - 4580
 
 	STRUCT_AFFECT affect[MOB_PER_ACCOUNT][MAX_AFFECT];
 	STRUCT_MOBEXTRA mobExtra[MOB_PER_ACCOUNT];
@@ -1274,7 +1286,7 @@ struct		  MSG_DeleteCharacter
 	int Slot;
 
 	char MobName[NAME_LENGTH];
-	char Password[12];
+	char Password[ACCOUNTPASS_LENGTH];
 };
 
 const short _MSG_War						= (14 | FLAG_CLIENT2GAME | FLAG_DB2GAME | FLAG_GAME2DB);
@@ -2425,7 +2437,7 @@ int  BASE_GetHttpRequest(char *httpname, char *Request, int MaxBuffer);
 int  BASE_GetSkillDamage(int skillnum, STRUCT_MOB *mob, int weather, int weapondamage);
 int  BASE_GetEnglish(char *name);
 int  BASE_GetWeekNumber();
-int  BASE_CheckPacket(struct MSG_STANDARD *m);
+bool BASE_CheckPacket(struct MSG_STANDARD *m);
 
 int  BASE_VisualItemCode(STRUCT_ITEM *Item, int mnt);
 int  BASE_VisualAnctCode(STRUCT_ITEM *Item);

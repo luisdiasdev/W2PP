@@ -1,0 +1,59 @@
+{
+  // Debugs the server executables that the x86-debug build copies into the
+  // legacy release tree (see W2PP_RELEASE_ROOT in CMakeLists.txt, by default
+  // ../release). The processes set their own working directory to the folder
+  // that contains the executable, so `cwd` only matters for the very first
+  // file lookups. The console is the integrated terminal because both servers
+  // read operator commands (`status`, `quit`, ...) from stdin.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "DBSrv (release tree)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/../release/DBSRV/run/dbsrv.exe",
+      "cwd": "${workspaceFolder}/../release/DBSRV/run",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      // Symbols are looked up next to the executable first, then in the build
+      // outputs for the case where only the .exe was refreshed.
+      "symbolSearchPath": "${workspaceFolder}/../release/DBSRV/run;${workspaceFolder}/build/x86-debug/Debug;${workspaceFolder}/build/x86-release/Release"
+    },
+    {
+      "name": "TMSrv (release tree)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/../release/TMSRV/run/tmsrv.exe",
+      "cwd": "${workspaceFolder}/../release/TMSRV/run",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "symbolSearchPath": "${workspaceFolder}/../release/TMSRV/run;${workspaceFolder}/build/x86-debug/Debug;${workspaceFolder}/build/x86-release/Release"
+    },
+    {
+      // Same binaries, but started by hand (or by another tool) from the
+      // release tree. Use this when the server must keep running while the
+      // editor is restarted, or to debug a process that is already serving.
+      "name": "Attach to DBSrv",
+      "type": "cppvsdbg",
+      "request": "attach",
+      "processName": "dbsrv.exe",
+      "symbolSearchPath": "${workspaceFolder}/../release/DBSRV/run;${workspaceFolder}/build/x86-debug/Debug;${workspaceFolder}/build/x86-release/Release"
+    },
+    {
+      "name": "Attach to TMSrv",
+      "type": "cppvsdbg",
+      "request": "attach",
+      "processName": "tmsrv.exe",
+      "symbolSearchPath": "${workspaceFolder}/../release/TMSRV/run;${workspaceFolder}/build/x86-debug/Debug;${workspaceFolder}/build/x86-release/Release"
+    }
+  ],
+  "compounds": [
+    {
+      // DBSrv is launched first: TMSrv exits during boot when its two DB
+      // connect attempts (immediate and +200 ms) both fail.
+      "name": "Servers: DBSrv + TMSrv",
+      "configurations": ["DBSrv (release tree)", "TMSrv (release tree)"],
+      "stopAll": true
+    }
+  ]
+}

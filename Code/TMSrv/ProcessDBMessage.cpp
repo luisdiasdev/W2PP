@@ -16,16 +16,12 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include <io.h>
-#include <errno.h>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 #include "..\ItemEffect.h"
 #include "Language.h"
 
@@ -151,7 +147,7 @@ void ProcessDBMessage(char *Msg)
 
 			for (int i = 1; i < MAX_USER; i++)
 			{
-				if (pUser[i].Mode == USER_EMPTY || pUser[i].cSock.Sock == 0)
+				if (pUser[i].Mode == USER_EMPTY || !pUser[i].cSock.IsOpen())
 					continue;
 
 				if ( memcmp(pUser[i].Mac, m->Mac, sizeof(m->Mac)))
@@ -260,7 +256,7 @@ void ProcessDBMessage(char *Msg)
 								{
 									int retsour = BASE_CanCargo(&m->Item, pUser[conn].Cargo, i % 9, i / 9);
 
-									if (retsour != TRUE)
+									if (retsour != 1)
 										continue;
 
 									pUser[conn].Cargo[i] = m->Item;

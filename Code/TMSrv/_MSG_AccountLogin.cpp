@@ -27,6 +27,13 @@ void Exec_MSG_AccountLogin(int conn, char *pMsg)
 
 	pUser[conn].AccountName[NAME_LENGTH - 1] = 0;
 
+	char account[ACCOUNTNAME_LENGTH + 1];
+	memset(account, 0, sizeof(account));
+	memcpy(account, m->AccountName, ACCOUNTNAME_LENGTH);
+
+	sprintf(temp, "sys,login account=%s client=%d size=%d", account, m->ClientVersion, Size);
+	Log(temp, "-system", 0);
+
 	if (conn <= 0 || (conn >= (MAX_USER - ADMIN_RESERV)))
 	{
 		sprintf(temp, g_pMessageStringTable[_NN_Reconnect]);
@@ -44,6 +51,10 @@ void Exec_MSG_AccountLogin(int conn, char *pMsg)
 	if (Size < sizeof(MSG_AccountLogin) || m->ClientVersion != ClientVersion)
 #endif
 	{
+		sprintf(temp, "err,login rejected account=%s client=%d server=%d",
+			account, m->ClientVersion, ClientVersion);
+		Log(temp, "-system", 0);
+
 		sprintf(temp, g_pMessageStringTable[_NN_Version_Not_Match_Rerun], APP_VERSION);
 		SendClientMessage(conn, temp);
 

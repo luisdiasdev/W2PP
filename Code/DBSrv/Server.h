@@ -21,6 +21,12 @@
 #define __SERVER__
 
 #include "CFileDB.h"
+#include "CUser.h"
+#include "../net/Acceptor.h"
+#include "../net/Connection.h"
+
+#include <memory>
+#include <string>
 
 int  ReadTrandGuildInfo(); // Last updated 15/01/2013
 int  WriteTransGuildInfo(); // Last update 15/01/2013
@@ -38,7 +44,8 @@ int  WriteConfig(); // Last updated 15/01/2013
 int  ProcessAdminClientMessage(char *msg); // Last updated 15/01/2013 -
 void ProcessClientMessage(int conn, char *msg); // Last updated 15/01/2013
 
-LONG APIENTRY MainWndProc(HWND hWnd, UINT message, UINT wParam, LONG lParam); // Last updated 21/01/2013
+std::string BuildStatusText();
+extern std::string g_statusText;
 
 void DisableAccount(int conn, char *account, int Year, int YearDay); // Last updated 15/01/2013
 void EnableAccount(int conn, char *account); // Last updated 15/01/2013
@@ -53,21 +60,12 @@ void Log(char *str1, char *str2, unsigned int ip); // Last updated 15/01/2013
 
 void DayLog_ExpLog(); // Last updated 22/03/2015
 
-int  GetUserFromSocket(int Sock); // Last updated 15/01/2013
-int  GetAdminFromSocket(int Sock); // Last updated 15/01/2013
 int  GetEmptyUser(); // Last updated 15/01/2013
-
-void DrawConfig();
 
 void DayLog_ReadAccountInDir(char *dir, FILE *log);
 void DayLog_ItemLog();
 
-BOOL file_exists(char *s, ...);
-
-
-extern HWND		hWndMain;
-extern HMENU		hMainMenu;
-extern HINSTANCE   hInst;
+bool file_exists(char *s, ...);
 
 extern int ServerIndex;
 extern int CurrentTransInfo;
@@ -101,24 +99,13 @@ extern FILE *fDayLogFile;
 extern int		LastLogDay;
 extern int		LastDayLogDay;
 
-extern CUser TempUser;
-
-extern CUser pUser[MAX_SERVER];
-extern CUser pAdmin[MAX_ADMIN];
-
-extern CPSock AdminClient;
-extern CPSock AdminSocket;
-extern CPSock ListenSocket;
-
 extern CFileDB cFileDB;
 
 extern STRUCT_MOB g_pBaseSet[MAX_CLASS];
 extern STRUCT_ITEMLOG ItemDayLog[MAX_ITEMLIST];
 
-extern HFONT hFont;
-extern HFONT h;
+extern net::Connection AdminClient;
 
-extern int x;
-extern int y;
-extern HDC hDC;
+extern CUser pUser[MAX_SERVER];
+extern CUser pAdmin[MAX_ADMIN];
 #endif

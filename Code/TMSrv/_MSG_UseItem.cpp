@@ -101,7 +101,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		if(pUser[conn].PotionTime != 0)
 		{
-			int isTime = GetTickCount() - pUser[conn].PotionTime;			
+			int isTime = platform::MonotonicMs() - pUser[conn].PotionTime;			
 
 			if(isTime < PotionDelay)
 			{
@@ -109,7 +109,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 				return;
 			}
 		}
-		pUser[conn].PotionTime = GetTickCount();
+		pUser[conn].PotionTime = platform::MonotonicMs();
 
 		if (Hp && pMob[conn].MOB.CurrentScore.Hp > 0)
 		{
@@ -206,7 +206,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 /*
 			if(pUser[conn].UseItemTime != 0)
 			{
-				int isTime = GetTickCount() - pUser[conn].UseItemTime;			
+				int isTime = platform::MonotonicMs() - pUser[conn].UseItemTime;			
 
 				if(isTime < 1000)
 				{
@@ -215,7 +215,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 					return;
 				}
 			}
-			pUser[conn].UseItemTime = GetTickCount();
+			pUser[conn].UseItemTime = platform::MonotonicMs();
 */
 
 #pragma region REFINE_LOCKED_SEAL
@@ -3211,7 +3211,7 @@ lbl_a_noparty:
 #pragma region Selo do Guerreiro
 	if (item->sIndex == 4146)
 	{
-		pUser[conn].UseItemTime = GetTickCount();
+		pUser[conn].UseItemTime = platform::MonotonicMs();
 
 		if (pMob[conn].extra.Fame >= 2000000000)
 			pMob[conn].extra.Fame = 2000000000;
@@ -4229,7 +4229,7 @@ lbl_a_noparty:
 	{
 		if(item->sIndex == 3203)
 		{
-			int flagSkillOff = FALSE;
+			bool flagSkillOff = false;
 
 			for (int k = 0; k < MAX_AFFECT; k++)
 			{
@@ -4237,11 +4237,11 @@ lbl_a_noparty:
 				if (skillAffectType == 1 || skillAffectType == 3 || skillAffectType == 5 || skillAffectType == 7 || skillAffectType == 10 || skillAffectType == 12 || skillAffectType == 20 || skillAffectType == 32)
 				{
 					pMob[conn].Affect[k].Type = 0;
-					flagSkillOff = TRUE;
+					flagSkillOff = true;
 				}
 			}
 
-			if (flagSkillOff == TRUE)
+			if (flagSkillOff == true)
 			{
 				pMob[conn].GetCurrentScore(conn);
 				SendScore(conn);

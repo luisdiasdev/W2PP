@@ -16,16 +16,12 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include <io.h>
-#include <errno.h>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 #include "..\ItemEffect.h"
 #include "Language.h"
 
@@ -69,7 +65,7 @@ int CastleQuestParty[MAX_PARTY + 1] = { 0, 0, 0, 0, 0, 0, };
 int CastleQuestLevel = -1;
 char CastleLeader[NAME_LENGTH];
 
-BOOL CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
+bool CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
 {
 	int state = pItem[gateid].State;
 	int gatestate2 = m->State;
@@ -77,7 +73,7 @@ BOOL CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
 	int gatekey = BASE_GetItemAbility(&pItem[gateid].ITEM, EF_KEYID);
 
 	if (gatekey < 10 || gatekey > 14)
-		return FALSE;
+		return false;
 
 	int key = 0;
 	int Quest = -1;
@@ -99,14 +95,14 @@ BOOL CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
 		if (pItem[gateid].ITEM.sIndex != 773)
 			SendClientMessage(conn, g_pMessageStringTable[_NN_No_Key]);
 
-		return TRUE;
+		return true;
 	}
 
 #pragma region ENTRY_GATE
 	if (gatekey == 10)
 	{//Portão principal do castelo zakum onde define qual level será a quest.
 		if (Quest < 0 || Quest >= MAX_CASTLE_QUEST)
-			return TRUE;
+			return true;
 
 		if (CastleQuestTime != -1)
 		{
@@ -123,7 +119,7 @@ BOOL CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
 			sprintf(temp, g_pMessageStringTable[_SD_Zakum_Quest_by_S_N], CastleLeader, count);
 			SendClientMessage(conn, temp);
 
-			return TRUE;
+			return true;
 		}
 
 		//Deleta todos os mobs do mapa que sobraram em alguma outra quest.
@@ -188,7 +184,7 @@ BOOL CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
 	else if (gatekey >= 11 && gatekey <= 14)
 	{
 		if (Quest != CastleQuestLevel)
-			return TRUE;
+			return true;
 	}
 #pragma endregion
 
@@ -204,7 +200,7 @@ BOOL CCastleZakum::OpenCastleGate(int conn, int gateid, MSG_UpdateItem *m)
 
 	sprintf(temp, "etc,opengate gateid:%d X:%d Y:%d", gateid, pItem[gateid].PosX, pItem[gateid].PosY);
 	Log(temp, pUser[conn].AccountName, pUser[conn].IP);
-	return TRUE;
+	return true;
 }
 
 void CCastleZakum::MobKilled(int target, int conn, int PosX, int PosY)
@@ -296,7 +292,7 @@ void CCastleZakum::MobKilled(int target, int conn, int PosX, int PosY)
 	}
 }
 
-BOOL CCastleZakum::KeyDrop(int target, int conn, int PosX, int PosY, STRUCT_ITEM *Key)
+bool CCastleZakum::KeyDrop(int target, int conn, int PosX, int PosY, STRUCT_ITEM *Key)
 {
 	int ItemKey = BASE_GetItemAbility(Key, EF_KEYID);
 
@@ -306,9 +302,9 @@ BOOL CCastleZakum::KeyDrop(int target, int conn, int PosX, int PosY, STRUCT_ITEM
 		Key->stEffect[0].cValue = CastleQuestLevel;
 
 		PutItem(conn, Key);
-		return FALSE;
+		return false;
 	}
-	return TRUE;
+	return true;
 }
 
 void CCastleZakum::ProcessSecTimer()
@@ -399,7 +395,7 @@ void CCastleZakum::ReadCastleQuest()
 
 	if (fs == NULL)
 	{
-		MessageBoxA(hWndMain, "CastleQuest.txt não foi encontrado.", CASTLE_QUEST_PATH, MB_OK);
+		platform::ReportFatal("CastleQuest.txt não foi encontrado.", CASTLE_QUEST_PATH);
 
 		return;
 	}
@@ -459,21 +455,21 @@ int  CCastleZakum::ParseCastleString(int Num, char *str)
 	sscanf(str, "%s %s %s", str1, str2, str3);
 
 	if (str[0] == 47)
-		return FALSE;
+		return false;
 
 	if (str[0] == 0)
-		return FALSE;
+		return false;
 
 	STRUCT_ITEM Item;
 	memset(&Item, 0, sizeof(STRUCT_ITEM));
 
-	char item_str1[256];
-	char item_str2[256];
-	char item_str3[256];
-	char item_str4[256];
-	char item_str5[256];
-	char item_str6[256];
-	char item_str7[256];
+	char item_str1[256] = { 0 };
+	char item_str2[256] = { 0 };
+	char item_str3[256] = { 0 };
+	char item_str4[256] = { 0 };
+	char item_str5[256] = { 0 };
+	char item_str6[256] = { 0 };
+	char item_str7[256] = { 0 };
 
 	int item_value[7] = { 0, 0, 0, 0, 0, 0, 0 };
 
@@ -490,7 +486,7 @@ int  CCastleZakum::ParseCastleString(int Num, char *str)
 	secondvalue = atoi(str3);
 
 	if (strlen(str2) > 80)
-		return FALSE;
+		return false;
 
 	_strupr(str1);
 	_strupr(str2);
@@ -547,9 +543,9 @@ int  CCastleZakum::ParseCastleString(int Num, char *str)
 				CastleQuest[Num].Prize[i].stEffect[2].cEffect = item_value[5];
 				CastleQuest[Num].Prize[i].stEffect[2].cValue = item_value[6];
 
-				return TRUE;
+				return true;
 			}
 		}
 	}
-	return TRUE;
+	return true;
 }

@@ -16,8 +16,6 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
-
 #include "CUser.h"
 #include "Server.h"
 
@@ -48,45 +46,18 @@ CUser::~CUser()
 
 }
 
-BOOL CUser::AcceptUser(int ListenSocket)
-{
-	SOCKADDR_IN acc_sin; 
-	int Size = sizeof(acc_sin);
-
-	int tSock = accept(ListenSocket, (struct sockaddr FAR *)&acc_sin, (int FAR *)&(Size));
-
-	if(tSock < 0) 
-		return FALSE;
-
-	if(WSAAsyncSelect(tSock, hWndMain, WSA_READ, FD_READ | FD_CLOSE ) > 0) 
-	{	
-		closesocket(tSock);
-
-		return FALSE;
-	}
-
-	cSock.Sock          = tSock;
-	cSock.nRecvPosition = 0;
-	cSock.nProcPosition = 0;
-	cSock.nSendPosition = 0;
-
-	char *tmp  = inet_ntoa(acc_sin.sin_addr);
-	IP		   = acc_sin.sin_addr.S_un.S_addr;
-	Mode	   = USER_ACCEPT;
-	Unk3	   = 0;
-
-	return TRUE;
-}
-
 int CUser::CloseUser()
 {
-     cSock.CloseSocket();
-	 cSock.Sock		= 0;
-	 IsBillConnect  = 0;
-	 
-	 Mode = USER_EMPTY;
+	// Graceful close: the session flushes its queue and closes on its own,
+	// while the slot is released immediately so it can be reused.
+	cSock.CloseSocket();
+	cSock.Detach();
 
-	 AccountName[0] = 0;
+	IsBillConnect = 0;
 
-	 return TRUE;
+	Mode = USER_EMPTY;
+
+	AccountName[0] = 0;
+
+	return true;
 }

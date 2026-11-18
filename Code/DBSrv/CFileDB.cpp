@@ -17,16 +17,13 @@
 *   Contact at:
 */
 
-#include <windows.h>
-#include <ERRNO.H>
 #include <stdlib.h>
 #include <stdio.h>
-#include <io.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <time.h> 
 
 #include "CFileDB.h"
+#include "../net/Connection.h"
+#include "../platform/FileSystem.h"
 #include "CUser.h"
 #include "Server.h"
 #include "CRanking.h"
@@ -41,7 +38,7 @@ extern int TransperCharacter;
 extern CUser pUser[MAX_SERVER]; // Server.cpp
 extern CUser pAdmin[MAX_ADMIN]; // Server.cpp
 
-extern CPSock AdminClient;
+extern net::Connection AdminClient;
 
 extern STRUCT_MOB g_pBaseSet[MAX_CLASS]; // Server.cpp
 
@@ -84,9 +81,9 @@ int CFileDB::AddAccount(char *id, char *pass, char *name, int ssn1, int ssn2, ch
 	_strupr(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 
 	char First[128];
 
@@ -96,13 +93,13 @@ int CFileDB::AddAccount(char *id, char *pass, char *name, int ssn1, int ssn2, ch
 
 	sprintf(temp, "./account/%s/%s", First, check);
 
-	int Handle = _open(temp, O_RDONLY | O_BINARY);
+	platform::File probe;
 
-	if(Handle != -1)
+	if(probe.OpenRead(temp))
 	{
-		_close(Handle);
+		probe.Close();
 
-		return FALSE;
+		return false;
 	}
 
 	STRUCT_ACCOUNTFILE file;
@@ -137,9 +134,9 @@ int CFileDB::AddAccount(char *id, char *pass, char *name, int ssn1, int ssn2, ch
 	int ret = DBWriteAccount(&file);
 
 	if(ret == 0)
-		return FALSE;
+		return false;
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::UpdateAccount(char *id, char *pass)
@@ -151,9 +148,9 @@ int CFileDB::UpdateAccount(char *id, char *pass)
 	_strupr(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 
 	char First[128];
 
@@ -163,12 +160,12 @@ int CFileDB::UpdateAccount(char *id, char *pass)
 
 	sprintf(temp, "./account/%s/%s", First, check);
 
-	int Handle = _open(temp, O_RDONLY | O_BINARY);
+	platform::File probe;
 
-	if(Handle == -1)
-		return FALSE;
+	if(!probe.OpenRead(temp))
+		return false;
 
-	_close(Handle);
+	probe.Close();
 
 	int Idx = GetIndex(id);
 
@@ -181,22 +178,22 @@ int CFileDB::UpdateAccount(char *id, char *pass)
 
 	int ret = DBReadAccount(&file);
 
-	if(ret == FALSE)
+	if(ret == false)
 	{
 		Log("err, updateaccount read fail", id, 0);
 
-		return FALSE;
+		return false;
 	}
 
 	strncpy(file.Info.AccountPass, pass, ACCOUNTPASS_LENGTH);
 
 	ret = DBWriteAccount(&file);
 
-	if(ret == FALSE)
+	if(ret == false)
 	{
 		Log("err, updateAccount write fail", id, 0);
 
-		return FALSE;
+		return false;
 	}
 
 	int IdxName = GetIndex(file.Info.AccountName);
@@ -204,7 +201,7 @@ int CFileDB::UpdateAccount(char *id, char *pass)
 	if(IdxName > 0 && IdxName < MAX_DBACCOUNT)
 		strncpy(file.Info.AccountPass, pass, ACCOUNTPASS_LENGTH);
 
-	return TRUE;
+	return true;
 }
 
 int ProcessRecord(int conn, char * str)
@@ -225,12 +222,12 @@ int ProcessRecord(int conn, char * str)
 	FILE *fp = fopen(filetemp, "wt");
 
 	if(fp == NULL)
-		return FALSE;
+		return false;
 	
 	fprintf(fp, "%s", str);
 	fclose(fp);
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::ProcessMessage(char *Msg, int conn)
@@ -273,12 +270,12 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(IdxName)
 					pUser[svr].cSock.SendOneMessage((char*)&sm, sm.Size);
 
-				return TRUE;
+				return true;
 			}
 
 			int idx = GetIndex(conn, m->ID);
 
-			if(TransperCharacter == 0 || AdminClient.Sock == 0)
+			if(TransperCharacter == 0 || AdminClient.IsOpen() == false)
 			{
 				Log("err,transper but not transper_server", pAccountList[idx].File.Info.AccountName, 0);
 
@@ -293,7 +290,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(IdxName != 0)
 					pUser[svr].cSock.SendOneMessage((char*)&sm, sm.Size);
 
-				return TRUE;
+				return true;
 			}
 
 			STRUCT_MOB *mob;
@@ -332,7 +329,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(IdxName != 0)
 					pUser[svr].cSock.SendOneMessage((char*)&sm, sm.Size);
 
-				return TRUE;
+				return true;
 			}
 
 			DisableAccount(-1, pAccountList[idx].File.Info.AccountName, 0, 0);
@@ -351,7 +348,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			AdminClient.SendOneMessage((char*)&sm, sm.Size);
 
-			return TRUE;
+			return true;
 		}
 
 	case _MSG_GuildZoneReport:
@@ -379,7 +376,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					pUser[i].cSock.SendOneMessage((char*)&sm, sizeof(MSG_GuildReport));
 			}
 
@@ -411,7 +408,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock)
+				if(pUser[i].cSock.IsOpen())
 					SendDBSignalParm2(i, 0, _MSG_War, m->Parm1, m->Parm2);
 			}
 			
@@ -445,7 +442,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					SendDBSignalParm2(i, 0, _MSG_GuildAlly, m->Guild, m->Ally);
 			}
 
@@ -470,10 +467,10 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock == 0)
+				if(pUser[i].cSock.IsOpen() == false)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					SendGuildInfo(i, myguild);
 			}
 
@@ -499,7 +496,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					SendDBSignalParm3(i, 0, _MSG_DBSetIndex, -1, Sapphire, i);
 			}
 
@@ -519,7 +516,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			if((accname[0] == 'C' && accname[1] == 'O' && accname[2] == 'M' && accname[3] >= '0' && accname[3] <= '9' && accname[4] == 0) || 
 				(accname[0] == 'L' && accname[1] == 'P' && accname[2] == 'T' && accname[3] >= '0' && accname[3] <= '9' && accname[4] == 0))
-				return FALSE;
+				return false;
 
 			STRUCT_ACCOUNTFILE *file;
 
@@ -538,7 +535,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			{
 				SendDBSignal(conn, m->ID, _MSG_DBNewAccountFail);
 
-				return TRUE;				
+				return true;				
 			}
 
 			_strupr(file->Info.AccountName);
@@ -583,7 +580,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pAdmin[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pAdmin[i].cSock.Sock != 0)
+				if(pAdmin[i].cSock.IsOpen())
 					pAdmin[i].cSock.SendOneMessage((char*)std, std->Size);
 			}
 
@@ -603,7 +600,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock)
+				if(pUser[i].cSock.IsOpen())
 					pUser[i].cSock.SendOneMessage((char*)m, sizeof(MSG_MessageDBImple));
 			}
 		} break;
@@ -621,7 +618,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			{
 				SendDBSignal(conn, m->ID, _MSG_DBAccountLoginFail_Account);
 
-				return FALSE;
+				return false;
 			}
 
 			int Idx = GetIndex(conn, m->ID);
@@ -639,7 +636,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			{
 				SendDBSignal(conn, m->ID, _MSG_DBAccountLoginFail_Account);
 
-				return TRUE;
+				return true;
 			}
 
 			if(file.Coin < 0)
@@ -655,7 +652,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(file.Info.Year >= when.tm_year || file.Info.Year >= when.tm_year && file.Info.YearDay >= when.tm_yday)
 				{
 					SendDBSignalParm(conn, m->ID, _MSG_DBAccountLoginFail_Block, 0);
-					return TRUE;
+					return true;
 				}
 			}
 
@@ -671,19 +668,19 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				}
 				memset(file.TempKey, 0, sizeof(file.TempKey));
 				DBWriteAccount(&file);
-				return TRUE;
+				return true;
 			}
 
 			if(strcmp(file.Info.AccountPass, m->AccountPassword) != 0)
 			{
 				SendDBSignal(conn, m->ID, _MSG_DBAccountLoginFail_Pass);
 
-				return TRUE;
+				return true;
 			}
 		lb_sucess:
 
 			if(IdxName == Idx)
-				return TRUE;
+				return true;
 
 			if(IdxName != 0)
 			{
@@ -693,7 +690,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				{
 					SendDBSignal(conn, m->ID, _MSG_DBAlreadyPlaying);
 
-					return TRUE;
+					return true;
 				}
 
 				SendDBSignal(conn, m->ID, _MSG_DBStillPlaying);
@@ -793,7 +790,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				for (int i = 0; i < MAX_SERVER; i++)
 				{
-					if (pUser[i].cSock.Sock == 0 || pUser[i].Mode == USER_EMPTY)
+					if (pUser[i].cSock.IsOpen() == false || pUser[i].Mode == USER_EMPTY)
 						continue;
 
 					pUser[i].cSock.SendOneMessage((char*)&sm_pa, sizeof(MSG_DBCheckPrimaryAccount));
@@ -836,7 +833,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				{
 					Log("err,charlogin mobname empty", pAccountList[Idx].File.Info.AccountName, 0);
 
-					return TRUE;
+					return true;
 				}
 				pUser[conn].cSock.SendOneMessage((char*)&sm, sizeof(MSG_CNFCharacterLogin));
 #pragma region Ranking
@@ -868,7 +865,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-				return TRUE;
+				return true;
 			}
 			if(cls < 0 || cls >= 4)
 			{
@@ -876,7 +873,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-				return TRUE;
+				return true;
 			}
 
 			int Secure = pAccountList[Idx].SecurePass;
@@ -900,7 +897,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-				return FALSE;
+				return false;
 			}
 
 			if((check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0) || 
@@ -910,7 +907,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-				return FALSE;
+				return false;
 			}
 
 			STRUCT_MOB *mob;
@@ -931,7 +928,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				Log("err,newchar already charged", pAccountList[Idx].File.Info.AccountName, 0);
 				Log(mob->MobName, m->MobName, 0);
 
-				return TRUE;
+				return true;
 			}
 
 			m->MobName[NAME_LENGTH-1] = 0;
@@ -945,7 +942,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				{
 					SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-					return TRUE;
+					return true;
 				}
 			}
 
@@ -955,7 +952,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			{
 				SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-				return TRUE;
+				return true;
 			}
 			STRUCT_MOBEXTRA *extra;
 
@@ -988,7 +985,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				Log("err,newchar fail - undefined class", m->MobName, 0);
 
-				return TRUE;
+				return true;
 			}
 
 
@@ -1004,7 +1001,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				Log("err,newchar fail - create file", m->MobName, 0);
 
-				return TRUE;
+				return true;
 			}
 
 			char temp[256];
@@ -1074,7 +1071,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			{
 				Log("err,charlogin mobname empty", pAccountList[Idx].File.Info.AccountName, 0);
 
-				return TRUE;
+				return true;
 			}
 
 			pUser[conn].cSock.SendOneMessage((char*)&sm, sizeof(MSG_CNFCharacterLogin));
@@ -1090,7 +1087,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			// Send ranking info to tm->client
 			rankingSystem.sendUpdateIndividualRank(rankId, conn, sm.ID, new STRUCT_RANKING(pAccountList[Idx].File.Char[Slot].MobName, pAccountList[Idx].File.Char[Slot].Exp, pAccountList[Idx].File.mobExtra[Slot].ClassMaster, pAccountList[Idx].File.Char[Slot].CurrentScore.Level, pAccountList[Idx].File.Char[Slot].Class));
 #pragma endregion
-			return TRUE;
+			return true;
 		}
 
 	case _MSG_DBNoNeedSave:
@@ -1147,7 +1144,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				Log(temp, "-system", 0);
 
-				return TRUE;
+				return true;
 			}
 
 			if(Slot != m->Slot)
@@ -1167,7 +1164,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				Log(temp, "-system", 0);
 
-				return TRUE;
+				return true;
 			}
 
 			pAccountList[Idx].File.Donate = m->Donate;
@@ -1215,7 +1212,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				RemoveAccountList(Idx);
 
-				return TRUE;
+				return true;
 			}
 
 			if((Slot < 0 || Slot >= MOB_PER_ACCOUNT) || (Slot != m->Slot))
@@ -1227,7 +1224,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				RemoveAccountList(Idx);
 
-				return TRUE;
+				return true;
 			}
 
 			if(pAccountList[Idx].Login == 0)
@@ -1237,7 +1234,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				sprintf(temp, "err,savenquit3 %d %d %d %s %s", m->ID, Slot, m->Slot, acc, m->AccountName);
 				Log(temp, "-system", 0);
 
-				return TRUE;
+				return true;
 			}
 
 			pAccountList[Idx].File.Char[Slot] = m->MOB;
@@ -1287,7 +1284,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				Log("err,deletechar slot", pAccountList[Idx].File.Info.AccountName, 0);
 
-				return TRUE;
+				return true;
 			}
 
 			int Secure = pAccountList[Idx].SecurePass;
@@ -1305,7 +1302,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				Log("err,deletechar password", pAccountList[Idx].File.Info.AccountName, 0);
 
-				return TRUE;
+				return true;
 			}
 
 			STRUCT_MOB *mob;
@@ -1315,7 +1312,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			if (pAccountList[Idx].File.mobExtra[Slot].ClassMaster != MORTAL && pAccountList[Idx].File.mobExtra[Slot].ClassMaster != ARCH)
 			{
 				SendDBSignal(conn, m->ID, _MSG_DBDeleteCharacterFail);
-				return TRUE;
+				return true;
 			}
 
 			if(mob->BaseScore.Level >= 219)
@@ -1324,7 +1321,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				Log("err,deletechar level 219", pAccountList[Idx].File.Info.AccountName, 0);
 
-				return TRUE;
+				return true;
 			}
 
 	
@@ -1380,7 +1377,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			{
 				Log("err,save secure - create file", pAccountList[Idx].File.Info.AccountName, 0);
 
-				return TRUE;
+				return true;
 			}
 
 			pAccountList[Idx].SecurePass = 1;
@@ -1407,7 +1404,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			{
 				Log("err,save secure - create file", pAccountList[Idx].File.Info.AccountName, 0);
 
-				return TRUE;
+				return true;
 			}
 
 			pAccountList[Idx].SecurePass = 1;
@@ -1441,7 +1438,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			SendDBSignal(conn, m->ID, _MSG_DBCNFArchCharacterFail);
 
-			return TRUE;
+			return true;
 		}
 		if (cls < 0 || cls >= MAX_CLASS)
 		{
@@ -1449,7 +1446,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-			return TRUE;
+			return true;
 		}
 
 		char check[NAME_LENGTH];
@@ -1464,7 +1461,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-			return FALSE;
+			return false;
 		}
 
 		if ((check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0) ||
@@ -1474,7 +1471,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-			return FALSE;
+			return false;
 		}
 
 		STRUCT_MOB *mob;
@@ -1495,7 +1492,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			Log("err,newchar already charged", pAccountList[Idx].File.Info.AccountName, 0);
 			Log(mob->MobName, m->MobName, 0);
 
-			return TRUE;
+			return true;
 		}
 
 		m->MobName[NAME_LENGTH - 1] = 0;
@@ -1509,7 +1506,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			{
 				SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-				return TRUE;
+				return true;
 			}
 		}
 
@@ -1545,7 +1542,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			Log("err,newchar fail - undefined class", m->MobName, 0);
 
-			return TRUE;
+			return true;
 		}
 
 		mob->Equip[0].sIndex = MortalFace + 5 + cls;
@@ -1566,7 +1563,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			Log("err,newchar fail - create file", m->MobName, 0);
 
-			return TRUE;
+			return true;
 		}
 
 		char temp[256];
@@ -1595,7 +1592,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					pUser[i].cSock.SendOneMessage(Msg, sizeof(MSG_MagicTrumpet));
 			}
 
@@ -1604,7 +1601,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pAdmin[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pAdmin[i].cSock.Sock != 0)
+				if(pAdmin[i].cSock.IsOpen())
 					pAdmin[i].cSock.SendOneMessage(Msg, sizeof(MSG_MagicTrumpet));
 			}
 	}break;
@@ -1616,7 +1613,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				if(pUser[i].Mode == USER_EMPTY)
 					continue;
 
-				if(pUser[i].cSock.Sock != 0)
+				if(pUser[i].cSock.IsOpen())
 					pUser[i].cSock.SendOneMessage(Msg, sizeof(MSG_DBNotice));
 			}
 	}break;
@@ -1631,9 +1628,9 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		sprintf(temp, "./capsule/%d", Index);
 
-		int Handle = _open(temp, O_RDONLY | O_BINARY);
+		platform::File capsuleFile;
 
-		if(Handle == -1)
+		if(!capsuleFile.OpenRead(temp))
 		{
 			/*if(errno == EINVAL)
 				Log("err readcapsule EINVAL", temp, 0);
@@ -1642,14 +1639,14 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			else
 				Log("err readcapsule UNKNOW", temp, 0);
 				*/
-			return FALSE;
+			return false;
 		}
 
 		STRUCT_CAPSULE file;
 
-		_read(Handle, &file, sizeof(STRUCT_CAPSULE));
+		capsuleFile.Read(&file, sizeof(STRUCT_CAPSULE));
 
-		_close(Handle);
+		capsuleFile.Close();
 
 		MSG_CNFDBCapsuleInfo sm;
 
@@ -1693,31 +1690,20 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		{
 			Log("err,putincapsule  slot out of range", pAccountList[Idx].File.Info.AccountName, 0);
 
-			return TRUE;
+			return true;
 		}
 		LastCapsule++;
 
 		char temp[256];
 		sprintf(temp, "./capsule/%d", LastCapsule);
 
-		int Handle = _open(temp, O_RDWR | O_CREAT | O_BINARY, _S_IREAD | _S_IWRITE);
+		platform::File capsuleFile;
 
-		if(Handle == -1)
+		if(!capsuleFile.OpenReadWrite(temp))
 		{
-			 if (errno == EEXIST)
-				 Log("err putincapsulewrite EEXIST", 0, 0);
-			 if (errno == EACCES)
-				 Log("err putincapsulewrite EACCES", 0, 0);
-			 if (errno == EINVAL)
-				 Log("err putincapsulewrite EINVAL", 0, 0);
-			 if (errno == EMFILE)
-				 Log("err putincapsulewrite EMFILE", 0, 0);
-			 if (errno == ENOENT)
-				 Log("err putincapsulewrite ENOENT", 0, 0);
-			 else
-				Log("err putincapsulewrite UNKNOWN", 0, 0);
+			Log("err putincapsulewrite OPEN", 0, 0);
 
-			 return FALSE;
+			return false;
 		}
 
 		STRUCT_CAPSULE file;
@@ -1727,8 +1713,8 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		file.extra.QuestInfo.Arch.MortalSlot = -1;
 
-		_write(Handle, &file, sizeof(STRUCT_CAPSULE));
-		_close(Handle);
+		capsuleFile.Write(&file, sizeof(STRUCT_CAPSULE));
+		capsuleFile.Close();
 
 		memset(pAccountList[Idx].File.ShortSkill[Slot], 0, 16);
 
@@ -1777,7 +1763,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		{
 			Log("err,outcapsule  slot out of range", pAccountList[Idx].File.Info.AccountName, 0);
 
-			return TRUE;
+			return true;
 		}
 
 		for (NovoSlot = 0; NovoSlot < MOB_PER_ACCOUNT; NovoSlot++)
@@ -1791,7 +1777,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			SendDBSignal(conn, m->ID, _MSG_DBCNFCapsuleCharacterFail);
 
-			return TRUE;
+			return true;
 		}
 
 		int ret = CreateCharacter(pAccountList[Idx].File.Info.AccountName, m->MobName);
@@ -1800,7 +1786,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		{
 			SendDBSignal(conn, m->ID, _MSG_DBCNFCapsuleCharacterFail2);
 
-			return TRUE;
+			return true;
 		}
 
 		STRUCT_ITEM *item = GetItemPointer(&pAccountList[Idx].File.Char[Slot], pAccountList[Idx].File.Cargo, m->SourType, m->SourPos);
@@ -1810,30 +1796,19 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		char temp[256];
 		sprintf(temp, "./capsule/%d", index);
 
-		int Handle = _open(temp, O_RDONLY | O_BINARY);
+		platform::File capsuleFile;
 
-		if(Handle == -1)
+		if(!capsuleFile.OpenRead(temp))
 		{
-			 if (errno == EEXIST)
-				 Log("err putincapsuleread EEXIST", 0, 0);
-			 if (errno == EACCES)
-				 Log("err putincapsuleread EACCES", 0, 0);
-			 if (errno == EINVAL)
-				 Log("err putincapsuleread EINVAL", 0, 0);
-			 if (errno == EMFILE)
-				 Log("err putincapsuleread EMFILE", 0, 0);
-			 if (errno == ENOENT)
-				 Log("err putincapsuleread ENOENT", 0, 0);
-			 else
-				Log("err putincapsuleread UNKNOWN", 0, 0);
+			Log("err putincapsuleread OPEN", 0, 0);
 
-			 return FALSE;
+			return false;
 		}
 
 		STRUCT_CAPSULE file;
 
-		_read(Handle, &file, sizeof(STRUCT_CAPSULE));
-		_close(Handle);
+		capsuleFile.Read(&file, sizeof(STRUCT_CAPSULE));
+		capsuleFile.Close();
 
 		strncpy(file.MOB.MobName, m->MobName, 12);
 
@@ -1855,7 +1830,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			Log("err,newchar already charged", pAccountList[Idx].File.Info.AccountName, 0);
 			Log(mob->MobName, m->MobName, 0);
 
-			return TRUE;
+			return true;
 		}
 
 		m->MobName[NAME_LENGTH - 1] = 0;
@@ -1869,7 +1844,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			{
 				SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-				return TRUE;
+				return true;
 			}
 		}
 								  
@@ -1902,7 +1877,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			Log("err,newchar fail - create file", m->MobName, 0);
 
-			return TRUE;
+			return true;
 		}
 		memcpy(&pAccountList[Idx].File.Char[NovoSlot], mob, sizeof(STRUCT_MOB));
 		memcpy(&pAccountList[Idx].File.mobExtra[NovoSlot], extra, sizeof(STRUCT_MOBEXTRA));
@@ -1912,7 +1887,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		Log(temp, pAccountList[Idx].File.Info.AccountName, 0);
 
 		sprintf(temp, "./capsule/%d", index);
-		DeleteFileA(temp);
+		platform::DeleteFile(temp);
 
 
 		MSG_CNFNewCharacter sm;
@@ -2051,7 +2026,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		{
 			Log("err,itemid invalid", "-system", 0);
 
-			return TRUE;
+			return true;
 		}
 
 		ItemDayLog[ItemID].Num++;
@@ -2083,7 +2058,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		for (int i = 0; i < MAX_SERVER; i++)
 		{
-			if (pUser[i].cSock.Sock == 0 || pUser[i].Mode == USER_EMPTY)
+			if (pUser[i].cSock.IsOpen() == false || pUser[i].Mode == USER_EMPTY)
 				continue;
 
 			pUser[i].cSock.SendOneMessage((char*)&sm, sizeof(MSG_DBCheckPrimaryAccount));
@@ -2102,7 +2077,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 	}
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::SendDBSignal(int svr, unsigned short id, unsigned short signal)
@@ -2113,10 +2088,10 @@ int CFileDB::SendDBSignal(int svr, unsigned short id, unsigned short signal)
     sm.ID = id;
 	sm.Size = sizeof(sm);
 
-	if(pUser[svr].cSock.Sock)
+	if(pUser[svr].cSock.IsOpen())
 		pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::SendDBSignalParm(int svr, unsigned short id, unsigned short signal, int parm)
@@ -2128,10 +2103,10 @@ int CFileDB::SendDBSignalParm(int svr, unsigned short id, unsigned short signal,
 	 sm.Size = sizeof(sm);
 	 sm.Parm = parm;
 
-	 if(pUser[svr].cSock.Sock)
+	 if(pUser[svr].cSock.IsOpen())
 		 pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
-	 return TRUE;
+	 return true;
 }
 
 int CFileDB::SendDBSignalParm2(int svr, unsigned short id, unsigned short signal, int parm1, int parm2)
@@ -2144,10 +2119,10 @@ int CFileDB::SendDBSignalParm2(int svr, unsigned short id, unsigned short signal
 	sm.Parm1 = parm1;
 	sm.Parm2 = parm2;
 
-	if(pUser[svr].cSock.Sock)
+	if(pUser[svr].cSock.IsOpen())
 		pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::SendDBSignalParm3(int svr, unsigned short id, unsigned short signal, int parm1, int parm2, int parm3)
@@ -2161,10 +2136,10 @@ int CFileDB::SendDBSignalParm3(int svr, unsigned short id, unsigned short signal
 	sm.Parm2 = parm2;
 	sm.Parm3 = parm3;
 
-	if(pUser[svr].cSock.Sock)
+	if(pUser[svr].cSock.IsOpen())
 		pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::SendDBMessage(int svr, unsigned short id, char *msg)
@@ -2179,7 +2154,7 @@ int CFileDB::SendDBMessage(int svr, unsigned short id, char *msg)
 
     pUser[svr].cSock.SendOneMessage((char*)&sm, sizeof(MSG_MessagePanel));
 	
-	return TRUE;
+	return true;
 }
 
 void CFileDB::SendGuildInfo(int srv, int Guild)
@@ -2195,13 +2170,13 @@ void CFileDB::SendGuildInfo(int srv, int Guild)
 
 	memcpy(&sm.GuildInfo, &GuildInfo[Guild], sizeof(STRUCT_GUILDINFO));
 
-	if(pUser[srv].cSock.Sock)
+	if(pUser[srv].cSock.IsOpen())
 		pUser[srv].cSock.SendOneMessage((char*)&sm, sizeof(MSG_GuildInfo));
 }
 
 void CFileDB::AddAccountList(int Idx)
 { 
-	if(pAccountList[Idx].Login == TRUE)
+	if(pAccountList[Idx].Login == 1)
 	{
 		Log("err,addAccountlist - already added", pAccountList[Idx].File.Info.AccountName, 0);
 
@@ -2212,7 +2187,7 @@ void CFileDB::AddAccountList(int Idx)
 
 	pUser[conn].Count++;
 
-	pAccountList[Idx].Login = TRUE;
+	pAccountList[Idx].Login = true;
 	pAccountList[Idx].Slot  = -1;
 
 	return;
@@ -2220,14 +2195,14 @@ void CFileDB::AddAccountList(int Idx)
 
 void CFileDB::RemoveAccountList(int Idx)
 {
-    if(pAccountList[Idx].Login == FALSE)
+    if(pAccountList[Idx].Login == false)
 		return;
 	
 	int conn = Idx / MAX_USER;
 
 	pUser[conn].Count--;
 
-	pAccountList[Idx].Login = FALSE;
+	pAccountList[Idx].Login = false;
 	pAccountList[Idx].Slot  = -1;
 
 	memset(&pAccountList[Idx].File, 0, sizeof(pAccountList[Idx].File));
@@ -2242,18 +2217,18 @@ int CFileDB::CreateCharacter(char *ac, char *ch)
 	_strupr(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 
 	strncpy(check, ch, NAME_LENGTH);
 
 	_strupr(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 
 	char First[128];
 	char temp[128];
@@ -2271,33 +2246,22 @@ int CFileDB::CreateCharacter(char *ac, char *ch)
 		fclose(fp);
 		Log("err createchar EEXIST", ch, 0);
 
-        return FALSE;
+        return false;
 	}
 
-	int Handle = _open(temp, O_RDWR | O_CREAT | O_BINARY, _S_IREAD | _S_IWRITE);
+	platform::File accountFile;
 
-	if(Handle == -1)
+	if(!accountFile.OpenReadWrite(temp))
 	{
-		 if (errno == EEXIST)
-			 Log("err createchar EEXIST", ch, 0);
-         if (errno == EACCES)
-			 Log("err createchar EACCES", ch, 0);
-         if (errno == EINVAL)
-			 Log("err createchar EINVAL", ch, 0);
-	     if (errno == EMFILE)
-			 Log("err createchar EMFILE", ch, 0);
-	     if (errno == ENOENT)
-			 Log("err createchar ENOENT", ch, 0);
-		 else
-			Log("err createchar UNKNOWN", ch, 0);
+		Log("err createchar OPEN", ch, 0);
 
-         return FALSE;
+         return false;
 	}
 
-	_write(Handle, ac, ACCOUNTNAME_LENGTH);
-	_close(Handle);
+	accountFile.Write(ac, ACCOUNTNAME_LENGTH);
+	accountFile.Close();
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::DeleteCharacter(char *ch, char *account)
@@ -2309,9 +2273,9 @@ int CFileDB::DeleteCharacter(char *ch, char *account)
 	_strupr(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 
 	char First[128];
 	char temp[128];
@@ -2320,7 +2284,7 @@ int CFileDB::DeleteCharacter(char *ch, char *account)
 
 	sprintf(temp, "./char/%s/%s", First, check);
 
-	int ret = DeleteFileA(temp);
+	int ret = (platform::DeleteFile(temp) == platform::FsResult::Ok) ? 1 : 0;
 
 	return ret;
 }
@@ -2381,7 +2345,7 @@ void CFileDB::SendDBSavingQuit(int Idx, int mode)
 
     memcpy(sm.AccountName, pAccountList[Idx].File.Info.AccountName, ACCOUNTNAME_LENGTH);
 
-	if(pUser[conn].cSock.Sock && pUser[conn].Mode != USER_EMPTY)
+	if(pUser[conn].cSock.IsOpen() && pUser[conn].Mode != USER_EMPTY)
 		pUser[conn].cSock.SendOneMessage((char*)&sm, sizeof(MSG_DBSavingQuit));
 
     return;
@@ -2398,9 +2362,9 @@ int CFileDB::DBWriteAccount(STRUCT_ACCOUNTFILE *account)
 	 _strupr(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 
 	char First[128];
 
@@ -2410,62 +2374,36 @@ int CFileDB::DBWriteAccount(STRUCT_ACCOUNTFILE *account)
 
 	sprintf(temp, "./account/%s/%s", First, check);	
 
-	int Handle = _open(temp, O_RDWR|O_CREAT|O_BINARY, _S_IREAD | _S_IWRITE);
+	platform::File accountFile;
 
-	if(Handle == -1)
+	if(!accountFile.OpenReadWrite(temp))
 	{
-		if (errno == EEXIST)
-			Log("err writeaccount EEXIST", accname, 0);
-		if (errno == EACCES)
-			Log("err writeaccount EACCES", accname, 0);
-		if (errno == EINVAL)
-			Log("err writeaccount EINVAL", accname, 0);
-		if (errno == EMFILE)
-			Log("err writeaccount EMFILE", accname, 0);
-		if (errno == ENOENT)
-			Log("err writeaccount ENOENT", accname, 0);
-		else
-			Log("err writeaccount UNKNOWN", accname, 0);
+		Log("err writeaccount OPEN", accname, 0);
 
-		return FALSE;
+		return false;
 	}
 
-	int ret = _lseek(Handle, 0, SEEK_SET);
-
-	if(ret == -1)
+	if(!accountFile.Seek(0, SEEK_SET))
 	{
 		Log("err,writeaccount lseek fail", accname, 0);
 
-		_close(Handle); 
+		accountFile.Close(); 
 
-		return FALSE;
+		return false;
 	}
 
-	ret = _write(Handle, account, sizeof(STRUCT_ACCOUNTFILE));
-
-	if(ret == -1)
+	if(!accountFile.Write(account, sizeof(STRUCT_ACCOUNTFILE)))
 	{
-		_close(Handle);
+		accountFile.Close();
 
 		Log("CreateAccount write fail", accname, 0);
 
-		if (errno == EEXIST)
-			Log("CreateAccount EEXIST", accname, 0);
-		if (errno == EACCES)
-			Log("CreateAccount EACCES", accname, 0);
-		if (errno == EINVAL)
-			Log("CreateAccount EINVAL", accname, 0);
-		if (errno == EMFILE)
-			Log("CreateAccount EMFILE", accname, 0);
-		if (errno == ENOENT)
-			Log("CreateAccount ENOENT", accname, 0);
-
-		return FALSE;
+		return false;
 	}
 
-	_close(Handle);
+	accountFile.Close();
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::DBExportAccount(STRUCT_ACCOUNTFILE *file)
@@ -2479,40 +2417,36 @@ int CFileDB::DBExportAccount(STRUCT_ACCOUNTFILE *file)
 	_strupr(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 
 	char temp[128];
 
 	sprintf(temp, "S:/export/account%d/%s", ServerIndex, check);
 
-	int Handle = _open(temp, O_RDWR | O_CREAT | O_BINARY, _S_IREAD | _S_IWRITE);
+	platform::File exportFile;
 
-	if(Handle == -1)
-		return FALSE;
+	if(!exportFile.OpenReadWrite(temp))
+		return false;
 
-	int ret = _lseek(Handle, 0, SEEK_SET);
-
-	if(ret == -1)
+	if(!exportFile.Seek(0, SEEK_SET))
 	{
-		_close(Handle);
+		exportFile.Close();
 
-		return FALSE;
+		return false;
 	}
 
-	ret = _write(Handle, file, sizeof(STRUCT_ACCOUNTFILE));
-
-	if(ret == -1)
+	if(!exportFile.Write(file, sizeof(STRUCT_ACCOUNTFILE)))
 	{
-		_close(Handle);
+		exportFile.Close();
 
-		return FALSE;
+		return false;
 	}
 
-	_close(Handle);
+	exportFile.Close();
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::DBReadAccount(STRUCT_ACCOUNTFILE *file)
@@ -2529,9 +2463,9 @@ int CFileDB::DBReadAccount(STRUCT_ACCOUNTFILE *file)
 	_strupr(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
-		return FALSE;
+		return false;
 
 	char First[128];
 
@@ -2541,39 +2475,32 @@ int CFileDB::DBReadAccount(STRUCT_ACCOUNTFILE *file)
 
 	sprintf(temp, "./account/%s/%s", First, check);
 
-	int Handle = _open(temp, O_RDONLY | O_BINARY);
+	platform::File accountFile;
 
-	if(Handle == -1)
+	if(!accountFile.OpenRead(temp))
 	{
-		if(errno == EINVAL)
-			Log("err readaccount EINVAL", file->Info.AccountName, 0);
-		else if(errno == EMFILE)
-			Log("err readaccount EEMFILE", file->Info.AccountName, 0);
-		/*else
-			Log("err readaccount UNKNOW", file->Info.AccountName, 0);*/
+		Log("err readaccount OPEN", file->Info.AccountName, 0);
 
-		return FALSE;
+		return false;
 	}
 
-	int length = _filelength(Handle);
+	int length = static_cast<int>(accountFile.Size());
 
 	int reqsz = sizeof(STRUCT_ACCOUNTFILE);
 
-	int ret = _read(Handle, file, reqsz);
-
-	if(ret == -1)
+	if(!accountFile.Read(file, reqsz))
 	{
-		_close(Handle);
+		accountFile.Close();
 
-		return FALSE;
+		return false;
 	}
 
-	_close(Handle);
+	accountFile.Close();
 
 	if(length < reqsz)
 		memset(file->ShortSkill, 0, 8);
 
-	return TRUE;
+	return true;
 }
 
 int CFileDB::DBCheckImpleName(char **ilchat, char *Str)
@@ -2589,23 +2516,23 @@ int CFileDB::DBCheckImpleName(char **ilchat, char *Str)
 				 continue;
 
 	         if (Str[i] == ilchat[j][0] && Str[i+1] == ilchat[j][1] && Str[i+2] == ilchat[j][2] && Str[i+3] == ilchat[j][3] && ilchat[j][4] == 0)
-				 return TRUE;
+				 return true;
 
 			 if (ilchat[j][i+4] == 0)
 				 continue;
 
 	         if (Str[i] == ilchat[j][0] && Str[i+1] == ilchat[j][1] && Str[i+2] == ilchat[j][2] && Str[i+3] == ilchat[j][3] && Str[i+4] == ilchat[j][4] && Str[i+5] == ilchat[j][5] && ilchat[j][6] == 0)
-				 return TRUE;
+				 return true;
 
 			 if (ilchat[j][i+6] == 0)
 				 continue;
 
 	         if (Str[i] == ilchat[j][0] && Str[i+1] == ilchat[j][1] && Str[i+2] == ilchat[j][2] && Str[i+3] == ilchat[j][3] && Str[i+4] == ilchat[j][4] && Str[i+5] == ilchat[j][5] && Str[i+6] == ilchat[j][6] && Str[i+7] == ilchat[j][7] && ilchat[j][8] == 0)
-				 return TRUE;
+				 return true;
 		 }
 	 }
 
-	 return FALSE;
+	 return false;
 }
 
 void CFileDB::DBGetSelChar(STRUCT_SELCHAR *sel, STRUCT_ACCOUNTFILE *file)
@@ -2652,15 +2579,15 @@ void CFileDB::GetAccountByChar(char *acc, char *cha)
 
 	sprintf(temp, "./char/%s/%s", first, check);
 
-	int Handle = _open(temp, O_RDONLY | O_BINARY);
+	platform::File charFile;
 
-	if(Handle == -1)
+	if(!charFile.OpenRead(temp))
 	{
 		return;
 	}
 
-	_read(Handle, acc, ACCOUNTNAME_LENGTH);
-	_close(Handle);
+	charFile.Read(acc, ACCOUNTNAME_LENGTH);
+	charFile.Close();
 }
 
 void CFileDB::InitAccountList(int idx)
@@ -2679,7 +2606,7 @@ int  CFileDB::GetEncPassword(int idx, int *Enc)
 	Enc[6] = rand() % 900 + 100;
 	Enc[7] = rand() % 900 + 100;
 
-	return FALSE;
+	return false;
 }
 
 void CFileDB::SetEncPassword(int idx, int newsrv, int *Enc, int Unk)

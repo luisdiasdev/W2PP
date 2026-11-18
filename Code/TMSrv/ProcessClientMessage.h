@@ -18,16 +18,12 @@
 */
 #pragma once
 
-#include <Windows.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include <io.h>
-#include <errno.h>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 #include "..\ItemEffect.h"
 #include "Language.h"
 
@@ -43,8 +39,6 @@
 #include "CWarTower.h"
 
 // Externs
-
-extern HWND hWndMain;
 
 extern int ServerGroup;
 
@@ -67,7 +61,7 @@ extern CNPCGenerator mNPCGen;
 
 extern CUser pUser[MAX_USER];
 
-void  ProcessClientMessage(int conn, char *pMsg, BOOL isServer);
+void  ProcessClientMessage(int conn, char *pMsg, bool isServer);
 
 
 ///**************************************************************************************************

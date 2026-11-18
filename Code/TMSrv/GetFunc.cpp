@@ -16,7 +16,6 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
 
 #include "..\Basedef.h"
 #include "..\ItemEffect.h"
@@ -627,32 +626,32 @@ int GetEmptyAffect(int mob, int type)
 int GetHide(int mob)
 {
 	if (mob <= 0 || mob >= MAX_USER)
-		return FALSE;
+		return false;
 
 	for(int i = 0; i < MAX_AFFECT; i++)
 	{
 		if (pMob[mob].Affect[i].Type == 28)
-			return TRUE;
+			return true;
 	}
-	return FALSE;
+	return false;
 }
 
 int GetInView(int a, int b)
 {
 	if (pMob[a].TargetX < pMob[b].TargetX - VIEWGRIDX || pMob[a].TargetX > pMob[b].TargetX + VIEWGRIDX ||
 		pMob[a].TargetY < pMob[b].TargetY - VIEWGRIDY || pMob[a].TargetY > pMob[b].TargetY + VIEWGRIDY)
-		return FALSE;
+		return false;
 
-	return TRUE;
+	return true;
 }
 
 int GetInHalf(int a, int b)
 {
 	if (pMob[a].TargetX < pMob[b].TargetX - HALFGRIDX || pMob[a].TargetX > pMob[b].TargetX + HALFGRIDX ||
 		pMob[a].TargetY < pMob[b].TargetY - HALFGRIDY || pMob[a].TargetY > pMob[b].TargetY + HALFGRIDY)
-		return FALSE;
+		return false;
 
-	return TRUE;
+	return true;
 }
 
 int GetTeleportPosition(int conn, int *x, int *y)
@@ -1873,10 +1872,10 @@ int GetGuild(STRUCT_ITEM *item)
 	return guild;
 }
 
-BOOL GetEmptyItemGrid(int *gridx, int *gridy)
+bool GetEmptyItemGrid(int *gridx, int *gridy)
 {
 	if ((pItemGrid[*gridy][*gridx] == 0) && (pHeightGrid[*gridy][*gridx] != 127))
-		return TRUE;
+		return true;
 
 	for (int y = (*gridy) - 1; y <= (*gridy) + 1; y++)
 	{
@@ -1890,28 +1889,28 @@ BOOL GetEmptyItemGrid(int *gridx, int *gridy)
 				*gridy = y;
 				*gridx = x;
 
-				return TRUE;
+				return true;
 			}
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
-BOOL GetEmptyMobGrid(int mob, int *tx, int *ty)
+bool GetEmptyMobGrid(int mob, int *tx, int *ty)
 {
 	if (*tx < 0 || *ty < 0 || *tx >= MAX_GRIDX || *ty >= MAX_GRIDY)
 	{
 		Log("GetEmptyMobGridOut of range", "-system", 0);
 
-		return FALSE;
+		return false;
 	}
 
 	if (pMobGrid[*ty][*tx] == mob)
-		return TRUE;
+		return true;
 
 	if (pMobGrid[*ty][*tx] == 0 && pHeightGrid[*ty][*tx] != 127)
-		return TRUE;
+		return true;
 
 	int y = 0;
 	int x = 0;
@@ -1932,7 +1931,7 @@ BOOL GetEmptyMobGrid(int mob, int *tx, int *ty)
 			*ty = y;
 			*tx = x;
 
-			return TRUE;
+			return true;
 		}
 	}
 
@@ -1952,7 +1951,7 @@ BOOL GetEmptyMobGrid(int mob, int *tx, int *ty)
 			*ty = y;
 			*tx = x;
 
-			return TRUE;
+			return true;
 		}
 	}
 
@@ -1972,7 +1971,7 @@ BOOL GetEmptyMobGrid(int mob, int *tx, int *ty)
 			*ty = y;
 			*tx = x;
 
-			return TRUE;
+			return true;
 		}
 	}
 
@@ -1992,28 +1991,28 @@ BOOL GetEmptyMobGrid(int mob, int *tx, int *ty)
 			*ty = y;
 			*tx = x;
 
-			return TRUE;
+			return true;
 		}
 	}
 
 	
-	return FALSE;
+	return false;
 }
 
-BOOL GetEmptyMobGridGreat(int mob, int *tx, int *ty)
+bool GetEmptyMobGridGreat(int mob, int *tx, int *ty)
 {
 	if (*tx < 0 || *ty < 0 || *tx >= MAX_GRIDX || *ty >= MAX_GRIDY)
 	{
 		Log("GetEmptyMobGridOut of range", "-system", 0);
 
-		return FALSE;
+		return false;
 	}
 
 	if (pMobGrid[*ty][*tx] == mob)
-		return TRUE;
+		return true;
 
 	if (pMobGrid[*ty][*tx] == 0 && pHeightGrid[*ty][*tx] != 127)
-		return TRUE;
+		return true;
 
 	int y = 0;
 	int x = 0;
@@ -2036,11 +2035,11 @@ BOOL GetEmptyMobGridGreat(int mob, int *tx, int *ty)
 				*ty = y;
 				*tx = x;
 
-				return TRUE;
+				return true;
 			}
 		}
 	}
-	return FALSE;
+	return false;
 }
 
 int GetCurKill(int conn)

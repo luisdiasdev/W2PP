@@ -16,16 +16,12 @@
 *
 *   Contact at:
 */
-#include <Windows.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include <io.h>
-#include <errno.h>
 
 #include "..\Basedef.h"
-#include "..\CPSock.h"
+#include "..\net\Connection.h"
 #include "..\ItemEffect.h"
 #include "Language.h"
 
@@ -678,7 +674,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								sprintf(temp, g_pMessageStringTable[_SN_End_Khepra], guildname);
 								SendNotice(temp);
 
-								DrawConfig(TRUE);
+								RefreshStatus(true);
 							}
 							
 							else
@@ -687,7 +683,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 								sprintf(temp, g_pMessageStringTable[_SN_End_Khepra], "UoW");
 								SendNotice(temp);
 
-								DrawConfig(TRUE);
+								RefreshStatus(true);
 							}
 
 							for (int xx = 2335; xx < 2395; xx++)
@@ -1785,7 +1781,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 
 								SetItemBonus(&item, pMob[target].MOB.CurrentScore.Level, 0, 0);
 								PutItem(conn, &item);
-								DrawConfig(1);
+								RefreshStatus(1);
 							}
 #pragma endregion
 							int target_level = pMob[target].MOB.CurrentScore.Level;
@@ -1901,7 +1897,7 @@ void MobKilled(int target, int conn, int PosX, int PosY)
 										SetItemBonus(item, pMob[target].MOB.CurrentScore.Level, 0, bonus);
 
 
-										if(CCastleZakum::KeyDrop(target, conn, PosX, PosY, item) == TRUE)
+										if(CCastleZakum::KeyDrop(target, conn, PosX, PosY, item) == true)
 											PutItem(conn, item);
 
 										sprintf(temp, "MobName:%s dropou o item: %s:%d %d.%d.%d.%d.%d.%d do mob:%s", pMob[conn].MOB.MobName, g_pItemList[item->sIndex].Name, item->sIndex, item->stEffect[0].cEffect, item->stEffect[0].cValue, item->stEffect[1].cEffect, item->stEffect[1].cValue, item->stEffect[2].cEffect, item->stEffect[2].cValue, pMob[target].MOB.MobName);

@@ -1230,9 +1230,9 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		{
 			if(pUser[conn].Message != 0)
 			{
-				int isTime = GetTickCount() - pUser[conn].Message;			
+				int isTime = platform::MonotonicMs() - pUser[conn].Message;			
 
-				pUser[conn].Message = GetTickCount();
+				pUser[conn].Message = platform::MonotonicMs();
 
 				if(isTime < 3000)
 				{
@@ -1240,7 +1240,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 					return;
 				}
 			}
-			pUser[conn].Message = GetTickCount();
+			pUser[conn].Message = platform::MonotonicMs();
 
 			strncpy(m->MobName, pMob[conn].MOB.MobName, NAME_LENGTH);
 
@@ -1257,9 +1257,9 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 		{
 			if(pUser[conn].Message != 0)
 			{
-				int isTime = GetTickCount() - pUser[conn].Message;			
+				int isTime = platform::MonotonicMs() - pUser[conn].Message;			
 
-				pUser[conn].Message = GetTickCount();
+				pUser[conn].Message = platform::MonotonicMs();
 
 				if(isTime < 3000)
 				{
@@ -1267,7 +1267,7 @@ void Exec_MSG_MessageWhisper(int conn, char *pMsg)
 					return;
 				}
 			}
-			pUser[conn].Message = GetTickCount();
+			pUser[conn].Message = platform::MonotonicMs();
 
 			strncpy(m->MobName, pMob[conn].MOB.MobName, NAME_LENGTH);
 
