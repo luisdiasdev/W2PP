@@ -128,7 +128,7 @@ Architectural role confirmed against `docs/reports/architectural-analyzer/archit
 | BR-12 | Admission (admin) | Admin slot requires IP allow-list membership (`Admin.txt`, hot-reloaded) or a retained IP; then an account challenge login | `Code/DBSrv/Server.cpp:953`, `968-1003`, `353-391` |
 | BR-13 | Encode challenge | `Encode1`/`Encode2` are independently random `0..9999` values issued on accept and must be echoed exactly; mismatch destroys the slot | `Code/DBSrv/Server.cpp:1052-1065`, `1686-1687` |
 | BR-14 | Auth state machine | `Level == -1` means unauthenticated; a non-negative `Level` means authenticated and blocks re-authentication on the same slot | `Code/DBSrv/Server.cpp:1036`, `1689-1690` |
-| BR-15 | Credential policy | Account file must exist; password must match 12 bytes; `AccountPass[0]` of `_` or `@` blocks authentication; requires a character of level ≥ 1000 | `Code/DBSrv/Server.cpp:1692-1722` |
+| BR-15 | Credential policy | Account file must exist; password must match 16 bytes; `AccountPass[0]` of `_` or `@` blocks authentication; requires a character of level ≥ 1000 | `Code/DBSrv/Server.cpp:1692-1722` |
 | BR-16 | Privilege derivation | Admin level = (highest character level on the account) − 1000; per-command thresholds `>0`, `>=2`, `>2`; two commands have no threshold | `Code/DBSrv/Server.cpp:1724-1726`, `1481`, `1982` |
 | BR-17 | Deferred ban | A ban of a logged-in account is deferred: request save+quit, remember `DisableID`/`Year`/`YearDay`, apply ban at logout | `Code/DBSrv/Server.cpp:1939-1952`; `CFileDB.cpp:1108-1120`, `1261-1272`; `Server.cpp:1359-1417` |
 | BR-18 | Idempotent ban/enable | Banning an already-banned account returns state `"1"`; enabling an unbanned account returns the stored password | `Code/DBSrv/Server.cpp:1382-1388`, `1442-1448` |
@@ -550,13 +550,13 @@ next accept       -> Level = -1
 
 **Overview**
 
-Authentication requires: an existing account file; a password matching all 12 bytes of `AccountPass`; an `AccountPass[0]` that is neither `_` nor `@`; and at least one character whose `BaseScore.Level >= 1000`.
+Authentication requires: an existing account file; a password matching all 16 bytes of `AccountPass`; an `AccountPass[0]` that is neither `_` nor `@`; and at least one character whose `BaseScore.Level >= 1000`.
 
 **Detailed description**
 
 After the challenge check and the duplicate-auth check, the handler reads the account through `cFileDB.DBReadAccount(&file)` using the uppercased `m->Account` (`Server.cpp:1684`, `1692-1699`). A read failure returns `TRUE`, which is silently converted into "ignore the packet" by the caller's `if(ret == FALSE)` logic — the peer stays connected with `Level == -1` and can try again, indefinitely, with no lockout, delay, or log entry. This is the only branch of the authentication path that neither authenticates nor disconnects.
 
-Status prefixes are then checked before the password: `'_'` (documented elsewhere as "Conta Defeituosa" — defective account, `Server.cpp:1821-1825`) and `'@'` ("Conta bloqueada" — blocked, `Server.cpp:1816-1820`) both return `FALSE`, destroying the slot. `'#'` ("Conta Desativada" — deactivated) is *not* rejected here, an asymmetry with the status report path in `_MSG_NPReqAccount` (`Server.cpp:1826-1830`). The password comparison is `strncmp(m->Pass, p, ACCOUNTPASS_LENGTH)` over the full 12 bytes with no early exit — a timing-safe style comparison, though the surrounding protocol is plaintext so the property has no practical value.
+Status prefixes are then checked before the password: `'_'` (documented elsewhere as "Conta Defeituosa" — defective account, `Server.cpp:1821-1825`) and `'@'` ("Conta bloqueada" — blocked, `Server.cpp:1816-1820`) both return `FALSE`, destroying the slot. `'#'` ("Conta Desativada" — deactivated) is *not* rejected here, an asymmetry with the status report path in `_MSG_NPReqAccount` (`Server.cpp:1826-1830`). The password comparison is `strncmp(m->Pass, p, ACCOUNTPASS_LENGTH)` over the full 16 bytes with no early exit — a timing-safe style comparison, though the surrounding protocol is plaintext so the property has no practical value.
 
 The final gate is game-state-derived: the handler scans the 4 character slots and keeps the maximum `BaseScore.Level` of any character with a non-empty `MobName` (`Server.cpp:1713-1719`), then requires `maxlevel >= 1000` or returns `FALSE` (`Server.cpp:1721-1722`). A legitimate operator account with no level-1000+ character cannot log in at all. Conversely, any account whose character reaches level 1000 through normal play or through a defect becomes an admin — the credential policy and the authorization policy are the same check, evaluated against the *stored* character file rather than a role store.
 
@@ -758,7 +758,7 @@ Code/CPSock.cpp                  # ctor allocates 2 x 128KB per instance; CloseS
                                  #   AddMessage/SendMessageA/SendOneMessage
 Code/Basedef.h                   # MAX_SERVER 10, MAX_ADMIN 10, MAX_USER 1000,
                                  #   MAX_DBACCOUNT 10000, ACCOUNTNAME_LENGTH 16,
-                                 #   ACCOUNTPASS_LENGTH 12, DB_PORT 7514, ADMIN_PORT 8895,
+                                 #   ACCOUNTPASS_LENGTH 16, DB_PORT 7514, ADMIN_PORT 8895,
                                  #   FLAG_GAME2DB / FLAG_NP2DB, MSG_NPIDPASS
 ```
 
@@ -906,7 +906,7 @@ Wire format for all of the above: 4-byte `INITCODE` (`0x1F11F311`) then `HEADER{
 
 * Game link: IP allow-list from `serverlist.txt` **and** /24 subnet match (`Server.cpp:1095-1118`, `1150`).
 * Admin link: IP allow-list from `Admin.txt`, hot-reloaded per accept (`Server.cpp:953`, `353-391`).
-* Admin credentials: per-connection random challenge, 12-byte password comparison, blocked/defective account prefixes rejected, level-derived authorization (`Server.cpp:1686-1722`).
+* Admin credentials: per-connection random challenge, 16-byte password comparison, blocked/defective account prefixes rejected, level-derived authorization (`Server.cpp:1686-1722`).
 * Packet envelope validation with direction flags and index bounds before dispatch (`Server.cpp:1341-1354`, `1465-1477`).
 * Fixed-size message cap of 8192 bytes enforced in the parser, with buffer reset on violation (`CPSock.cpp:397-406`).
 * Two-phase ban that refuses to overwrite a live session's file (`Server.cpp:1949-1952`).

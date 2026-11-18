@@ -378,7 +378,7 @@ The pattern is always the same three steps: zero a local `STRUCT_ACCOUNTFILE`, c
 
 Three consequences follow. First, a short or truncated account file is silently accepted and then "repaired" by the next import, which rewrites the entire record with whatever the read produced (the buffer was zeroed beforehand, so the tail becomes zeros). Second, the record is a single ~7.6 KB write on a file that is also written by `_MSG_DBSaveMob` handling (`Code/TMSrv/Server.cpp:7056-7083` sends the save; DBSrv writes it) - two logical writers mutating different fields of the same record through whole-record writes. Third, the mutation is performed on a snapshot: between `DBReadAccount` and `DBWriteAccount` no other work happens in the same function, but the state read may already be stale relative to a `_MSG_DBSaveMob` that was queued by TMSrv in response to the very delivery performed 60 lines earlier. This is a lost-update window for concurrent character saves, and a duplicate-grant window for items (if TMSrv's own save landed before the read, the item is already present on disk and will be added a second time at the next free slot).
 
-The read path performs three defensive rewrites that matter for this rule: it forces `AccountName[14..15]` and `AccountPass[10..11]` to zero (`CFileDB.cpp:2520-2523`), it rejects the account names COM0-COM9 and LPT0-LPT9 (`:2531-2534`), and it derives the directory key from the first character only (`BASE_GetFirstKey`, `Basedef.cpp:4114-4160`).
+The read path performs three defensive rewrites that matter for this rule: it forces `AccountName[14..15]` and `AccountPass[14..15]` to zero (`CFileDB.cpp:2520-2523`), it rejects the account names COM0-COM9 and LPT0-LPT9 (`:2531-2534`), and it derives the directory key from the first character only (`BASE_GetFirstKey`, `Basedef.cpp:4114-4160`).
 
 **Rule workflow**:
 ```
@@ -518,7 +518,7 @@ AddAccount(...) -> on success DeleteFile(source) ; on failure keep source
 Each imported account field has an explicit length window; the checks reject out-of-range values but use inconsistent boundary comparisons and truncate defensively after the fact.
 
 **Detailed description**:
-The accepted windows are: id `len != 0 && len < ACCOUNTNAME_LENGTH (16)` (`:447`); password `len != 0 && len < ACCOUNTPASS_LENGTH (12)` (`:478`); real name `len != 0 && len < REALNAME_LENGTH (24)` (`:506`); e-mail `len != 0 && len < EMAIL_LENGTH (48)` (`:588`); telephone `len != 0 && len < TELEPHONE_LENGTH (16)` (`:621`); address `len != 0 && len > ADDRESS_LENGTH (78)` - note the inverted comparison, which allows a length of exactly 78 (`:654`). SSN1 and SSN2 must be non-zero (`:533`, `:557`); zero is treated as "not supplied". No content validation exists for any field: e-mail is not checked for an `@`, telephone for digits, address for length semantics, or the identifier for allowed characters.
+The accepted windows are: id `len != 0 && len < ACCOUNTNAME_LENGTH (16)` (`:447`); password `len != 0 && len < ACCOUNTPASS_LENGTH (16)` (`:478`); real name `len != 0 && len < REALNAME_LENGTH (24)` (`:506`); e-mail `len != 0 && len < EMAIL_LENGTH (48)` (`:588`); telephone `len != 0 && len < TELEPHONE_LENGTH (16)` (`:621`); address `len != 0 && len > ADDRESS_LENGTH (78)` - note the inverted comparison, which allows a length of exactly 78 (`:654`). SSN1 and SSN2 must be non-zero (`:533`, `:557`); zero is treated as "not supplied". No content validation exists for any field: e-mail is not checked for an `@`, telephone for digits, address for length semantics, or the identifier for allowed characters.
 
 After each check, the code performs a belt-and-braces truncation: `id[14] = 0; id[15] = 0;` (`:459-460`), `pass[10] = 0; pass[11] = 0;` (`:488-489`), `name[22] = 0; name[23] = 0;` (`:516-517`). For the three raw-line fields the pre-truncation is done on the destination before the length test, not on the source: `email[47] = 0; email[46] = 0;` (`:583-584`), `tel[15] = 0; tel[14] = 0;` (`:616-617`), `addr[77] = 0; addr[76] = 0;` (`:649-650`). Since `strncpy` then overwrites those bytes with source content, the pre-truncation only helps when the source is shorter.
 
@@ -527,7 +527,7 @@ The address boundary is a genuine defect: with `len == 78`, `strncpy(addr, temp,
 **Rule workflow**:
 ```
 id:        reject if empty or >=16 ; force bytes 14,15 = 0 ; uppercase
-password:  reject if empty or >=12 ; force bytes 10,11 = 0
+password:  reject if empty or >=16 ; force bytes 14,15 = 0
 realname:  reject if empty or >=24 ; force bytes 22,23 = 0
 ssn1/ssn2: reject if 0
 email:     strip newline ; reject if empty or >=48 ; copy 48 bytes

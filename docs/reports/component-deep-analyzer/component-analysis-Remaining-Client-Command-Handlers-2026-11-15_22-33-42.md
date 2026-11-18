@@ -1024,7 +1024,7 @@ On success the handler rewrites `Type = _MSG_DBCreateCharacter`, sets `ID = conn
 Deletion requires the character-select screen and is forwarded to DBSrv with the session parked in `USER_WAITDB`; unlike creation, the name is not validated locally.
 
 **Detailed description**
-`_MSG_DeleteCharacter.cpp:24` terminates `MobName` at `NAME_LENGTH-1`, `:26` requires `Mode == USER_SELCHAR`, and `:28-33` rewrites `Type = _MSG_DBDeleteCharacter`, sets `ID`, parks the session in `USER_WAITDB` and forwards the struct including its `Slot` and `Password[12]` fields (`Basedef.h:1269-1278`).
+`_MSG_DeleteCharacter.cpp:24` terminates `MobName` at `NAME_LENGTH-1`, `:26` requires `Mode == USER_SELCHAR`, and `:28-33` rewrites `Type = _MSG_DBDeleteCharacter`, sets `ID`, parks the session in `USER_WAITDB` and forwards the struct including its `Slot` and `Password[16]` fields (`Basedef.h:1269-1278`).
 
 The failure branch (`:38-44`) is the only place in the family that emits a hard-coded English string instead of a `g_pMessageStringTable` entry: `SendClientMessage(conn, "Deleting Character. wait a moment.")`. That message is shown when the player is *not* on the select screen, which is precisely when the message is misleading. It also writes `err,delchar not user_selchar <conn> <mode>`.
 

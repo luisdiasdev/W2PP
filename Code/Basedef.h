@@ -75,7 +75,7 @@ inline unsigned char HighByte(unsigned long value)
 #pragma region Account related defines
 
 #define		ACCOUNTNAME_LENGTH		16		// Max length of the account login
-#define		ACCOUNTPASS_LENGTH		12      // Max length of the account password
+#define		ACCOUNTPASS_LENGTH		16      // Max length of the account password
 #define		REALNAME_LENGTH			24      // Max length of the name of the account owner
 #define		EMAIL_LENGTH			48      // Max length of the email address of the account owner
 #define		ADDRESS_LENGTH			78      // Max length of the real address of the account owner
@@ -851,13 +851,13 @@ struct STRUCT_RANKING
 
 struct STRUCT_ACCOUNTFILE
 {
-	STRUCT_ACCOUNTINFO Info; // 0 - 216
+	STRUCT_ACCOUNTINFO Info; // 0 - 224
 
-	STRUCT_MOB	Char[MOB_PER_ACCOUNT]; // 216 - 3480
-	STRUCT_ITEM Cargo[MAX_CARGO]; // 3480 - 4504
-	int			Coin; // 4504 - 4508
+	STRUCT_MOB	Char[MOB_PER_ACCOUNT]; // 224 - 3488
+	STRUCT_ITEM Cargo[MAX_CARGO]; // 3488 - 4512
+	int			Coin; // 4512 - 4516
 
-	unsigned char ShortSkill[MOB_PER_ACCOUNT][16]; // 4508 - 4572
+	unsigned char ShortSkill[MOB_PER_ACCOUNT][16]; // 4516 - 4580
 
 	STRUCT_AFFECT affect[MOB_PER_ACCOUNT][MAX_AFFECT];
 	STRUCT_MOBEXTRA mobExtra[MOB_PER_ACCOUNT];
@@ -1286,7 +1286,7 @@ struct		  MSG_DeleteCharacter
 	int Slot;
 
 	char MobName[NAME_LENGTH];
-	char Password[12];
+	char Password[ACCOUNTPASS_LENGTH];
 };
 
 const short _MSG_War						= (14 | FLAG_CLIENT2GAME | FLAG_DB2GAME | FLAG_GAME2DB);

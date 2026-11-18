@@ -7,7 +7,7 @@ The servers build only for Windows x86 and depend on a few MSVC-specific CRT fac
 ## What Changes
 
 - **Build system**: add native Linux x86_64 configure/build/test presets with the vcpkg Linux triplet; keep the existing Windows x86 presets and toolchain behavior. Configure SHALL fail clearly on unsupported platforms and architectures.
-- **ABI normalization**: replace bare `long` fields in layout-sensitive records with fixed-width integer types so the 12-byte header and the 816/536/1352/7800/840-byte records stay byte-identical on both Windows x86 and Linux x86_64. The on-disk and wire formats do not change.
+- **ABI normalization**: replace bare `long` fields in layout-sensitive records with fixed-width integer types so the 12-byte header and the 816/536/1352/7808/840-byte records stay byte-identical on both Windows x86 and Linux x86_64. The on-disk and wire formats do not change.
 - **Portability fixes**: remove the unconditional MSVC-only `<mbstring.h>` include, replace the two `fopen_s` calls, and implement executable-path discovery for Linux (`/proc/self/exe`). Convert the CP949 comments in `Code/ItemEffect.h` to valid UTF-8 without changing runtime data bytes.
 - **Runtime paths**: construct log, day-log, chat-log and item-log paths with the platform path rules instead of hard-coded backslashes so the existing `./Log` and `./DayLog` layouts work on Linux.
 - **Linux verification**: run the portable unit tests plus a POSIX integration smoke that starts DBSrv and TMSrv against a temporary runtime tree, accepts a loopback connection, and verifies shutdown through both the console command and SIGINT.

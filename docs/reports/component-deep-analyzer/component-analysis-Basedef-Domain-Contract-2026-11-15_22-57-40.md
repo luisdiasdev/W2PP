@@ -21,11 +21,11 @@
 
 Three structural properties define the component and its risk profile:
 
-1. **The header is a frozen binary contract with no version marker.** `STRUCT_ACCOUNTFILE` is written to and read from disk with raw `_read`/`_write` of `sizeof(STRUCT_ACCOUNTFILE)` (verified: 7,800 bytes, offsets `Info`=0, `Char`=216, `Cargo`=3480, `Coin`=4504, `ShortSkill`=4508, `affect`=4572, `mobExtra`=5600, `Donate`=7744, `TempKey`=7748). Nothing in the file records a format version, magic number or length. Four `#pragma pack(push, 1)` regions cover five types (`STRUCT_RANKING`, `MSG_AccountLogin`, `MSG_AccountLogin_HWID`, `MSG_UpdateScore`, `MSG_AttackOne`) while all others use the compiler default packing of 8, so the 7,800-byte layout is an emergent property of field order, natural alignment and hand-written `char EMPTY[n]` filler blocks (`char EMPTY[30]` appears 5 times in `STRUCT_MOBEXTRA` alone, plus `int EMPTY[9]`).
+1. **The header is a frozen binary contract with no version marker.** `STRUCT_ACCOUNTFILE` is written to and read from disk with raw `_read`/`_write` of `sizeof(STRUCT_ACCOUNTFILE)` (verified: 7,808 bytes, offsets `Info`=0, `Char`=224, `Cargo`=3488, `Coin`=4512, `ShortSkill`=4516, `affect`=4580, `mobExtra`=5608, `Donate`=7752, `TempKey`=7756). Nothing in the file records a format version, magic number or length. Four `#pragma pack(push, 1)` regions cover five types (`STRUCT_RANKING`, `MSG_AccountLogin`, `MSG_AccountLogin_HWID`, `MSG_UpdateScore`, `MSG_AttackOne`) while all others use the compiler default packing of 8, so the 7,808-byte layout is an emergent property of field order, natural alignment and hand-written `char EMPTY[n]` filler blocks (`char EMPTY[30]` appears 5 times in `STRUCT_MOBEXTRA` alone, plus `int EMPTY[9]`).
 
 2. **The protocol is uniquely addressable but base IDs are massively reused.** All 191 message constants were evaluated numerically: there are **zero exact-value collisions**, but base IDs are reused across namespaces for 30 distinct base values (e.g. base `1` maps to five different message types: `0x0401`, `0x0801`, `0x0101`, `0x4501`, `0x1001`). Direction is therefore not carried in the payload — it is carried only by the four-to-six high bits of `Type`, and dispatch correctness depends on every participant re-deriving the same flag values. `FLAG_NEW` (`0x4000`) is used by exactly 2 messages and is the only defined bit above `0x2000`; `0x8000` is unallocated and unused.
 
-3. **The contract is declarative but only partially enforced at runtime.** `BASE_CheckPacket` — the only function in the system whose job is to validate that a received buffer's `Size` matches the declared payload structure — has its entire body inside a block comment (`Code/Basedef.cpp:6476-6594`) and now unconditionally returns `FALSE` (`Code/Basedef.cpp:6595`). The only size enforcement that remains is the transport guard `Size > MAX_MESSAGE_SIZE (8192) || Size < sizeof(HEADER)` in `CPSock::ReadMessage` (`Code/CPSock.cpp:397`). Consequently the 100 payload structures are trusted at face value once the outer frame is sane, and the largest declared payload (`MSG_NPAccountInfo`, 7,824 bytes) sits 368 bytes below the transport ceiling with no compile-time assertion protecting that margin.
+3. **The contract is declarative but only partially enforced at runtime.** `BASE_CheckPacket` — the only function in the system whose job is to validate that a received buffer's `Size` matches the declared payload structure — has its entire body inside a block comment (`Code/Basedef.cpp:6476-6594`) and now unconditionally returns `FALSE` (`Code/Basedef.cpp:6595`). The only size enforcement that remains is the transport guard `Size > MAX_MESSAGE_SIZE (8192) || Size < sizeof(HEADER)` in `CPSock::ReadMessage` (`Code/CPSock.cpp:397`). Consequently the 100 payload structures are trusted at face value once the outer frame is sane, and the largest declared payload (`MSG_NPAccountInfo`, 7,832 bytes) sits 360 bytes below the transport ceiling with no compile-time assertion protecting that margin.
 
 Key findings: 4 domain structures are dead (`STRUCT_CAMP`, `STRUCT_LEVELBONUS`, and — by type name — `STRUCT_SEALOFSOUL`, `STRUCT_DAM`, both reachable only as embedded members); 55 fields are explicitly unnamed (`Unk*`, `EMPTY`, `Zero`, `Useless*`, `NotUsed`); 3 `TODO` markers sit on contract-level defects (`Code/Basedef.h:1095`, `:1511`, `:1523`); `MOB_PER_ACCOUNT` is fixed at 4 while `STRUCT_SELCHAR` hardcodes the literal `4` in 7 array dimensions; and the "global level" convention is implemented with two different offsets (`+MAX_LEVEL` in 9 sites, `+MAX_CLEVEL` in 4 sites, and `+MAX_CLEVEL + 1` in one site — an off-by-one at `Code/TMSrv/_MSG_AcceptParty.cpp:93`). There are no tests of any kind in the repository.
 
@@ -83,9 +83,9 @@ Basedef.cpp, CPSock.cpp
 3. CFileDB::ProcessMessage (CFileDB.cpp:236) switches on exact Type;
    slot validity is re-checked against MOB_PER_ACCOUNT (0..3)      -> BR-07
 4. CFileDB::DBReadAccount / DBWriteAccount perform a single
-   _read/_write of sizeof(STRUCT_ACCOUNTFILE) = 7,800 bytes at
+   _read/_write of sizeof(STRUCT_ACCOUNTFILE) = 7,808 bytes at
    ./account/<FirstKey>/<ACCOUNTNAME>                              -> BR-03
-5. Legacy tolerance: if _filelength(Handle) < 7,800 only
+5. Legacy tolerance: if _filelength(Handle) < 7,808 only
    memset(file->ShortSkill, 0, 8) is applied (CFileDB.cpp:2573-2574)
 6. Rankings read the same file with a size heuristic
    (7,500..7,600 bytes) OR sizeof(STRUCT_ACCOUNTFILE) (CRanking.cpp:175)
@@ -116,7 +116,7 @@ CSV/txt on disk -> BASE_ReadItemListFile / BASE_ReadSkillBin / BASE_InitializeMo
 |---|---|---|---|
 | BR-01 | Protocol invariant | Every wire message begins with a 12-byte header (`Size,KeyWord,CheckSum,Type,ID,ClientTick`); `Size` is the authoritative frame length and must be 12..8192 | `Basedef.h:925-946`; enforced at `CPSock.cpp:397` |
 | BR-02 | Protocol invariant | Message identity = `(direction flags) OR base_id`; direction is encoded in the high bits of `Type` and is the only disambiguator of reused base IDs | `Basedef.h:932-941, 976-2325` |
-| BR-03 | Persistence | A character file is exactly one 7,800-byte `STRUCT_ACCOUNTFILE`; layout is positional, unversioned and padding-sensitive | `Basedef.h:840-856` |
+| BR-03 | Persistence | A character file is exactly one 7,808-byte `STRUCT_ACCOUNTFILE`; layout is positional, unversioned and padding-sensitive | `Basedef.h:840-856` |
 | BR-04 | Persistence | A character record is exactly 816 bytes (`STRUCT_MOB`) with fixed 16-slot equip and 64-slot carry arrays at fixed offsets 140 and 268 | `Basedef.h:438-481` |
 | BR-05 | Encoding | An item is 8 bytes: `short sIndex` plus 3 `{effect,value}` byte pairs, with sanctification/success packed into a single `cValue` byte using two disjoint numeric ranges | `Basedef.h:398-412`; decode at `Basedef.cpp:2100-2285` |
 | BR-06 | Capacity/geometry | Carry grid 9x7 = 63 usable cells for 64 slots (slot 63 reserved by `KILL_MARK`); cargo grid 9x14 = 126 cells for 128 slots | `Basedef.h:76-93, 166` |
@@ -166,7 +166,7 @@ The transport treats `Size` as the framing length and nothing else. `CPSock::Rea
 
 The contract-level enforcement that would compare `Size` against the declared structure is present but inert. `BASE_CheckPacket(MSG_STANDARD*)` at `Code/Basedef.cpp:6475` opens a block comment on line 6476 that contains roughly 90 `if (m->Type == _MSG_X && m->Size != sizeof(MSG_X)) code = 1;` statements, closes it at line 6594, and then executes `return FALSE;` at line 6595 — so the function always reports "invalid" while performing no comparison at all. Its only call site is behind `#ifdef _PACKET_DEBUG` in `CPSock::AddMessage` (`CPSock.cpp:544-552`), i.e. it is a send-side debugging hook, never a receive-side validator, and even there it can only ever log a warning. The consequence for the header is that the 100 payload definitions are read as trusted interpretations of a buffer whose only guarantee is `12 <= Size <= 8192`; a truncated `MSG_Trade` (156 B declared) would be cast to a 156-byte type over a shorter allocation and read past the frame.
 
-This rule also fixes the ceiling relationship that the header must respect: the largest declared payload, `MSG_NPAccountInfo` at 7,824 bytes (12 + 7,800 + 4 + 4 + 4), is within 368 bytes of `MAX_MESSAGE_SIZE` (8,192, defined in `Code/CPSock.h:38`, not in this header). Adding a single field of 369 bytes or more to `STRUCT_ACCOUNTFILE`, or raising `MAX_CARGO`, would silently exceed the transport limit and make the NP account-info path unframeable, with no compile-time or run-time diagnostic at the definition site.
+This rule also fixes the ceiling relationship that the header must respect: the largest declared payload, `MSG_NPAccountInfo` at 7,832 bytes (12 + 7,808 + 4 + 4 + 4), is within 360 bytes of `MAX_MESSAGE_SIZE` (8,192, defined in `Code/CPSock.h:38`, not in this header). Adding a single field of 361 bytes or more to `STRUCT_ACCOUNTFILE`, or raising `MAX_CARGO`, would silently exceed the transport limit and make the NP account-info path unframeable, with no compile-time or run-time diagnostic at the definition site.
 
 **Rule workflow**
 
@@ -229,16 +229,16 @@ The header also documents a de-facto allocation rule that has never been written
 
 ---
 
-### Business Rule: BR-03 — 7,800-byte unversioned character file
+### Business Rule: BR-03 — 7,808-byte unversioned character file
 
 **Overview**
-`STRUCT_ACCOUNTFILE` is the atomic unit of persistence. Exactly one instance is written per account per save, as a single raw `_write` of 7,800 bytes, with no header, magic value, version field or checksum.
+`STRUCT_ACCOUNTFILE` is the atomic unit of persistence. Exactly one instance is written per account per save, as a single raw `_write` of 7,808 bytes, with no header, magic value, version field or checksum.
 
 **Detailed description**
 
-The structure at `Code/Basedef.h:840-856` documents its own offsets in inline comments, and those comments were verified correct by compiling against the header: `Info` at 0 (216 bytes), `Char[4]` at 216 (4 x 816 = 3,264), `Cargo[128]` at 3,480 (1,024), `Coin` at 4,504, `ShortSkill[4][16]` at 4,508 (64), `affect[4][32]` at 4,572 (1,024), `mobExtra[4]` at 5,600 (4 x 536 = 2,144), `Donate` at 7,744, `TempKey[52]` at 7,748, total 7,800 with 4 bytes of tail padding to satisfy the 8-byte alignment demanded by `long long Exp` inside `STRUCT_MOB`. The gap between `affect` ending at 5,596 and `mobExtra` starting at 5,600 is implicit padding, not declared filler — a detail that matters because the file writer copies the raw struct including padding.
+The structure at `Code/Basedef.h:840-856` documents its own offsets in inline comments, and those comments were verified correct by compiling against the header: `Info` at 0 (220 bytes, padded to 224 by the 8-byte alignment of `STRUCT_MOB`), `Char[4]` at 224 (4 x 816 = 3,264), `Cargo[128]` at 3,488 (1,024), `Coin` at 4,512, `ShortSkill[4][16]` at 4,516 (64), `affect[4][32]` at 4,580 (1,024), `mobExtra[4]` at 5,608 (4 x 536 = 2,144), `Donate` at 7,752, `TempKey[52]` at 7,756, total 7,808. The 4 bytes between `Info` ending at 220 and `Char` starting at 224, and the gap between `affect` ending at 5,604 and `mobExtra` starting at 5,608, are implicit padding, not declared filler — a detail that matters because the file writer copies the raw struct including padding.
 
-The format is positional and therefore fragile in a very specific way. `STRUCT_ACCOUNTINFO` ends at 208 but `int Year` is placed at 208 and `int YearDay` at 212, so the 216-byte `Info` block has no slack; `STRUCT_MOB` relies on the compiler inserting 3 bytes between `Quest` (offset 24) and `Coin` (offset 28) and 6 bytes of tail padding after `Resist[4]`; `STRUCT_MOBEXTRA` is built almost entirely out of hand-written filler (`char EMPTY[30]` inside `QuestInfo.Mortal`, `.Arch`, `.Celestial`, inside `SaveCelestial[]`, plus `int EMPTY[9]` at the end) so that future additions can be absorbed inside an existing hole instead of shifting `Donate` and `TempKey`. There is no `static_assert` anywhere in the repository (verified: zero occurrences) and no compile-time or run-time size check on open, so a field insertion anywhere except inside a designated `EMPTY` block silently reinterprets every account file on disk.
+The format is positional and therefore fragile in a very specific way. `STRUCT_ACCOUNTINFO` ends at 212 but `int Year` is placed at 212 and `int YearDay` at 216, so the 220-byte `Info` block has no slack; `STRUCT_MOB` relies on the compiler inserting 3 bytes between `Quest` (offset 24) and `Coin` (offset 28) and 6 bytes of tail padding after `Resist[4]`; `STRUCT_MOBEXTRA` is built almost entirely out of hand-written filler (`char EMPTY[30]` inside `QuestInfo.Mortal`, `.Arch`, `.Celestial`, inside `SaveCelestial[]`, plus `int EMPTY[9]` at the end) so that future additions can be absorbed inside an existing hole instead of shifting `Donate` and `TempKey`. There is no `static_assert` anywhere in the repository (verified: zero occurrences) and no compile-time or run-time size check on open, so a field insertion anywhere except inside a designated `EMPTY` block silently reinterprets every account file on disk.
 
 Two independent readers compensate for the absence of a format marker by using size heuristics rather than validation. `CFileDB::DBReadAccount` (`Code/DBSrv/CFileDB.cpp:2518-2577`) calls `_filelength`, reads `sizeof(STRUCT_ACCOUNTFILE)` bytes regardless of the actual length, and only if `length < reqsz` performs `memset(file->ShortSkill, 0, 8)` — note that this zeroes 8 of the 64 bytes of `ShortSkill`, apparently a symptom of an older 8-byte field having occupied that address. `CRanking.cpp:175` accepts a file if `(fsize >= 7500 && fsize <= 7600) || fsize == sizeof(STRUCT_ACCOUNTFILE)`, which implies the loader has historically had to accept two vintages. `DBExportAccount` and `DBWriteAccount` (`CFileDB.cpp:2444`, `:2504`) write the whole struct unconditionally.
 
@@ -252,11 +252,11 @@ A second, distinct persistence unit follows the same rule set: `STRUCT_CAPSULE` 
 2. DB tier validates slot (0..3) and account name, then copies fields into a
    local STRUCT_ACCOUNTFILE (memset 0 first: CFileDB.cpp:110,261,837).
 3. DBWriteAccount opens ./account/<FirstKey>/<ACCOUNTNAME> and performs one
-   _write of 7,800 bytes; no length prefix, no version, no checksum.
-4. On load, DBReadAccount performs one _read of 7,800 bytes; a short file
+   _write of 7,808 bytes; no length prefix, no version, no checksum.
+4. On load, DBReadAccount performs one _read of 7,808 bytes; a short file
    leaves the tail as whatever the caller's memset produced.
 5. Field-level sanitisation happens after the read: AccountName[15] and [14]
-   forced to 0, AccountPass[11] and [10] forced to 0 (CFileDB.cpp:2520-2523),
+   forced to 0, AccountPass[15] and [14] forced to 0 (CFileDB.cpp:2520-2523),
    and reserved-name prefixes COM0-COM9 / LPT0-LPT9 rejected.
 6. `TempKey[52]` is a transfer/session token: it is memcmp'd against
    `MSG_AccountLogin::Zero[52]` (CFileDB.cpp:664-666) and is written from
@@ -385,7 +385,7 @@ The practical consequence is that raising `MOB_PER_ACCOUNT` from 4 to, say, 6 wo
 1. Client requests character creation/login with an explicit Slot (int on the wire).
 2. TMSrv validates 0 <= Slot < MOB_PER_ACCOUNT before forwarding (msg byte-for-byte rewritten).
 3. DB validates the same range again; CReadFiles uses Slot <= 3 instead of the constant.
-4. STRUCT_ACCOUNTFILE.Char[Slot] is read/written at 216 + 816*Slot.
+4. STRUCT_ACCOUNTFILE.Char[Slot] is read/written at 224 + 816*Slot.
 5. Selection screen data is projected into STRUCT_SELCHAR (fixed 4 entries) by DBGetSelChar.
 6. MSG_CNFNewCharacter / MSG_CNFDeleteCharacter carry that 840-byte projection
    (856 bytes on the wire including the header and tail padding).
@@ -489,13 +489,13 @@ A client may only log in if the `ClientVersion` field in `MSG_AccountLogin` equa
 
 `APP_VERSION 6975` (`Basedef.h:42`) is a bare `#define` with no companion build stamp, and it is compared for strict equality — not a minimum, not a range, not a compatibility set. The comparison lives in `_MSG_AccountLogin.cpp:44`: `if (Size < sizeof(MSG_AccountLogin) || m->ClientVersion != ClientVersion)` where `ClientVersion` was initialised from the constant one line earlier. The failure path formats `g_pMessageStringTable[_NN_Version_Not_Match_Rerun]` with `APP_VERSION` as a `%d` argument, sends it, flushes and closes. Under `_PACKET_DEBUG` the version test is compiled out (`#ifdef` at line 41), leaving only the size test — so a debug build silently accepts any client version, which is a meaningful behavioural divergence between build flavours.
 
-The same constant is duplicated into the build's own identity: the client patch directory is named `ClientPatch_v7662` while `APP_VERSION` is 6975, and no code reconciles the two strings. Since `MSG_AccountLogin` is one of only five structures under `#pragma pack(push, 1)`, its `ClientVersion` sits at a stable offset (12 + 12 + 16 + 52 = 92) that the client must produce exactly; `sizeof(MSG_AccountLogin)` is 116 bytes and includes `int AdapterName[4]` (the MAC quartet) and a 52-byte `char Zero[52]` whose purpose is undocumented. A legacy client that sends a shorter packet is only tolerated in `_PACKET_DEBUG` builds: in release the same `Size < sizeof(MSG_AccountLogin)` condition is part of the rejection test at line 44, so the `0xFF` MAC fallback at lines 67-68 is unreachable outside debug builds. That divergence means a debug server and a release server accept different packet sets for the same endpoint.
+The same constant is duplicated into the build's own identity: the client patch directory is named `ClientPatch_v7662` while `APP_VERSION` is 6975, and no code reconciles the two strings. Since `MSG_AccountLogin` is one of only five structures under `#pragma pack(push, 1)`, its `ClientVersion` sits at a stable offset (12 + 16 + 16 + 52 = 96) that the client must produce exactly; `sizeof(MSG_AccountLogin)` is 120 bytes and includes `int AdapterName[4]` (the MAC quartet) and a 52-byte `char Zero[52]` whose purpose is undocumented. A legacy client that sends a shorter packet is only tolerated in `_PACKET_DEBUG` builds: in release the same `Size < sizeof(MSG_AccountLogin)` condition is part of the rejection test at line 44, so the `0xFF` MAC fallback at lines 67-68 is unreachable outside debug builds. That divergence means a debug server and a release server accept different packet sets for the same endpoint.
 
 **Rule workflow**
 
 ```
-1. Client sends MSG_AccountLogin: AccountPassword[12], AccountName[16], Zero[52],
-   ClientVersion, DBNeedSave, AdapterName[4] (116 bytes, pack 1).
+1. Client sends MSG_AccountLogin: AccountPassword[16], AccountName[16], Zero[52],
+   ClientVersion, DBNeedSave, AdapterName[4] (120 bytes, pack 1).
 2. Handler rejects conn on a reserved slot first (BR-09).
 3. Handler rejects Size < 116 or ClientVersion != 6975 -> send localized message,
    flush, CloseUser.
@@ -676,7 +676,7 @@ for (q = 0; q < skill_target &&
 
 so the number of damage entries that may be read is derived from the frame length, and `MAX_TARGET 13` is the ceiling only when the largest variant is present. The three structures are *not* prefix-compatible in a naive sense: `MSG_Attack` carries `int CurrentHp` at one offset while `MSG_AttackOne` carries `int CurrentMp` there and `CurrentHp` later, and `MSG_AttackTwo` mirrors `MSG_AttackOne`'s ordering with a two-entry array. The declared sizes confirm the deliberate asymmetry (168 / 68 / 80, and `MSG_AttackTwo` is not `MSG_AttackOne + 8` because of packing), so a receiver cannot simply read `Dam[0]` at a fixed offset across variants.
 
-The same size-as-discriminator pattern appears in the login pair: `MSG_CNFCharacterLogin` (2,632 bytes, includes `affect[32]`, `mobExtra`, `Donate`) and `MSG_CNFClientCharacterLogin` (1,832 bytes) share `_MSG_CNFCharacterLogin` (`0x0114`); the client-variant omits the trailing 800 bytes. `MSG_AccountLogin` (116) versus `MSG_AccountLogin_HWID` (166) is a third instance, discriminated by `Size < sizeof(MSG_AccountLogin)` at `_MSG_AccountLogin.cpp:42,67` — except that both must first pass the earlier `Size < sizeof(MSG_AccountLogin)` rejection, so the HWID variant is only reachable on the transmit side. `MSG_CreateMob` (232) versus `MSG_CreateMobTrade` (252) is a fourth: the trade variant appends `char Desc[24]` and drops the trailing `int Hold`.
+The same size-as-discriminator pattern appears in the login pair: `MSG_CNFCharacterLogin` (2,632 bytes, includes `affect[32]`, `mobExtra`, `Donate`) and `MSG_CNFClientCharacterLogin` (1,832 bytes) share `_MSG_CNFCharacterLogin` (`0x0114`); the client-variant omits the trailing 800 bytes. `MSG_AccountLogin` (120) versus `MSG_AccountLogin_HWID` (170) is a third instance, discriminated by `Size < sizeof(MSG_AccountLogin)` at `_MSG_AccountLogin.cpp:42,67` — except that both must first pass the earlier `Size < sizeof(MSG_AccountLogin)` rejection, so the HWID variant is only reachable on the transmit side. `MSG_CreateMob` (232) versus `MSG_CreateMobTrade` (252) is a fourth: the trade variant appends `char Desc[24]` and drops the trailing `int Hold`.
 
 Because `BASE_CheckPacket` is disabled (BR-01), none of these discriminators are validated centrally; each handler re-implements the comparison, and a frame whose `Size` matches no variant falls through to the smallest interpretation. The header provides no `union`, no tag field and no comment block describing the variants — the only record of the relationship is the convention that the `MSG_*` names share a prefix and the dispatcher's `case` labels are shared.
 
@@ -824,7 +824,7 @@ Because the value is an `int` on the wire while the stored `CItem::State` is wha
 |---|---|---|---|
 | IR-01 | `STRUCT_MOB::Equip[0]` is the face/visual slot and `Equip[14]` the mount slot | High | `Server.cpp:4180,4202`; `Basedef.cpp:3433` |
 | IR-02 | `Carry[63]` (`KILL_MARK`) is a kill-counter record, never a container | High | `GetFunc.cpp:2051-2142` |
-| IR-03 | `MSG_NPAccountInfo` must remain below `MAX_MESSAGE_SIZE` (368-byte headroom) | High | measured 7,824 vs `CPSock.h:38` |
+| IR-03 | `MSG_NPAccountInfo` must remain below `MAX_MESSAGE_SIZE` (360-byte headroom) | High | measured 7,832 vs `CPSock.h:38` |
 | IR-04 | `Effect[0]` has priority over `Effect[1]` over `Effect[2]` for any effect lookup | High | `Basedef.cpp:2102-2119,2291-2299` |
 | IR-05 | `sIndex` ranges 2320-2359 = mounts, 2330-2389 = no-sanctification, 2360-2389 = growth items | Medium | `Server.cpp:4211`, `Basedef.cpp:2145,2179,2229` |
 | IR-06 | The 52-byte blob is a cross-structure session/transfer token: `STRUCT_ACCOUNTFILE::TempKey`, `MSG_AccountLogin::Zero` and `MSG_DBCNFServerChange::Enc` are compared and copied as one value | High | `CFileDB.cpp:664-672,1984` |
@@ -872,11 +872,11 @@ Code/
 │   │   ├── [714-744]  STRUCT_GUILDZONE     84 B
 │   │   ├── [746-763]  STRUCT_SEALOFSOUL    60 B
 │   │   ├── [765-778]  STRUCT_SELCHAR      840 B   (4 hardcoded dimensions x8)
-│   │   ├── [780-795]  STRUCT_ACCOUNTINFO  216 B
+│   │   ├── [780-795]  STRUCT_ACCOUNTINFO  220 B
 │   │   ├── [796-806]  STRUCT_GUILDINFO      8 B   (typedef, style outlier)
 │   │   └── [808-835]  STRUCT_RANKING       52 B   (pack 1, C++ ctors)
 │   ├── [838-921] #pragma region File Structures
-│   │   ├── [840-856]  STRUCT_ACCOUNTFILE 7800 B   (offset comments 0..4572)
+│   │   ├── [840-856]  STRUCT_ACCOUNTFILE 7808 B   (offset comments 0..4580)
 │   │   ├── [858-880]  STRUCT_SPELL         84 B
 │   │   ├── [882-906]  STRUCT_ITEMLIST     140 B
 │   │   ├── [908-914]  STRUCT_INITITEM       8 B
@@ -955,7 +955,7 @@ Measured totals: **80 translation units** include the header directly or transit
 
 ### 5.4 External dependencies
 
-None. The component performs no I/O, has no third-party dependency and no build-time code generation. The only externality is the MSVC ABI itself, on which the 7,800-byte persistence layout silently depends (alignment of `long long`/`time_t`, packing defaults).
+None. The component performs no I/O, has no third-party dependency and no build-time code generation. The only externality is the MSVC ABI itself, on which the 7,808-byte persistence layout silently depends (alignment of `long long`/`time_t`, packing defaults).
 
 ---
 
@@ -1023,7 +1023,7 @@ Two measurable cohesion violations stand out. First, `STRUCT_MOBEXTRA` mixes eig
 
 | Struct | Size | Align | Struct | Size | Align |
 |---|---|---|---|---|---|
-| `STRUCT_ITEM` | 8 | 2 | `STRUCT_ACCOUNTFILE` | 7,800 | 8 |
+| `STRUCT_ITEM` | 8 | 2 | `STRUCT_ACCOUNTFILE` | 7,808 | 8 |
 | `STRUCT_SCORE` | 48 | 4 | `STRUCT_SPELL` | 84 | 4 |
 | `STRUCT_MOB` | 816 | 8 | `STRUCT_ITEMLIST` | 140 | 4 |
 | `STRUCT_MOBEXTRA` | 536 | 8 | `STRUCT_INITITEM` | 8 | 2 |
@@ -1033,24 +1033,24 @@ Two measurable cohesion violations stand out. First, `STRUCT_MOBEXTRA` mixes eig
 | `STRUCT_BEASTBONUS` | 68 | 4 | `MSG_STANDARDPARM2` | 20 | 4 |
 | `STRUCT_TREASURE` | 52 | 2 | `MSG_STANDARDSHORTPARM2` | 16 | 4 |
 | `STRUCT_PISTA` | 84 | 4 | `MSG_STANDARDPARM3` | 24 | 4 |
-| `STRUCT_CASTLEQUEST` | 564 | 4 | `MSG_NPAccountInfo` | 7,824 | 8 |
+| `STRUCT_CASTLEQUEST` | 564 | 4 | `MSG_NPAccountInfo` | 7,832 | 8 |
 | `STRUCT_MERC` | 796 | 4 | `MSG_DBSaveMob` / `MSG_SavingQuit` | 2,696 | 8 |
 | `STRUCT_CAMP` | 428 | 4 | `MSG_CNFCharacterLogin` | 2,632 | 8 |
 | `STRUCT_ITEMLOG` | 4 | 4 | `MSG_CNFClientCharacterLogin` | 1,832 | 8 |
 | `STRUCT_GUILDZONE` | 84 | 4 | `MSG_DBCNFAccountLogin` | 1,928 | 8 |
 | `STRUCT_SEALOFSOUL` | 60 | 4 | `MSG_UpdateCarry` | 528 | 4 |
 | `STRUCT_SELCHAR` | 840 | 8 | `MSG_ShopList` | 236 | 4 |
-| `STRUCT_ACCOUNTINFO` | 216 | 4 | `MSG_CreateMob` | 232 | 4 |
+| `STRUCT_ACCOUNTINFO` | 220 | 4 | `MSG_CreateMob` | 232 | 4 |
 | `STRUCT_GUILDINFO` | 8 | 2 | `MSG_CreateMobTrade` | 252 | 4 |
 | `STRUCT_RANKING` (pack 1) | 52 | 1 | `MSG_Attack` | 168 | 8 |
-| `MSG_AccountLogin` (pack 1) | 116 | 1 | `MSG_AttackOne` (pack 1) | 68 | 1 |
-| `MSG_AccountLogin_HWID` (pack 1) | 166 | 1 | `MSG_AttackTwo` | 80 | 8 |
+| `MSG_AccountLogin` (pack 1) | 120 | 1 | `MSG_AttackOne` (pack 1) | 68 | 1 |
+| `MSG_AccountLogin_HWID` (pack 1) | 170 | 1 | `MSG_AttackTwo` | 80 | 8 |
 | `MSG_UpdateScore` (pack 1) | 152 | 1 | `MSG_Trade` | 156 | 4 |
 | `MSG_SendExpRanking` | 172 | 4 | `MSG_SendAutoTrade` | 196 | 4 |
 | `MSG_UpdateExpRanking` | 64 | 4 | `MSG_CombineItem` | 84 | 4 |
 | `MSG_UseItem` | 36 | 4 | `MSG_CreateItem` | 32 | 4 |
 
-`STRUCT_ACCOUNTFILE` field offsets: `Info` 0, `Char` 216, `Cargo` 3480, `Coin` 4504, `ShortSkill` 4508, `affect` 4572, `mobExtra` 5600, `Donate` 7744, `TempKey` 7748, size 7800.
+`STRUCT_ACCOUNTFILE` field offsets: `Info` 0, `Char` 224, `Cargo` 3488, `Coin` 4512, `ShortSkill` 4516, `affect` 4580, `mobExtra` 5608, `Donate` 7752, `TempKey` 7756, size 7808.
 `STRUCT_MOB` field offsets: `Coin` 28, `Exp` 32, `BaseScore` 44, `Equip` 140, `Carry` 268, `Resist` 806.
 `STRUCT_MOBEXTRA` field offsets: `QuestInfo` 12, `SaveCelestial` 160, `LastNT` 432, `KefraTicket` 444, `Hold` 456, `EMPTY` 496; `QuestInfo` 146 bytes, `SaveCelestial[0]` 136 bytes.
 
@@ -1096,9 +1096,9 @@ This component exposes no HTTP, GraphQL or gRPC surface. Its endpoints are the 1
 
 | Endpoint | Type | Base | Payload | Line |
 |---|---|---|---|---|
-| `_MSG_AccountLogin` | 0x020D | 13 | `MSG_AccountLogin` (116) / `_HWID` (166) | 1210 |
+| `_MSG_AccountLogin` | 0x020D | 13 | `MSG_AccountLogin` (120) / `_HWID` (170) | 1210 |
 | `_MSG_CreateCharacter` | 0x020F | 15 | `MSG_CreateCharacter` (36) | 1259 |
-| `_MSG_DeleteCharacter` | 0x0211 | 17 | `MSG_DeleteCharacter` (44) | 1269 |
+| `_MSG_DeleteCharacter` | 0x0211 | 17 | `MSG_DeleteCharacter` (48) | 1269 |
 | `_MSG_CharacterLogin` | 0x0213 | 19 | `MSG_CharacterLogin` (20) | 1335 |
 | `_MSG_CharacterLogout` | 0x0215 | 21 | `MSG_STANDARD` | 1387 |
 | `_MSG_CreateItem` | 0x026E | 110 | `MSG_CreateItem` (32) | 1592 |
@@ -1208,7 +1208,7 @@ Base ids 1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13, 20, 21, 22, 23, 31 (lines 978-1163)
 | `_MSG_NPIDPASS` | 0x2002 | 2 | NP→DB | `MSG_NPIDPASS` (48) | 2244 |
 | `_MSG_NPReqAccount` | 0x2003 | 3 | NP→DB | `MSG_NPReqAccount` (44) | 2254 |
 | `_MSG_NPNotFound` | 0x1004 | 4 | DB→NP | `MSG_STANDARD` | 2262 |
-| `_MSG_NPAccountInfo` | 0x1005 | 5 | DB→NP | `MSG_NPAccountInfo` (7,824) | 2264 |
+| `_MSG_NPAccountInfo` | 0x1005 | 5 | DB→NP | `MSG_NPAccountInfo` (7,832) | 2264 |
 | `_MSG_NPReqSaveAccount` | 0x2006 | 6 | NP→DB | `MSG_NPAccountInfo` | 2273 |
 | `_MSG_NPDisable` | 0x3007 | 7 | bidirectional | `MSG_STANDARD` | 2275 |
 | `_MSG_NPEnable` | 0x3008 | 8 | bidirectional | `MSG_NPEnable` (36) | 2277 |
@@ -1240,7 +1240,7 @@ Of the 93 constants carrying `FLAG_CLIENT2GAME`, **64** appear as `case` labels 
 | DB socket (game tier, outbound) | Internal service | Persistence and cross-server messages | TCP, port 7514, `FLAG_GAME2DB`/`FLAG_DB2GAME` | `Type & FLAG_DB2GAME` gate; `ID < MAX_USER`; no retry, no timeout in the dispatcher |
 | DB listener (DB tier) | Internal service | Accepts up to `MAX_SERVER` (10) game servers | TCP, port 7514 | `Type & FLAG_GAME2DB`; `ID <= MAX_USER`; logs and drops |
 | Admin listener (DB tier) | External tool | NP tool, up to `MAX_ADMIN` (10) sessions | TCP, port 8895, `FLAG_DB2NP`/`FLAG_NP2DB` | `Type & FLAG_NP2DB`; `ID < MAX_DBACCOUNT` |
-| Account store | Filesystem | One 7,800-byte record per account | Raw `_read`/`_write`, path `./account/<FirstKey>/<ACCOUNTNAME>` | `_filelength < 7800` -> partial `memset`; `errno` logged for EINVAL/EMFILE only |
+| Account store | Filesystem | One 7,808-byte record per account | Raw `_read`/`_write`, path `./account/<FirstKey>/<ACCOUNTNAME>` | `_filelength < 7808` -> partial `memset`; `errno` logged for EINVAL/EMFILE only |
 | Ranking store | Filesystem | Reads the same account records for ranking | Raw `fread`, size heuristic 7,500..7,600 or exact `sizeof` | Falls through if size does not match either condition |
 | Message string table | Filesystem | Localized strings, 2,000 x 128 | `UI/strdef.bin`, XOR 0x5A, trailing checksum | Checksum verification commented out (`Basedef.cpp:4951-4954`) |
 | Item/skill/init-item tables | Filesystem | Content plane | CSV text -> binary caches (`ItemList.bin`, `SkillData.bin`, `InitItem.bin`), single-record `_read` of `sizeof(STRUCT_ITEMLIST)+2` | `sz < sizeof+2` rejected (`Basedef.cpp:2871-2873`) |
@@ -1255,7 +1255,7 @@ Of the 93 constants carrying `FLAG_CLIENT2GAME`, **64** appear as `case` labels 
 
 | Pattern | Implementation | Location | Purpose |
 |---|---|---|---|
-| Shared-contract header (single source of truth) | `Basedef.h` compiled into both executables, no shared library | whole file | Guarantees TMSrv and DBSrv agree on 191 message identifiers, 100 payloads and the 7,800-byte disk layout without a linkage step |
+| Shared-contract header (single source of truth) | `Basedef.h` compiled into both executables, no shared library | whole file | Guarantees TMSrv and DBSrv agree on 191 message identifiers, 100 payloads and the 7,808-byte disk layout without a linkage step |
 | Macro-injected base class | `#define _MSG` expands a 12-byte header into every payload | `Basedef.h:925-930` | Structural inheritance in C: 100 payloads share an identical prologue by construction, enabling untyped dispatch |
 | Tagged namespace over a flat integer | `Type = base_id | direction_flags`, 7 flags, 18 masks | `Basedef.h:932-941, 976-2325` | Routes 191 logical endpoints through one 16-bit field with no collision |
 | Positional binary serialisation (flat-file record) | Raw `_read`/`_write` of `sizeof(STRUCT_ACCOUNTFILE)` | `Basedef.h:840-856`; `CFileDB.cpp:2444,2562` | Zero-copy persistence with no parser; trades schema evolution for speed |
@@ -1282,9 +1282,9 @@ Architectural decisions visible in the header, with their consequences:
 | Risk | Risk Level | Component Area | Issue | Impact |
 |---|---|---|---|---|
 | R-01 | High | Contract enforcement | `BASE_CheckPacket` body is inside a block comment (`Basedef.cpp:6476-6594`) and the function unconditionally returns FALSE (`:6595`); no receive-side size validation exists for any of the 100 payload structures | Any handler can read past a short frame; the only guard is the 12..8192 transport window |
-| R-02 | High | Persistence | 7,800-byte account record has no magic, version or length field; correctness depends on field order, natural alignment and `EMPTY` holes | A single field insertion silently reinterprets every existing account file; discovered only by corrupted data |
-| R-03 | High | Persistence | Two readers disagree on acceptable file size: `DBReadAccount` accepts any length and zeroes 8 bytes; `CRanking` accepts 7,500..7,600 or exactly 7,800 | Rankings and login can interpret the same file differently |
-| R-04 | High | Protocol sizing | `MSG_NPAccountInfo` is 7,824 bytes against `MAX_MESSAGE_SIZE` 8,192 (368-byte margin), with no `static_assert` (0 in repository) | Adding 369 bytes anywhere in `STRUCT_ACCOUNTFILE` makes the NP path unframeable with no diagnostic |
+| R-02 | High | Persistence | 7,808-byte account record has no magic, version or length field; correctness depends on field order, natural alignment and `EMPTY` holes | A single field insertion silently reinterprets every existing account file; discovered only by corrupted data |
+| R-03 | High | Persistence | Two readers disagree on acceptable file size: `DBReadAccount` accepts any length and zeroes 8 bytes; `CRanking` accepts 7,500..7,600 or exactly 7,808 | Rankings and login can interpret the same file differently |
+| R-04 | High | Protocol sizing | `MSG_NPAccountInfo` is 7,832 bytes against `MAX_MESSAGE_SIZE` 8,192 (360-byte margin), with no `static_assert` (0 in repository) | Adding 361 bytes anywhere in `STRUCT_ACCOUNTFILE` makes the NP path unframeable with no diagnostic |
 | R-05 | High | Bitmask aliasing | `STRUCT_MOB::Merchant` is simultaneously a merchant id (compared to 1/4/43/100), a 2-bit city field (bits 6-7) and `MSV_SNOOP` (bit 0) | `Merchant == 1` and `Merchant & MSV_SNOOP` coincide; NPC identity and GM invisibility can toggle each other |
 | R-06 | High | Inventory geometry | `BASE_CanCarry`/`BASE_CanCargo` build the occupancy map with stride `*GRIDX` but test it with stride `*GRIDY` (`Basedef.cpp:4449` vs `:4468`; `:4516` vs `:4531`) | Placement checks consult the wrong cells; cargo stride 9 vs 14 is the most divergent case |
 | R-07 | Medium | Level arithmetic | Global-level flattening uses `+MAX_LEVEL` (9 sites) and `+MAX_CLEVEL` (4 sites), plus `+MAX_CLEVEL + 1` for party leaders only (`_MSG_AcceptParty.cpp:93`) | Cross-domain comparisons are inconsistent by up to 200 levels; leader/member asymmetry of 1 |
@@ -1344,15 +1344,15 @@ There is no test harness, no test project, no assertion facility and no CI. Veri
 | `BASE_CheckPacket` | `Basedef.cpp:6475-6560` | Intended: `Size == sizeof(MSG_X)` for ~90 message types | Entire body commented out; only called under `#ifdef _PACKET_DEBUG` on the *send* path |
 | Size-discriminator loops | `_MSG_Attack.cpp:1062,1087-1093` | Variant selection by `m->Size >= sizeof(...)` | Runtime input validation, not a test |
 | `BASE_GetMobCheckSum` | `Basedef.cpp:2503-2517` | Detects equipment divergence (but zeroes `BaseScore` as a side effect) | Tamper check, not a test |
-| File-size heuristic | `CRanking.cpp:175` | Accepts 7,500..7,600 or exactly 7,800 | Defensive tolerance, masks rather than detects format drift |
+| File-size heuristic | `CRanking.cpp:175` | Accepts 7,500..7,600 or exactly 7,808 | Defensive tolerance, masks rather than detects format drift |
 | `_PACKET_DEBUG` logging | `CPSock.cpp:544-551`, `Basedef.cpp:6482-6560` | Logs packet type/size mismatches | Observability hook, disabled in release |
 
 ### 11.4 Coverage gaps ranked by contract risk
 
-1. **No layout assertion.** `static_assert(sizeof(STRUCT_ACCOUNTFILE) == 7800)` and equivalents for `STRUCT_MOB` (816), `STRUCT_MOBEXTRA` (536), `MSG_NPAccountInfo < MAX_MESSAGE_SIZE` would convert R-02/R-04 from latent corruption into compile errors. Zero exist.
+1. **No layout assertion.** `static_assert(sizeof(STRUCT_ACCOUNTFILE) == 7808)` and equivalents for `STRUCT_MOB` (816), `STRUCT_MOBEXTRA` (536), `MSG_NPAccountInfo < MAX_MESSAGE_SIZE` would convert R-02/R-04 from latent corruption into compile errors. Zero exist.
 2. **No message-id uniqueness check.** A script or `constexpr` set asserting all 191 values are distinct would have caught the 30 base-id reuses as intentional rather than accidental.
 3. **No payload round-trip test.** No test builds each of the 100 `MSG_*` structures, serialises, deserialises and compares — which is the only cheap way to detect a `pack` or field-order regression.
-4. **No file-format regression fixture.** Even a single 7,800-byte golden account file checked byte-for-byte on load and save would have prevented the historical drift implied by R-03 and R-24.
+4. **No file-format regression fixture.** Even a single 7,808-byte golden account file checked byte-for-byte on load and save would have prevented the historical drift implied by R-03 and R-24.
 5. **No dispatch coverage check.** 29 inbound-capable message types are never dispatched and are dropped silently (R-13); no test enumerates the declared-vs-handled sets.
 
 ---
@@ -1364,7 +1364,7 @@ There is no test harness, no test project, no assertion facility and no CI. Veri
 - Dialog/menu ids (8): `IDC_EXIT` 9000, `IDC_MOBRELOAD` 9001, `IDC_REBOOT` 9002, `IDC_SAVEALL` 9003, `IDC_READGUILD` 9004, `IDC_READGUILDNAME` 9005, `IDC_READGAMECONFIG` 9006, `IDC_SHUTDOWNNP` 9050
 - Build/network (7): `APP_VERSION` 6975, `GAME_PORT` 8281, `DB_PORT` 7514, `ADMIN_PORT` 8895, `MAX_SERVER` 10, `MAX_SERVERGROUP` 10, `MAX_SERVERNUMBER` 11 (derived)
 - Session/capacity (6): `MAX_IP_LENGTH` 16, `SECSTANDINGBY` 8, `SECBATTLE` 8, `MAX_USER` 1000, `ADMIN_RESERV` 10, `MAX_ADMIN` 10, `MAX_DBACCOUNT` 10000 (derived), `MAX_RANK_INDEX` 500
-- Account (7): `ACCOUNTNAME_LENGTH` 16, `ACCOUNTPASS_LENGTH` 12, `REALNAME_LENGTH` 24, `EMAIL_LENGTH` 48, `ADDRESS_LENGTH` 78, `TELEPHONE_LENGTH` 16, `MOB_PER_ACCOUNT` 4
+- Account (7): `ACCOUNTNAME_LENGTH` 16, `ACCOUNTPASS_LENGTH` 16, `REALNAME_LENGTH` 24, `EMAIL_LENGTH` 48, `ADDRESS_LENGTH` 78, `TELEPHONE_LENGTH` 16, `MOB_PER_ACCOUNT` 4
 - Inventory (9): `MAX_EQUIP` 16, `MAX_CARRY` 64, `MAX_CARGO` 128, `MAX_TRADE` 15, `MAX_AUTOTRADE` 12, `MAX_AUTOTRADETITLE` 24, `MAX_SHOPLIST` 27, `MAX_GROUNDMASK` 6, `ITEM_PLACE_EQUIP/CARRY/CARGO` 0/1/2
 - Grid (10): `CARGOGRIDX` 9, `CARGOGRIDY` 14, `CARRYGRIDX` 9, `CARRYGRIDY` 7, `VIEWGRIDX` 33, `VIEWGRIDY` 33, `HALFGRIDX` 16, `HALFGRIDY` 16, `MAX_GRIDX` 4096, `MAX_GRIDY` 4096
 - Content capacities (20): `MAX_ITEM` 5000, `MAX_SUMMONLIST` 50, `MAX_MOB` 25000, `MAX_NPCGENERATOR` 8192, `MAX_SKILL` 24, `MAX_COMBINE` 8, `MAX_CLASS` 4, `MAX_LEVEL` 399, `MAX_CLEVEL` 199, `MAX_CLASSMASTER` 4, `MAX_AFFECT` 32, `MAX_ROUTE` 24, `MAX_TRANS` 20480, `MAX_ITEMLIST` 6500, `MAX_SKILLINDEX` 103, `MAX_INITITEM` 256, `MAX_EFFECTINDEX` 128, `ITEMNAME_LENGTH` 64, `MAX_STATICEFFECT` 12, `MAX_MOB_MERC` 128
@@ -1453,8 +1453,8 @@ All 100 `MSG_*` structures measured with MSVC 14.44.35207 (x86 and x64 identical
 | `MSG_GuildZoneReport` | 32 | `MSG_DBClientMessage` | 108 | `MSG_DBCheckPrimaryAccount` | 44 | `MSG_DBCNFServerChange` | 80 |
 | `MSG_DBServerChange` | 20 | `MSG_DBActivatePinCode` | 104 | `MSG_DBPrimaryAccount` | 32 | `MSG_DBCNFAccountLogin` | 1,928 |
 | `MSG_GuildReport` | 212 | `MSG_NewAccount` | 232 | `MSG_DBCreateArchCharacter` | 40 | `MSG_SavingQuit` | 2,696 |
-| `MSG_MessageDBImple` | 112 | `MSG_MessagePanel` | 140 | `MSG_MessageBoxOk` | 116 | `MSG_AccountLogin` | 116 |
-| `MSG_AccountLogin_HWID` | 166 | `MSG_AccountSecure` | 32 | `MSG_CreateCharacter` | 36 | `MSG_DeleteCharacter` | 44 |
+| `MSG_MessageDBImple` | 112 | `MSG_MessagePanel` | 140 | `MSG_MessageBoxOk` | 116 | `MSG_AccountLogin` | 120 |
+| `MSG_AccountLogin_HWID` | 170 | `MSG_AccountSecure` | 32 | `MSG_CreateCharacter` | 36 | `MSG_DeleteCharacter` | 48 |
 | `MSG_DBSendItem` | 40 | `MSG_DBSendDonate` | 36 | `MSG_CNFNewCharacter` | 856 | `MSG_CNFDeleteCharacter` | 856 |
 | `MSG_GuildAlly` | 20 | `MSG_GuildInfo` | 24 | `MSG_CharacterLogin` | 20 | `MSG_CNFCharacterLogin` | 2,632 |
 | `MSG_CNFClientCharacterLogin` | 1,832 | `MSG_MagicTrumpet` | 108 | `MSG_DBNotice` | 108 | `MSG_DBOutCapsule` | 56 |
@@ -1471,10 +1471,10 @@ All 100 `MSG_*` structures measured with MSVC 14.44.35207 (x86 and x64 identical
 | `MSG_DeleteItem` | 20 | `MSG_SplitItem` | 24 | `MSG_Attack` | 168 | `MSG_Trade` | 156 |
 | `MSG_AttackOne` | 68 | `MSG_AttackTwo` | 80 | `MSG_EnvEffect` | 24 | `MSG_AcceptParty` | 32 |
 | `MSG_ReqTransper` | 52 | `MSG_SendAffect` | 268 | `MSG_SendExpRanking` | 172 | `MSG_UpdateExpRanking` | 64 |
-| `MSG_NPIDPASS` | 48 | `MSG_NPReqAccount` | 44 | `MSG_NPAccountInfo` | 7,824 | `MSG_NPEnable` | 36 |
+| `MSG_NPIDPASS` | 48 | `MSG_NPReqAccount` | 44 | `MSG_NPAccountInfo` | 7,832 | `MSG_NPEnable` | 36 |
 | `MSG_NPNotice` | 132 | `MSG_NPCreateCharacter` | 848 | `MSG_NPCreateCharacter_Reply` | 52 | `MSG_NPDonate` | 32 |
 
-Largest five: `MSG_NPAccountInfo` 7,824; `MSG_DBSaveMob` / `MSG_SavingQuit` 2,696; `MSG_CNFCharacterLogin` 2,632; `MSG_DBCNFAccountLogin` 1,928; `MSG_CNFClientCharacterLogin` 1,832. Transport ceiling is `MAX_MESSAGE_SIZE` = 8,192 (`Code/CPSock.h:38`), leaving 368 bytes of headroom on the largest payload.
+Largest five: `MSG_NPAccountInfo` 7,832; `MSG_DBSaveMob` / `MSG_SavingQuit` 2,696; `MSG_CNFCharacterLogin` 2,632; `MSG_DBCNFAccountLogin` 1,928; `MSG_CNFClientCharacterLogin` 1,832. Transport ceiling is `MAX_MESSAGE_SIZE` = 8,192 (`Code/CPSock.h:38`), leaving 360 bytes of headroom on the largest payload.
 
 ---
 

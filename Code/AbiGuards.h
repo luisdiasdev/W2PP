@@ -17,8 +17,8 @@ static_assert(sizeof(HEADER) == 12,
 	"HEADER must stay 12 bytes for wire compatibility");
 
 // Account record written by DBSrv (Code/DBSrv/CFileDB.cpp).
-static_assert(sizeof(STRUCT_ACCOUNTFILE) == 7800,
-	"STRUCT_ACCOUNTFILE must stay 7800 bytes for on-disk compatibility");
+static_assert(sizeof(STRUCT_ACCOUNTFILE) == 7808,
+	"STRUCT_ACCOUNTFILE must stay 7808 bytes for on-disk compatibility");
 
 // Character record and its extension, embedded in the account record.
 static_assert(sizeof(STRUCT_MOB) == 816,

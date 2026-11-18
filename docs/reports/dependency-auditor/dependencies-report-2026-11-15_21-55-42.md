@@ -133,7 +133,7 @@ Both projects define `_CRT_SECURE_NO_WARNINGS` (`TMSrv.vcxproj:61,79`; `DBSrv.vc
 
 ### C-8. Absence of any cryptographic dependency for credentials (High, functional/legal exposure)
 
-`STRUCT_ACCOUNTFILE.Info.AccountPass` (12-byte field, `Code/Basedef.h:66`) is stored and compared verbatim:
+`STRUCT_ACCOUNTFILE.Info.AccountPass` (16-byte field, `Code/Basedef.h:66`) is stored and compared verbatim:
 
 * `Code/DBSrv/CFileDB.cpp:1302` — `strncmp(m->Password, pAccountList[Idx].File.Info.AccountPass, ACCOUNTPASS_LENGTH)`
 * `Code/DBSrv/Server.cpp:596` — admin credentials read with `fscanf(fp, "%s %d %s %s", sip, &port, adminclientid, adminclientpass)`
@@ -247,7 +247,7 @@ Ranking criteria: dependency concentration (how many platform components a file 
 
 ### 6.1 `Code/Basedef.h` — the ABI anchor
 
-Declares `APP_VERSION 6975`, the ports (`GAME_PORT 8281`, `DB_PORT 7514`, `ADMIN_PORT 8895`), array limits (`MAX_USER 1000`, `MAX_DBACCOUNT 10000`), and the account field widths (`ACCOUNTNAME_LENGTH 16`, `ACCOUNTPASS_LENGTH 12`, `EMAIL_LENGTH 48`). Four `#pragma pack(push, 1)` regions (`:808`, `:1212`, `:1465`, `:2063`) wrap the structures that are written to disk and sent over the socket. Every consumer of the platform dependency (Windows SDK types, `size_t`, `time_t`, alignment rules of `v143`) is funnelled through this header, and it is included by 30 of 104 source files. Any toolset or SDK change that alters fundamental type sizes or packing behaviour silently corrupts the account/character files and desynchronises the protocol. Highest dependency blast radius in the project.
+Declares `APP_VERSION 6975`, the ports (`GAME_PORT 8281`, `DB_PORT 7514`, `ADMIN_PORT 8895`), array limits (`MAX_USER 1000`, `MAX_DBACCOUNT 10000`), and the account field widths (`ACCOUNTNAME_LENGTH 16`, `ACCOUNTPASS_LENGTH 16`, `EMAIL_LENGTH 48`). Four `#pragma pack(push, 1)` regions (`:808`, `:1212`, `:1465`, `:2063`) wrap the structures that are written to disk and sent over the socket. Every consumer of the platform dependency (Windows SDK types, `size_t`, `time_t`, alignment rules of `v143`) is funnelled through this header, and it is included by 30 of 104 source files. Any toolset or SDK change that alters fundamental type sizes or packing behaviour silently corrupts the account/character files and desynchronises the protocol. Highest dependency blast radius in the project.
 
 ### 6.2 `Code/CPSock.cpp` — Winsock 1.1 concentration
 
@@ -259,7 +259,7 @@ The only transport implementation (16 files include `CPSock.h`). `WSAInitialize(
 
 ### 6.4 `Code/DBSrv/CFileDB.cpp` — persistence with no database dependency
 
-65 KB implementing the entire account/character store as flat files: `sprintf(temp, "./account/%s/%s", First, check)` at `:97` builds a path from an account-name supplied by a client, then `_open`/`_read`/`_write`. The password comparison at `:1302` is a plain `strncmp` over the 12-byte plaintext field. 41 `memcpy` calls move whole `STRUCT_ACCOUNTFILE`/`STRUCT_MOB` blocks in and out of the file cache. This file is the reason the ODBC link dependency is dead weight: all database work is here, on the filesystem, with no crash-safe journal and no integrity check.
+65 KB implementing the entire account/character store as flat files: `sprintf(temp, "./account/%s/%s", First, check)` at `:97` builds a path from an account-name supplied by a client, then `_open`/`_read`/`_write`. The password comparison at `:1302` is a plain `strncmp` over the 16-byte plaintext field. 41 `memcpy` calls move whole `STRUCT_ACCOUNTFILE`/`STRUCT_MOB` blocks in and out of the file cache. This file is the reason the ODBC link dependency is dead weight: all database work is here, on the filesystem, with no crash-safe journal and no integrity check.
 
 ### 6.5 `Code/TMSrv/ProcessClientMessage.cpp` — the dispatch gate
 

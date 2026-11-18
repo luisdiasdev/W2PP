@@ -343,7 +343,7 @@ ProcessSecTimer  pUser[svr].AcceptUser   pAdmin[i].AcceptUser         │
 
 ### 8.3 Authentication and credential handling
 
-- Account passwords are stored **in clear text** inside `STRUCT_ACCOUNTINFO.AccountPass` (12 bytes) in the binary account record and compared with `strcmp` (`CFileDB.cpp:677`) and `strncmp` (`CFileDB.cpp:1302`, `Server.cpp:1708`).
+- Account passwords are stored **in clear text** inside `STRUCT_ACCOUNTINFO.AccountPass` (16 bytes) in the binary account record and compared with `strcmp` (`CFileDB.cpp:677`) and `strncmp` (`CFileDB.cpp:1302`, `Server.cpp:1708`).
 - No hashing, salting, stretching, or KDF exists anywhere in the codebase.
 - Administrative credential material lives in plaintext files: `Admin.txt` (allowed admin IPs, re-read on every admin accept) and `redirect.txt` (`adminclientid`, `adminclientpass`).
 - Partial mitigations that do exist: a failed-login counter (`CheckFailAccount`, threshold 3), an account disable/expiry window (`DisableAccount`/`EnableAccount` with `Year`/`YearDay`), a MAC-address block list (`Mac.txt`, `pMac[MAX_MAC]`, `GetAccountsByMac`), and an optional numeric PIN (`_MSG_AccountSecure`, `SecurePass`, `NumericToken[6]`).

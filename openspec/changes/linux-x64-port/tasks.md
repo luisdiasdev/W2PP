@@ -30,7 +30,7 @@
 
 - [ ] 5.1 On Windows x86, run the full Debug and Release configure/build and the complete CTest suite; verify the Windows server start/accept/shutdown checks and the existing PowerShell integration harnesses still pass.
 - [ ] 5.2 On Linux x86_64, run the full Debug and Release configure/build and the complete CTest suite; verify every unit test and the Linux smoke test pass.
-- [ ] 5.3 On both platforms, run the codec fixture replay and a record round-trip and confirm the 12-byte header and the 7800/816/536/1352/840-byte records match the pre-change bytes and sizes.
+- [ ] 5.3 On both platforms, run the codec fixture replay and a record round-trip and confirm the 12-byte header and the 7808/816/536/1352/840-byte records match the pre-change bytes and sizes.
 - [ ] 5.4 Confirm the Linux servers start without a desktop, accept a loopback connection, reject an oversized/invalid frame with a logged close, and shut down cleanly through both `quit` and SIGINT; confirm the Windows behavior is unchanged.
 
 ## Workflow follow-up

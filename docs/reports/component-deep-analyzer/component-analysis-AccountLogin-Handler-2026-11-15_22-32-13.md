@@ -129,7 +129,7 @@ The component is the outermost admission layer of an eleven-state user-session m
 | `Type` | `short` | client (`13`) | **rewritten to `_MSG_DBAccountLogin`** | DBSrv dispatch |
 | `ID` | `short` | client | **rewritten to `conn`** | DBSrv session mapping |
 | `ClientTick` | `unsigned int` | client | rewritten to `CurrentTime` | pre-dispatch SKIPCHECKTICK filter |
-| `AccountPassword[12]` | `char[12]` | client | untouched | DBSrv `strcmp` vs account file |
+| `AccountPassword[16]` | `char[16]` | client | untouched | DBSrv `strcmp` vs account file |
 | `AccountName[16]` | `char[16]` | client | uppercased, NUL-capped, `sscanf`-tokenized | DBSrv file lookup, TMSrv `pUser[conn].AccountName` |
 | `Zero[52]` | `char[52]` | client | untouched | DBSrv server-change key (`TempKey` compare) |
 | `ClientVersion` | `int` | client | untouched | TMSrv version gate only |
@@ -146,14 +146,14 @@ The component is the outermost admission layer of an eleven-state user-session m
 | Rule ID | Rule Type | Rule Description | Location |
 |---|---|---|---|
 | BR-01 | Validation / Session | Reject login on slot index 0 or on slots reserved for administration (`conn <= 0 \|\| conn >= MAX_USER - ADMIN_RESERV`), send "Reconnect", close socket | `Code/TMSrv/_MSG_AccountLogin.cpp:30-39` |
-| BR-02 | Validation / Framing | Reject packets shorter than `sizeof(MSG_AccountLogin)` (116 bytes) | `Code/TMSrv/_MSG_AccountLogin.cpp:42,44` |
+| BR-02 | Validation / Framing | Reject packets shorter than `sizeof(MSG_AccountLogin)` (120 bytes) | `Code/TMSrv/_MSG_AccountLogin.cpp:42,44` |
 | BR-03 | Validation / Compatibility | Reject login when `ClientVersion != APP_VERSION` (6975); **only compiled when `_PACKET_DEBUG` is undefined** | `Code/TMSrv/_MSG_AccountLogin.cpp:26,41-45`; `Code/TMSrv/TMSrv.vcxproj:61,79` |
 | BR-04 | Validation / State | Login accepted only from `USER_ACCEPT`; any other state yields "Login now, wait a moment." plus a crack log, socket retained | `Code/TMSrv/_MSG_AccountLogin.cpp:56-63` |
 | BR-05 | Data capture | Capture 16 bytes of `AdapterName` into `pUser[conn].Mac`; when the packet is shorter than the full struct, fill the MAC with `0xFF` | `Code/TMSrv/_MSG_AccountLogin.cpp:65-70` |
 | BR-06 | Protocol translation | Re-stamp the client packet as a DB packet: `Type = _MSG_DBAccountLogin`, `ID = conn` | `Code/TMSrv/_MSG_AccountLogin.cpp:73-74` |
 | BR-07 | Data normalization | Account name is tokenized with `sscanf("%s")`, uppercased with `_strupr`, and copied back into the packet capped at `NAME_LENGTH` (16) with a forced NUL at index 15 | `Code/TMSrv/_MSG_AccountLogin.cpp:28,76-80` |
 | BR-08 | Anti-brute-force | Refuse login when the account has 3 or more entries in the `FailAccount` ring buffer (16 slots x 16 chars) | `Code/TMSrv/_MSG_AccountLogin.cpp:82-90`; `Code/TMSrv/Server.cpp:1334-1361` |
-| BR-09 | Transport | Forward the credential packet to DBSrv as a fixed 116-byte message | `Code/TMSrv/_MSG_AccountLogin.cpp:92` |
+| BR-09 | Transport | Forward the credential packet to DBSrv as a fixed 120-byte message | `Code/TMSrv/_MSG_AccountLogin.cpp:92` |
 | BR-10 | State transition | On forward, set `pUser[conn].Mode = USER_LOGIN` and `pMob[conn].Mode = MOB_EMPTY` | `Code/TMSrv/_MSG_AccountLogin.cpp:94-95` |
 | BR-11 | Validation (downstream) | DBSrv rejects accounts whose name is a reserved DOS device alias `COM0`-`COM9` or `LPT0`-`LPT9` | `Code/DBSrv/CFileDB.cpp:619-625`; `Code/DBSrv/CFileDB.cpp:2481-2484, 2531-2534` |
 | BR-12 | Validation (downstream) | DBSrv rejects login when the account file cannot be read/does not exist | `Code/DBSrv/CFileDB.cpp:636-643` |
@@ -200,11 +200,11 @@ receive conn
 ### Business Rule: BR-02 — Minimum credential packet size
 
 **Overview**:
-The handler rejects any login packet whose declared `Size` is smaller than `sizeof(MSG_AccountLogin)` = 116 bytes.
+The handler rejects any login packet whose declared `Size` is smaller than `sizeof(MSG_AccountLogin)` = 120 bytes.
 
 **Detailed description**:
 
-`MSG_AccountLogin` is declared with `#pragma pack(push,1)` and contains a 12-byte header (`Size`, `KeyWord`, `CheckSum`, `Type`, `ID`, `ClientTick`), `AccountPassword[12]`, `AccountName[16]`, `Zero[52]`, `ClientVersion`, `DBNeedSave`, and `AdapterName[4]` — 12 + 104 = 116 bytes (`Code/Basedef.h:1213-1228`). The size gate protects two distinct things at once: it prevents the handler from reading `ClientVersion`, `DBNeedSave` and `AdapterName` out of a truncated buffer, and it prevents an under-sized structure from being forwarded to DBSrv where the same 116-byte layout is assumed. The lower bound is deliberately a *minimum*, not an equality test, which is what allows the historical `MSG_AccountLogin_HWID` extension (`Code/Basedef.h:1229-1245`, +50 bytes HWID) to remain wire-compatible: a longer packet passes the gate and its extra tail is simply not read by this handler.
+`MSG_AccountLogin` is declared with `#pragma pack(push,1)` and contains a 12-byte header (`Size`, `KeyWord`, `CheckSum`, `Type`, `ID`, `ClientTick`), `AccountPassword[16]`, `AccountName[16]`, `Zero[52]`, `ClientVersion`, `DBNeedSave`, and `AdapterName[4]` — 12 + 108 = 120 bytes (`Code/Basedef.h:1213-1228`). The size gate protects two distinct things at once: it prevents the handler from reading `ClientVersion`, `DBNeedSave` and `AdapterName` out of a truncated buffer, and it prevents an under-sized structure from being forwarded to DBSrv where the same 120-byte layout is assumed. The lower bound is deliberately a *minimum*, not an equality test, which is what allows the historical `MSG_AccountLogin_HWID` extension (`Code/Basedef.h:1229-1245`, +50 bytes HWID) to remain wire-compatible: a longer packet passes the gate and its extra tail is simply not read by this handler.
 
 The gate is expressed twice. Lines 41-45 wrap it in `#ifdef _PACKET_DEBUG`: the debug build compiles only the size comparison, whereas the non-debug build compiles size **or** version comparison. Line 67 then re-evaluates `m->Size < sizeof(MSG_AccountLogin)` in order to choose the MAC-fill strategy (see BR-05). Consequently, an under-sized packet can only reach the MAC branch if the earlier gate has been removed by a code change; in the current source the second test at line 67 is statically false when reached, which makes the `memset(..., 0xFF, ...)` branch unreachable through this code path. This is a preserved residue of an older protocol revision in which shorter login packets without an adapter field were legal, and it documents that the MAC field was appended to the protocol after the account name block.
 
@@ -366,11 +366,11 @@ if check >= 3:
 ### Business Rule: BR-09 — Credential forwarding to DBSrv
 
 **Overview**:
-The retyped packet is transmitted with `DBServerSocket.SendOneMessage((char*)m, sizeof(MSG_AccountLogin))`, i.e. always 116 bytes regardless of the size the client declared.
+The retyped packet is transmitted with `DBServerSocket.SendOneMessage((char*)m, sizeof(MSG_AccountLogin))`, i.e. always 120 bytes regardless of the size the client declared.
 
 **Detailed description**:
 
-`SendOneMessage` is `AddMessage` followed by an immediate flush (`Code/CPSock.cpp:686-693`). `AddMessage` bounds-checks the 128 KB send buffer, writes the payload into it while applying the per-byte obfuscation table `pKeyWord` keyed by a random `iKeyWord`, and recomputes `CheckSum` as the difference of the encrypted-byte sum and the plaintext-byte sum (`Code/CPSock.cpp:513-591`). The DB link is the same framing as the client link, so the login packet is encrypted on one untrusted socket (client) and re-encrypted on a second, trusted-but-plaintext-TCP socket (DB). The `sizeof` argument — rather than `m->Size` — is the effective enforcement of the 116-byte contract: a client that declared a larger size (for instance a `MSG_AccountLogin_HWID`) has its extra bytes dropped here, and a client that declared exactly 116 has its full structure forwarded.
+`SendOneMessage` is `AddMessage` followed by an immediate flush (`Code/CPSock.cpp:686-693`). `AddMessage` bounds-checks the 128 KB send buffer, writes the payload into it while applying the per-byte obfuscation table `pKeyWord` keyed by a random `iKeyWord`, and recomputes `CheckSum` as the difference of the encrypted-byte sum and the plaintext-byte sum (`Code/CPSock.cpp:513-591`). The DB link is the same framing as the client link, so the login packet is encrypted on one untrusted socket (client) and re-encrypted on a second, trusted-but-plaintext-TCP socket (DB). The `sizeof` argument — rather than `m->Size` — is the effective enforcement of the 120-byte contract: a client that declared a larger size (for instance a `MSG_AccountLogin_HWID`) has its extra bytes dropped here, and a client that declared exactly 120 has its full structure forwarded.
 
 The forward is unconditional with respect to content: the password, the `Zero[52]` block, `ClientVersion`, `DBNeedSave` and `AdapterName` all travel byte-for-byte. This is why the two client-controlled fields noted in the executive summary are escalation-relevant: DBSrv's duplicate-session branch and server-change branch both read values that TMSrv validated in no way whatsoever. The only content mutation performed before forwarding is the account-name normalization of BR-07.
 
@@ -501,7 +501,7 @@ if file.TempKey[0] != 0 and m->Zero[0] != 0:
 
 **Detailed description**:
 
-`AccountPass` is `char[12]` (`Code/Basedef.h:783`, `ACCOUNTPASS_LENGTH = 12` at `Code/Basedef.h:66`) and the wire field `AccountPassword` is the same width (`Code/Basedef.h:1217`). Both `DBReadAccount` and `DBWriteAccount` force the last two bytes to NUL (`Code/DBSrv/CFileDB.cpp:2522-2523`), which caps the usable secret at 10 characters and guarantees a terminator for `strcmp`. There is no hashing, salting, stretching or encryption anywhere on this path: the client transmits cleartext (obfuscated per-byte by the `pKeyWord` stream cipher, which is a transport encoding rather than a cryptographic protection), TMSrv relays it untouched, and DBSrv compares it with `strcmp`.
+`AccountPass` is `char[16]` (`Code/Basedef.h:783`, `ACCOUNTPASS_LENGTH = 16` at `Code/Basedef.h:66`) and the wire field `AccountPassword` is the same width (`Code/Basedef.h:1217`). Both `DBReadAccount` and `DBWriteAccount` force the last two bytes to NUL (`Code/DBSrv/CFileDB.cpp:2522-2523`), which caps the usable secret at 14 characters and guarantees a terminator for `strcmp`. There is no hashing, salting, stretching or encryption anywhere on this path: the client transmits cleartext (obfuscated per-byte by the `pKeyWord` stream cipher, which is a transport encoding rather than a cryptographic protection), TMSrv relays it untouched, and DBSrv compares it with `strcmp`.
 
 The comparison is case-sensitive because neither side is case-folded — only the account *name* passes through `_strupr`. It is also the only authentication test in the whole login path unless a numeric token has been configured, in which case the token exchange of BR-18 supplements it. Because the failure is answered with a distinct message and a socket close, and because BR-08's counter is inert, an attacker faces no server-side attempt limit on this comparison other than the cost of a reconnect.
 
@@ -635,7 +635,7 @@ Code/
 │   ├── MAX_USER 1000                      # :56
 │   ├── ADMIN_RESERV 10                    # :57
 │   ├── ACCOUNTNAME_LENGTH 16              # :65
-│   ├── ACCOUNTPASS_LENGTH 12              # :66
+│   ├── ACCOUNTPASS_LENGTH 16              # :66
 │   ├── NAME_LENGTH 16                     # :132
 │   ├── MAX_STRING 2000                    # :150
 │   ├── MAX_MAC 200                        # :152
@@ -643,7 +643,7 @@ Code/
 │   ├── _MSG macro (12-byte header)        # :925-930
 │   ├── _MSG_DBAccountLogin = 3|GAME2DB    # :978
 │   ├── MSG_DBCNFAccountLogin = 22|DB2GAME # :1094-1109
-│   ├── MSG_AccountLogin = 13|CLIENT2GAME  # :1210-1228 (pack(1), 116 bytes)
+│   ├── MSG_AccountLogin = 13|CLIENT2GAME  # :1210-1228 (pack(1), 120 bytes)
 │   ├── MSG_AccountLogin_HWID              # :1229-1245 (declared, never used)
 │   ├── MSG_AccountSecure = 222            # :1248-1257
 │   └── g_pMessageStringTable[MAX_STRING][128]  # :2461
@@ -822,14 +822,14 @@ The component is not an HTTP/gRPC service; it exposes message-protocol endpoints
 
 | Message endpoint | Code | Direction flags | Size | Description |
 |---|---|---|---|---|
-| `_MSG_AccountLogin` | 13 | `FLAG_CLIENT2GAME` | 116 bytes (`pack(1)`) | First credential submission; triggers this handler |
+| `_MSG_AccountLogin` | 13 | `FLAG_CLIENT2GAME` | 120 bytes (`pack(1)`) | First credential submission; triggers this handler |
 | `_MSG_AccountSecure` | 222 | `CLIENT2GAME \| GAME2CLIENT \| GAME2DB \| DB2GAME` | 32 bytes | Numeric-token create/verify/change; relayed by the related handler |
 
 ### Outbound — DB socket (TMSrv → DBSrv, port 7514)
 
 | Message endpoint | Code | Direction flags | Size | Description |
 |---|---|---|---|---|
-| `_MSG_DBAccountLogin` | 3 | `FLAG_GAME2DB` | 116 bytes | Credentials + MAC for authoritative verification |
+| `_MSG_DBAccountLogin` | 3 | `FLAG_GAME2DB` | 120 bytes | Credentials + MAC for authoritative verification |
 | `_MSG_AccountSecure` | 222 | `FLAG_GAME2DB` | 32 bytes | Token verification request |
 
 ### Inbound — DB socket (DBSrv → TMSrv), consumed by the reply handlers that complete this transaction
@@ -852,8 +852,8 @@ The component is not an HTTP/gRPC service; it exposes message-protocol endpoints
 
 | Integration | Type | Purpose | Protocol | Data Format | Error Handling |
 |---|---|---|---|---|---|
-| Game client → TMSrv | External client | Submit credentials, adapter fingerprint, build number | TCP, custom binary framing (`INITCODE` + per-byte obfuscation + checksum) | `MSG_AccountLogin` (116 B, `pack(1)`) | Size gate + `CloseUser`; a declared frame `Size` below `sizeof(HEADER)` or above `MAX_MESSAGE_SIZE` (8192) resets the receive buffer (`CPSock.cpp:397-406`), while an incomplete frame simply waits (`:386-411`); checksum mismatch does **not** drop the packet (`CPSock.cpp:455-466`) |
-| TMSrv → DBSrv | Internal service | Authoritative credential verification; account/MAC registration | TCP, same framing, port 7514, auto-reconnect loop | `MSG_AccountLogin` retyped to `_MSG_DBAccountLogin` (116 B) | Send failure is ignored by the handler; `CPSock` logs `"err,add buffer invalid/full"`; `Server.cpp:3819-3865` re-connects the DB socket on failure |
+| Game client → TMSrv | External client | Submit credentials, adapter fingerprint, build number | TCP, custom binary framing (`INITCODE` + per-byte obfuscation + checksum) | `MSG_AccountLogin` (120 B, `pack(1)`) | Size gate + `CloseUser`; a declared frame `Size` below `sizeof(HEADER)` or above `MAX_MESSAGE_SIZE` (8192) resets the receive buffer (`CPSock.cpp:397-406`), while an incomplete frame simply waits (`:386-411`); checksum mismatch does **not** drop the packet (`CPSock.cpp:455-466`) |
+| TMSrv → DBSrv | Internal service | Authoritative credential verification; account/MAC registration | TCP, same framing, port 7514, auto-reconnect loop | `MSG_AccountLogin` retyped to `_MSG_DBAccountLogin` (120 B) | Send failure is ignored by the handler; `CPSock` logs `"err,add buffer invalid/full"`; `Server.cpp:3819-3865` re-connects the DB socket on failure |
 | DBSrv → TMSrv | Internal service | Login outcome, session data | TCP, same framing | `MSG_DBCNFAccountLogin` (22) or one of the fail signals (31-38) | Each case formats a client message and calls `CloseUser` (success path proceeds to `USER_SELCHAR`) |
 | DBSrv account store | Filesystem | Read/persist `STRUCT_ACCOUNTFILE` (credentials, chars, block date, numeric token, TempKey) | File I/O on `./account/<key>/<NAME>` | Binary struct, no encryption | `DBReadAccount` returns 0 on open failure; NUL-forced name/password tails; device-name guard repeated |
 | `Language.txt` | Configuration file | All client-visible strings used by this flow | Text, `index<tab>text` | `char[MAX_STRING][128]` | Missing file leaves table uninitialised (only a bad `memset` of 2000 bytes to value 128 at `Basedef.cpp:4639`), so messages degrade to garbage rather than failing loudly |
@@ -897,7 +897,7 @@ The component is not an HTTP/gRPC service; it exposes message-protocol endpoints
 | High | `_MSG_AccountLogin.cpp:44` vs `TMSrv.vcxproj:61` | Client-version gate compiled out whenever `_PACKET_DEBUG` is defined (both projects' Debug configs) | A Debug build silently accepts any client build; divergent behaviour between configurations that is not documented |
 | High | BR-16 / `DBSrv/CFileDB.cpp:692-703` | Duplicate-session eviction decided by client-supplied `DBNeedSave`, which TMSrv never writes | A client can choose between "refused" and "evict the incumbent player" |
 | High | BR-14 / `DBSrv/CFileDB.cpp:664-675` | Server-change bypass uses client-supplied `Zero[52]` compared to a stored `TempKey`; on match the password check is skipped | Authentication strength of a transfer depends entirely on out-of-band ticket secrecy, which is not enforced or documented here |
-| Medium | BR-15 / `DBSrv/CFileDB.cpp:677` | Passwords stored and compared in cleartext with `strcmp` over a 12-byte field | Any account-file disclosure or DB-link capture yields reusable credentials |
+| Medium | BR-15 / `DBSrv/CFileDB.cpp:677` | Passwords stored and compared in cleartext with `strcmp` over a 16-byte field | Any account-file disclosure or DB-link capture yields reusable credentials |
 | Medium | `_MSG_AccountSecure.cpp` | No size check, no `Mode` check, no rate limit; forwards a fixed 30 bytes from a possibly shorter packet | Unvalidated relay into the token state machine; token packets accepted on any session state |
 | Medium | BR-20 / `ProcessDBMessage.cpp:369-383` | MAC block enforced after DBSrv has already registered the account; no `_MSG_DBNoNeedSave` is sent on rejection | Account can remain marked as logged-in on DBSrv while the client is disconnected |
 | Medium | `ProcessDBMessage.cpp:507-517` | Block parameters 1/2/3 handled but only `0` is ever emitted; `_Fail_Disable` and `_DBOnlyOncePerDay` handlers have no producer | Dead reply paths; operational block categories cannot be expressed |
@@ -969,7 +969,7 @@ Every branch of the handler is unexercised by automation. The following list is 
 | MAC sentinel | `:67-68` | short packet that passed earlier gates | `Mac[0..3] == 0xFFFFFFFF` |
 | MAC copy | `:69-70` | full packet with `AdapterName` | `pUser[conn].Mac` equals sent values |
 | Counter hit | `:84-90` | `CheckFailAccount(...) >= 3` | `MSG_MessagePanel(37)`, socket open, no DB send |
-| Happy path | `:92-95` | all gates pass | 116-byte `_MSG_DBAccountLogin` on DB socket; `USER_LOGIN`; `MOB_EMPTY` |
+| Happy path | `:92-95` | all gates pass | 120-byte `_MSG_DBAccountLogin` on DB socket; `USER_LOGIN`; `MOB_EMPTY` |
 | Account-name truncation | `:76-80` | 20-character name | 15 characters + NUL, uppercased, echoed in the DB packet |
 | Secure relay guard | `_MSG_AccountSecure.cpp:25` | `conn <= 0` or `>= 1000` | silent return, nothing on DB socket |
 
@@ -985,7 +985,7 @@ Missing coverage is recorded here as a structural risk: the login handler is the
 | `MAX_USER` | 1000 | `Code/Basedef.h:56` | Slot bound, `pUser`/`pMob` sizing |
 | `ADMIN_RESERV` | 10 | `Code/Basedef.h:57` | Upper slot reservation (990 usable) |
 | `ACCOUNTNAME_LENGTH` | 16 | `Code/Basedef.h:65` | Wire account name width |
-| `ACCOUNTPASS_LENGTH` | 12 | `Code/Basedef.h:66` | Wire password width |
+| `ACCOUNTPASS_LENGTH` | 16 | `Code/Basedef.h:66` | Wire password width |
 | `NAME_LENGTH` | 16 | `Code/Basedef.h:132` | Normalization cap and defensive NUL index |
 | `MESSAGE_LENGTH` | 96 | `Code/Basedef.h:129` | Client text panel payload |
 | `MAX_STRING` | 2000 | `Code/Basedef.h:150` | Message table size |
@@ -994,7 +994,7 @@ Missing coverage is recorded here as a structural risk: the login handler is the
 | `RECV_BUFFER_SIZE` / `SEND_BUFFER_SIZE` | 128 KB each | `Code/CPSock.h:35-36` | Socket buffering |
 | `INITCODE` | `0x1F11F311` | `Code/CPSock.h:40` | Post-accept handshake preamble |
 | `SKIPCHECKTICK` | 235543242 | `Code/Basedef.h:172` | Dispatcher bypass sentinel |
-| `sizeof(MSG_AccountLogin)` | 116 | derived from `Code/Basedef.h:1213-1228` | Size gate and DB send length |
+| `sizeof(MSG_AccountLogin)` | 120 | derived from `Code/Basedef.h:1213-1228` | Size gate and DB send length |
 | `sizeof(MSG_AccountSecure)` | 32 | derived from `Code/Basedef.h:1250-1257` (outside the `pack(1)` region) | Secure relay length |
 | `USER_ACCEPT` | 1 | `Code/TMSrv/CUser.h:27` | Required source state |
 | `USER_LOGIN` | 2 | `Code/TMSrv/CUser.h:28` | Resulting state |
@@ -1010,7 +1010,7 @@ Missing coverage is recorded here as a structural risk: the login handler is the
 | `MSG_AccountLogin_HWID` is unused | High | Declaration only; no references anywhere in `Code/` |
 | `BASE_CheckPacket` is a no-op | High | Comment block spans the entire body; function returns `FALSE` |
 | `_MSG_DBAccountLoginFail_Disable` and `_MSG_DBOnlyOncePerDay` are never emitted by DBSrv | High | No send site exists in `Code/DBSrv` |
-| Password comparison length is effectively 10 characters | Medium | `ACCOUNTPASS_LENGTH = 12` with the final two bytes NUL-forced in `DBReadAccount`; writers elsewhere set arbitrary prefixes, so the exact stored width depends on the account-creation path (`DBSrv/Server.cpp:1840-1844` writes 4 characters plus NUL) |
+| Password comparison length is effectively 14 characters | Medium | `ACCOUNTPASS_LENGTH = 16` with the final two bytes NUL-forced in `DBReadAccount`; writers elsewhere set arbitrary prefixes, so the exact stored width depends on the account-creation path (`DBSrv/Server.cpp:1840-1844` writes 4 characters plus NUL) |
 | `TempKey` secret length | Unknown | The comparison uses `sizeof(file.TempKey)`, whose declared size was not located in the analyzed scope; the write path is outside this component |
 | Relationship between `APP_VERSION = 6975` and the `ClientPatch_v7662` directory | Unknown | No source comment links the two numbering schemes |
 | MAC sentinel `0xFF` branch reachability | High (unreachable) | Earlier size gate rejects the same condition that this branch tests |
