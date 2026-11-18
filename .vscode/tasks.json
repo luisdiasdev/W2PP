@@ -1,0 +1,49 @@
+{
+  // Plain CMake CLI tasks; they do not require the CMake Tools extension.
+  // Building x86-debug also copies the fresh executables (and their PDBs) into
+  // the release tree, which is what the launch configurations run.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cmake: configure (x86-debug)",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--preset", "x86-debug"],
+      "problemMatcher": []
+    },
+    {
+      "label": "cmake: configure (x86-release)",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--preset", "x86-release"],
+      "problemMatcher": []
+    },
+    {
+      "label": "cmake: build (x86-debug)",
+      "detail": "Builds the servers and copies tmsrv.exe/dbsrv.exe (plus PDBs) into ../release",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--build", "--preset", "x86-debug"],
+      "problemMatcher": "$msCompile",
+      "dependsOn": "cmake: configure (x86-debug)",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "cmake: build (x86-release)",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--build", "--preset", "x86-release"],
+      "problemMatcher": "$msCompile",
+      "dependsOn": "cmake: configure (x86-release)",
+      "group": "build"
+    },
+    {
+      "label": "ctest (x86-debug)",
+      "type": "shell",
+      "command": "ctest",
+      "args": ["--preset", "x86-debug", "--output-on-failure"],
+      "problemMatcher": [],
+      "group": "test"
+    }
+  ]
+}

@@ -234,13 +234,22 @@ set(W2PP_RELEASE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../release" CACHE PATH
 
 function(w2pp_copy_to_release target folder)
   if(W2PP_RELEASE_ROOT)
+    set(release_dir "${W2PP_RELEASE_ROOT}/${folder}/run")
+    # Copy the PDB next to the executable when the configuration produces one
+    # (Debug does, Release does not), so a debugger attached to the release
+    # tree always resolves symbols for the exact binary it is running.
+    if(CMAKE_GENERATOR MATCHES "Visual Studio")
+      set(pdb_arg "-DPDB_FILE=$<TARGET_PDB_FILE:${target}>")
+    else()
+      set(pdb_arg "-DPDB_FILE=")
+    endif()
     add_custom_command(TARGET ${target} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E make_directory
-              "${W2PP_RELEASE_ROOT}/${folder}/run"
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-              "$<TARGET_FILE:${target}>"
-              "${W2PP_RELEASE_ROOT}/${folder}/run/"
-      COMMENT "Copying ${target} to ${W2PP_RELEASE_ROOT}/${folder}/run"
+      COMMAND ${CMAKE_COMMAND}
+              "-DEXE_FILE=$<TARGET_FILE:${target}>"
+              "${pdb_arg}"
+              "-DDEST_DIR=${release_dir}"
+              -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_to_release.cmake"
+      COMMENT "Copying ${target} to ${release_dir}"
       VERBATIM)
   endif()
 endfunction()

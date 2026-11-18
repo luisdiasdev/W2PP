@@ -38,7 +38,7 @@ ctest --preset x86-release
 
 Configure and build into `build/x86-<config>`. The executables are written to `build/x86-<config>/<Config>/` (`tmsrv.exe`, `dbsrv.exe`, `w2pp_tests.exe`). Run a subset of the tests with `ctest --preset x86-debug -R <regex>`. Configure fails with a clear message if a non-Win32 architecture is requested.
 
-The post-build step also copies `tmsrv.exe` and `dbsrv.exe` into the legacy release tree (by default `../release/TMSRV/run` and `../release/DBSRV/run`, i.e. `E:\wyd\test-setup\release` for this checkout), so they can be started next to the existing runtime data. Override the destination with `-DW2PP_RELEASE_ROOT=<path>`, or set it to an empty value to disable the copy.
+The post-build step also copies `tmsrv.exe` and `dbsrv.exe` into the legacy release tree (by default `../release/TMSRV/run` and `../release/DBSRV/run`, i.e. `E:\wyd\test-setup\release` for this checkout), so they can be started next to the existing runtime data. Debug builds also copy the companion `.pdb` so a debugger can resolve symbols for the deployed binary. Override the destination with `-DW2PP_RELEASE_ROOT=<path>`, or set it to an empty value to disable the copy.
 
 ### Running the servers
 
@@ -62,6 +62,16 @@ Console commands are read only when stdin is a terminal; set `W2PP_FORCE_CONSOLE
 | DBSrv | `readmobbase`, `status`, `quit` |
 
 `quit`, `Ctrl+C` and `SIGTERM` share one graceful shutdown path: listeners stop, links close, pending data is flushed/closed, logs are flushed and the process exits successfully.
+
+### Debugging with VS Code
+
+`.vscode/` ships launch configurations for both servers. They run the copies in the release tree, which the `x86-debug` build refreshes together with the matching PDB:
+
+1. Build with `Ctrl+Shift+B` (`cmake: build (x86-debug)`).
+2. Pick `DBSrv (release tree)`, `TMSrv (release tree)`, or the `Servers: DBSrv + TMSrv` compound in Run and Debug, then press `F5`. Start DBSrv before TMSrv: if both DB connect attempts fail during boot, TMSrv exits.
+3. `Attach to DBSrv` / `Attach to TMSrv` attach to an instance you started yourself from the release tree.
+
+The launch configurations use the integrated terminal, so the console commands (`status`, `quit`, ...) keep working while debugging. If `W2PP_RELEASE_ROOT` was overridden, update the `program`/`cwd` paths in `.vscode/launch.json` accordingly.
 
 ### Behavior differences from the legacy Win32 servers
 
