@@ -19,7 +19,7 @@
 #ifndef __GETFUNC__
 #define __GETFUNC__
 
-#include "..\Basedef.h"
+#include "../Basedef.h"
 
 int	 GetMatchCombine		(STRUCT_ITEM *item);
 int  GetMatchCombineEhre	(STRUCT_ITEM *Item);

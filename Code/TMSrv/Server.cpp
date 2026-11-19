@@ -20,9 +20,9 @@
 #include <time.h>
 #include <math.h>
 
-#include "..\Basedef.h"
-#include "..\net\Connection.h"
-#include "..\ItemEffect.h"
+#include "../Basedef.h"
+#include "../net/Connection.h"
+#include "../ItemEffect.h"
 #include "Language.h"
 
 #include "CItem.h"
@@ -34,7 +34,6 @@
 #include "CReadFiles.h"
 #include "CWarTower.h"
 
-#pragma region Defines
 
 int FREEEXP = 35;
 int PARTY_DIF = 150;
@@ -479,7 +478,6 @@ int PistaRune[7][10] =
 //////////////////////////////////////
 extern STRUCT_GUILDZONE g_pGuildZone[MAX_GUILDZONE];
 
-#pragma endregion
 
 void ClearCrown(int conn)
 {
@@ -1829,7 +1827,7 @@ void SetItemBonus(STRUCT_ITEM *Dest, int Level, int a3, int DropBonus)
 			Dest->stEffect[1].cEffect = 59;
           int v4 = rand() & 0x8000007F;
           if ( v4 < 0 )
-            v4 = ((unsigned __int8)(v4 - 1) | 0x80) + 1;
+            v4 = ((unsigned char)(v4 - 1) | 0x80) + 1;
 		  Dest->stEffect[1].cValue = v4;
         }
       }
@@ -1994,7 +1992,7 @@ void SetItemBonus(STRUCT_ITEM *Dest, int Level, int a3, int DropBonus)
         Dest->stEffect[2].cEffect = 59;
         int v5 = rand() & 0x8000007F;
         if ( v5 < 0 )
-          v5 = ((unsigned __int8)(v5 - 1) | 0x80) + 1;
+          v5 = ((unsigned char)(v5 - 1) | 0x80) + 1;
 		Dest->stEffect[2].cValue = v5;
       }
     }
@@ -2053,7 +2051,7 @@ void SetItemBonus(STRUCT_ITEM *Dest, int Level, int a3, int DropBonus)
 				Dest->stEffect[0].cEffect = 59;
               int v6 = rand() & 0x8000007F;
               if ( v6 < 0 )
-                v6 = ((unsigned __int8)(v6 - 1) | 0x80) + 1;
+                v6 = ((unsigned char)(v6 - 1) | 0x80) + 1;
 			  Dest->stEffect[0].cValue = v6;
             }
             else
@@ -3768,7 +3766,6 @@ int  ProcessAffect(int idx)
 	if (currentTarget == idx)
 		pMob[idx].CurrentTarget = 0;
 
-#pragma region Fada attack
 	else
 	{
 		if (currentTarget > 0 && currentTarget < MAX_MOB)
@@ -3887,7 +3884,6 @@ int  ProcessAffect(int idx)
 		else
 			pMob[idx].CurrentTarget = 0;
 	}
-#pragma endregion
 LABEL_59:
 
 	int regen = 0;
@@ -3912,7 +3908,6 @@ LABEL_59:
 		if(pMob[idx].extra.ClassMaster != MORTAL && pMob[idx].extra.ClassMaster != ARCH)
 			Level += MAX_LEVEL;
 
-#pragma region Regen de HP Aura da Vida
 		if (Type == 17)
 		{
 			Hp += AffectLevel / 2 + AffectValue;
@@ -3932,8 +3927,6 @@ LABEL_59:
 			regen = 1;
 			goto LessAffect;
 		}
-#pragma endregion
-#pragma region Veneno - Drenagem de HP
 		if (Type == 20) //??? Possivelmente Veneno's
 		{
 			AffectValue = 100;
@@ -3978,8 +3971,6 @@ LABEL_59:
 
 			goto LessAffect;
 		}
-#pragma endregion
-#pragma region RegenHP Type21
 /*		if (Type == 21)//Regen de HT
 		{
 			Hp += AffectValue * MaxHp / 100;
@@ -4000,8 +3991,6 @@ LABEL_59:
 
 			goto LessAffect;
 		}*/
-#pragma endregion
-#pragma region THUNDER
 		if(Type == 22)
 		{
 			  int alvo1 = 0;
@@ -4309,8 +4298,6 @@ LABEL_59:
 						ProcessClientMessage(idx, (char*)&sm, true);
 			  }
 		}
-#pragma endregion
-#pragma region Aura Bestial
 		if(Type == 23)
 		{
 			 int alvo1 = 0;
@@ -4618,8 +4605,6 @@ LABEL_59:
 						ProcessClientMessage(idx, (char*)&sm, true);
 			  }
 		}
-#pragma endregion
-#pragma region Affects less time
 	LessAffect :
 		if (pMob[idx].Affect[i].Time < 32400000)
 			pMob[idx].Affect[i].Time--;
@@ -4643,7 +4628,6 @@ LABEL_59:
 			upScore = 1;
 		}
 
-#pragma endregion
 	}
 
 	
@@ -5854,7 +5838,6 @@ void GuildProcess()
 	}
 
 #ifdef RVR_ON
-#pragma region Guerra de Reino
 	if (NewbieEventServer == 1 && timeinfo->tm_wday != 0 && timeinfo->tm_wday != 6 && timeinfo->tm_hour == RvRHour)
 	{
 		if (RvRState == 0 && timeinfo->tm_min < 5)
@@ -5893,7 +5876,6 @@ void GuildProcess()
 			RvRBluePoint = 0;
 		}
 	}
-#pragma endregion
 #endif
 	CWarTower::GuildProcess(timeinfo);
 }
@@ -5908,7 +5890,7 @@ void StartLog()
 	time(&now);
 	when = *localtime(&now);
 
-	sprintf(temp, ".\\Log\\TM_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
+	sprintf(temp, "./Log/TM_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
 
 	fLogFile = fopen(temp, "wt");
 
@@ -6035,7 +6017,7 @@ int  GetUserByName(char *name)
 	{
 		char *tname = name + 1;
 
-		_strupr(tname);
+		UpcaseString(tname);
 
 		for (int i = 1; i < MAX_USER; i++)
 		{
@@ -6177,7 +6159,7 @@ int  GetAngle(int x, int y)
 	if (x == 0 || y == 0)
 		return 0;
 
-	double tangle = atan2((FLOAT)y, (FLOAT)x);
+	double tangle = atan2((float)y, (float)x);
 
 	int angle = (int)((tangle * 3600) / 6.283184);
 
@@ -6192,10 +6174,10 @@ int  GetAngle(int x, int y)
 
 int  GetLength(int x, int y)
 {
-	FLOAT valx = (FLOAT)(x * x);
-	FLOAT valy = (FLOAT)(y * y);
+	float valx = (float)(x * x);
+	float valy = (float)(y * y);
 
-	FLOAT valxy = valx + valy;
+	float valxy = valx + valy;
 
 	if (valxy > 100)
 		return 100;
@@ -8445,7 +8427,7 @@ void StartChatLog()
 	time(&now);
 	when = *localtime(&now);
 
-	sprintf(temp, ".\\chat_log\\TM_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
+	sprintf(temp, "./chat_log/TM_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
 
 	fChatLogFile = fopen(temp, "wt");
 
@@ -8484,7 +8466,7 @@ void StartItemLog()
 	time(&now);
 	when = *localtime(&now);
 
-	sprintf(temp, ".\\item_log\\TM_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
+	sprintf(temp, "./item_log/TM_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
 
 	fItemLogFile = fopen(temp, "wt");
 
@@ -8565,7 +8547,7 @@ int  ParseMobMercString(int Num, char *str)
 	if (strlen(str2) > 80)
 		return false;
 
-	_strupr(str1);
+	UpcaseString(str1);
 
 	if (!strcmp(str1, "MOBNAME:"))
 		strncpy(pMobMerc[Num].MobName, str2, NAME_LENGTH);

@@ -17,8 +17,8 @@
 *   Contact at:
 */
 
-#include "..\Basedef.h"
-#include "..\ItemEffect.h"
+#include "../Basedef.h"
+#include "../ItemEffect.h"
 #include "Language.h"
 
 #include "Server.h"

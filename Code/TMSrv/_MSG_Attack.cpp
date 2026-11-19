@@ -219,7 +219,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 		Special = Level;
 	}
 
-#pragma region Escudo_dourado
 	if (skillnum == 85)
 	{
 		int coin = 100 * Level;
@@ -230,12 +229,10 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 		pMob[conn].MOB.Coin -= coin;
 		SendEtc(conn);
 	}
-#pragma endregion
 
 	int Mp = pMob[conn].MOB.CurrentScore.Mp;
 	int ReqMp = pUser[conn].ReqMp;
 
-#pragma region Consumo de mana
 	if (skillnum >= 0 && skillnum < MAX_SKILLINDEX)
 	{
 		int ManaSpent = BASE_GetManaSpent(skillnum, pMob[conn].MOB.SaveMana, Special);
@@ -253,7 +250,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 
 	m->CurrentMp = pMob[conn].MOB.CurrentScore.Mp;
 	m->ReqMp = pUser[conn].ReqMp;
-#pragma endregion
 
 	int master = 0;
 
@@ -293,7 +289,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 	}
 
 
-#pragma region Loop Target
 	for (int i = 0; i < MAX_TARGET; i++)
 	{
 		if (i >= MAX_TARGET && m->Size <= sizeof(MSG_Attack))
@@ -418,7 +413,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 			}
 		}
 
-#pragma region Ataque físico
 		if (dam == -2)
 		{
 			int dis = BASE_GetDistance(m->PosX, m->PosY, m->TargetX, m->TargetY);
@@ -482,9 +476,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 
 			m->DoubleCritical = DoubleCritical;
 		}
-#pragma endregion
 
-#pragma region Skills
 		else if (dam == -1 && skillnum >= 0 && skillnum <= MAX_SKILLINDEX)
 		{
 			dam = 0;
@@ -514,7 +506,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 			int unk2 = 0;
 			int InstanceType = g_pSpell[skillnum].InstanceType;
 
-#pragma region Ataques com elementos
 			if (InstanceType >= 1 && InstanceType <= 5)
 			{
 				int Weather = CurrentWeather;
@@ -529,7 +520,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				if (ApplyWeather != 0)
 					Weather = 0;
 
-#pragma region Ataque de Fada
 				if (ClientTick == SKIPCHECKTICK && m->Motion == 254 && (m->SkillIndex == 32 || m->SkillIndex == 34 || m->SkillIndex == 36))
 				{
 					int Level = pMob[conn].MOB.CurrentScore.Level;
@@ -551,7 +541,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					if (dam > 1000)
 						dam = 1000;
 				}
-#pragma endregion
 
 				else
 					dam = BASE_GetSkillDamage(skillnum, &pMob[conn].MOB, Weather, pMob[conn].WeaponDamage);
@@ -602,9 +591,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 
 				dam = dam / 2;
 			}
-#pragma endregion
 
-#pragma region HEAL_RECOVERY
 			else if (InstanceType == 6)
 			{
 				if (pMob[idx].MOB.Clan == 4)
@@ -710,9 +697,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					}
 				}
 			}
-#pragma endregion
 
-#pragma region Flash
 			else if (InstanceType == 7)
 			{
 				pMob[idx].Mode = MOB_PEACE;
@@ -721,9 +706,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				for (int j = 0; j < MAX_ENEMY; j++)
 					pMob[idx].EnemyList[j] = MOB_EMPTY;
 			}
-#pragma endregion
 
-#pragma region Desintoxicar
 			else if (InstanceType == 8)
 			{
 				int NeedUpdate = 0;
@@ -745,9 +728,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					SendScore(idx);
 				}
 			}
-#pragma endregion
 
-#pragma region Teleporte
 			else if (InstanceType == 9)
 			{
 				if (pMob[idx].MOB.CurrentScore.Hp <= 0)
@@ -784,9 +765,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					SendClientMessage(idx, temp);
 				}
 			}
-#pragma endregion
 
-#pragma region Invisibilidade
 			else if (InstanceType == 10 && idx < MAX_USER)
 			{
 				for (int l = MAX_USER; l < MAX_MOB; l++)
@@ -803,9 +782,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					}
 				}
 			}
-#pragma endregion
 
-#pragma region Evock
 			else if (InstanceType == 11)
 			{
 
@@ -835,9 +812,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				}
 				dam = 0;
 			}
-#pragma endregion
 
-#pragma region Chamas etereas
 			else if (InstanceType == 12)
 			{
 				int targetLevel = pMob[idx].MOB.CurrentScore.Level;
@@ -882,9 +857,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					continue;
 				}
 			}
-#pragma endregion
 
-#pragma region Furia divina
 			if (skillnum == 6)
 			{
 				if (idx >= MAX_USER && pMob[idx].MOB.Merchant != 0)
@@ -964,9 +937,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 
 				break;
 			}
-#pragma endregion
 
-#pragma region Exterminar
 			if (skillnum == 22)
 			{
 				int CurrentMp = pMob[conn].MOB.CurrentScore.Mp;
@@ -1009,9 +980,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					pUser[conn].cSock.AddMessage((char*)&sm_act, sizeof(MSG_Action));
 				}
 			}
-#pragma endregion
 
-#pragma region Julgamento divino
 			else if (skillnum == 30)
 			{
 				dam = dam + hp;
@@ -1019,9 +988,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				pMob[conn].MOB.CurrentScore.Hp = ((pMob[conn].MOB.CurrentScore.Hp) / 6) + 1;
 				pUser[conn].ReqHp = pMob[conn].MOB.CurrentScore.Hp;
 			}
-#pragma endregion
 
-#pragma region Renascimento 
 			else if (skillnum == 31)
 			{
 				int hp = (rand() % 10 + 10) * ((pMob[conn].MOB.CurrentScore.MaxHp + 1) / 100);
@@ -1046,9 +1013,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					GridMulticast(pMob[idx].TargetX, pMob[idx].TargetY, (MSG_STANDARD*)&CreateMob, 0);
 				}
 			}
-#pragma endregion
 
-#pragma region Velocidade
 			else if (skillnum == 41)
 			{
 				int skill_target = (Special / 25) + 2;
@@ -1077,9 +1042,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 
 				break;
 			}
-#pragma endregion
 
-#pragma region Arma Magica
 			else if (skillnum == 44)
 			{
 				int skill_target = (Special / 25) + 2;
@@ -1107,9 +1070,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 
 				break;
 			}
-#pragma endregion
 
-#pragma region Cancelamento
 			else if (skillnum == 47)
 			{
 				int CancelContinue = 0;
@@ -1135,9 +1096,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				if (CancelContinue == 1)
 					break;
 			}
-#pragma endregion
 
-#pragma region Book Vinha
 			else if (skillnum == 98)
 			{
 				if (m->TargetX < 0 || m->TargetX >= MAX_GRIDX || m->TargetY < 0 || m->TargetY >= MAX_GRIDY)
@@ -1154,7 +1113,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				break;
 			}
 
-#pragma endregion
 
 			int Aggressive = g_pSpell[skillnum].Aggressive;
 
@@ -1189,7 +1147,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					SameLeaderGuild = 0;
 			}
 
-#pragma region Buff
 			if (SameLeaderGuild)
 			{
 				if (skillnum == 102)
@@ -1224,18 +1181,14 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 					SendScore(idx);
 				}
 			}
-#pragma endregion
 
-#pragma region TRANSFORMATION
 			if (skillnum == 64 || skillnum == 66 || skillnum == 68 || skillnum == 70 || skillnum == 71)
 			{
 				pMob[conn].GetCurrentScore(conn);
 				SendScore(conn);
 				SendEquip(conn, 0);
 			}
-#pragma endregion
 
-#pragma region SKILLBOOK_RESSURECTION
 			if (pMob[conn].MOB.CurrentScore.Hp == 0 && skillnum == 99)
 			{
 				int rev = rand() % 115;
@@ -1265,10 +1218,8 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				GetCreateMob(conn, &CreateMob);
 				GridMulticast(pMob[conn].TargetX, pMob[conn].TargetY, (MSG_STANDARD*)&CreateMob, 0);
 			}
-#pragma endregion
 
 		}
-#pragma endregion
 
 		else
 		{
@@ -1281,7 +1232,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 		if (dam <= 0)
 			continue;
 
-#pragma region Perfuracao		   
 		if (idx < MAX_USER || pMob[idx].MOB.Clan == 4)
 		{
 			if ((m->DoubleCritical & 4) != 0)
@@ -1301,9 +1251,7 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 
 			m->Dam[i].Damage = (int)dam;
 		}
-#pragma endregion
 
-#pragma region Ataque PvP
 		if (pMob[conn].PvPDamage != 0 && idx < MAX_USER)
 		{
 			if (dam <= 1)
@@ -1314,7 +1262,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 
 			m->Dam[i].Damage = (int)dam;
 		}
-#pragma endregion
 
 		if (leader == mobleader || Guild == MobGuild)
 			dam = 0;
@@ -1327,7 +1274,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 		if (idx >= MAX_USER && pMob[idx].MOB.Clan == 4 && pMob[idx].Summoner > 0 && pMob[idx].Summoner < MAX_USER && pUser[pMob[idx].Summoner].Mode == USER_PLAY)
 			Summoner = pMob[idx].Summoner;
 
-#pragma region PK - War - Miss
 
 		if (Summoner < MAX_USER)
 		{
@@ -1416,7 +1362,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 				}
 			}
 		}
-#pragma endregion
 
 		if (mylevel <= MAX_LEVEL)
 		{
@@ -1631,7 +1576,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 		if (idx > MAX_USER && pMob[idx].MOB.Clan == 4)
 			LinkMountHp(idx);
 
-#pragma region Joia Abs
 		if (pMob[conn].HpAbs != 0 && (rand() % 2) == 0 && dam >= 1)
 		{
 			int RecHP = (int)((dam * pMob[conn].HpAbs + 1) / 100);
@@ -1646,7 +1590,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 			else
 				pUser[conn].ReqHp = RecHP;
 		}
-#pragma endregion
 
 		if (pMob[idx].MOB.CurrentScore.Hp <= 0)
 		{
@@ -1706,7 +1649,6 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 			}
 		}
 	}
-#pragma endregion
 
 	if (UNK2 > 0)
 		Exp = UNK2;
@@ -1736,14 +1678,11 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 	if (skillnum == 30)
 		SendSetHpMp(conn);
 
-#pragma region MobKilled Check
 	for (int i = 0; i < MAX_TARGET; i++)
 	{
 		if (TargetKilled[i] > 0 && TargetKilled[i] < MAX_MOB && pMob[TargetKilled[i]].Mode != MOB_EMPTY)
 			MobKilled(TargetKilled[i], conn, 0, 0);
 	}
-#pragma endregion
-#pragma region Level Check
 
 	int Segment = pMob[conn].CheckGetLevel();
 
@@ -1785,5 +1724,4 @@ void Exec_MSG_Attack(int conn, char *pMsg)
 			Log(temp, pUser[conn].AccountName, pUser[conn].IP);
 		}
 	}
-#pragma endregion
 }

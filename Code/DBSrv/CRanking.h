@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "..\Basedef.h"
+#include "../Basedef.h"
 #include <stdio.h>
 
 enum RankPos

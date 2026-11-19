@@ -31,7 +31,6 @@ extern CUser pAdmin[MAX_ADMIN]; // Server.cpp
 //Initialize ranking system
 RankingSystem rankingSystem;
 
-#pragma region GrindRanking class
 GrindRanking::GrindRanking()
 {
 	for (int i = 0; i < MAX_RANK_INDEX; i++)
@@ -91,9 +90,7 @@ GrindRankingConnId GrindRanking::getElementConnId(int rankId)
 	else
 		return GrindRankingConnId();
 }
-#pragma endregion
 
-#pragma region RankingSystem class
 RankingSystem::RankingSystem()
 {
 	loadRanking();
@@ -148,7 +145,7 @@ int RankingSystem::readAccountsInDir(char *dir)
 			errno = 0;
 
 			FILE* fs;
-			fopen_s(&fs, tmp, "rb");
+			fs = fopen(tmp, "rb");
 
 			if (fs != NULL)
 			{
@@ -373,4 +370,3 @@ int RankingSystem::increaseRankingElementValue(int rankId, int newValue, int cla
 
 	return newRankId;
 }
-#pragma endregion

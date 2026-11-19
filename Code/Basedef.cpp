@@ -22,7 +22,6 @@
 #include <stdio.h> 
 #include <string.h>        
 #include <time.h>
-#include <mbstring.h>
 #include <string>
 
 #include "Basedef.h"
@@ -30,7 +29,6 @@
 #include "AbiGuards.h"
 #include "platform/Path.h"
 
-#pragma region Defines
 
 int BaseSIDCHM[4][6] = // Define the base Strength, Intelligence, Dexterity, Constance, HP and MP of the 4 classes
 {
@@ -101,7 +99,6 @@ int g_pSuccessRate[11] = {5, 5, 5, 5, 4, 4, 3, 3, 2, 1, 0};
 
 char g_pItemGrid[8][4][2] = 
 {
-#pragma region ItemGrid
 	{
 		{01, 00},
 		{00, 00},
@@ -152,7 +149,6 @@ char g_pItemGrid[8][4][2] =
 		{01, 01}
 	}
 
-#pragma endregion
 };
 
 int	g_pDistanceTable[7][7] =
@@ -564,7 +560,6 @@ int g_pBonusType[10] = {10, 30, 2, 5, 3, 10, 2, 8, 2, 8 };
 
 int DungeonPos[30][2] = 
 {
-#pragma region DungeonPos
 	{244, 3822}, 
 	{380, 3810},
 	{352, 3780},
@@ -595,7 +590,6 @@ int DungeonPos[30][2] =
 	{1104, 3737},
 	{1124, 3804}, 
 	{1132, 3756}
-#pragma endregion
 };
 
 int DungeonItem[10] = {	421, 422, 423, 419, 420, 685, 691, 696, 696, 696 };
@@ -757,7 +751,6 @@ int g_HeightHeight = 4096;
 int g_HeightPosX = 0;
 int g_HeightPosY = 0;
 
-#pragma endregion
 
 int BASE_NeedLog(struct STRUCT_ITEM *item, int money)
 {
@@ -2693,7 +2686,7 @@ void BASE_WriteSkillBin()
 		fwrite(&nRand, sizeof(nRand), 1 , fp);
 		fclose(fp);
 
-		FILE *fpCSum = fopen("..\\SkillCSum.h", "wt");
+		FILE *fpCSum = fopen("../SkillCSum.h", "wt");
 
 		if(fpCSum != NULL)
 		{
@@ -2747,9 +2740,9 @@ void BASE_WriteItemList(int nItemList)
 	FILE* fpCSum = NULL;
 
 	if(nItemList == 0)
-		fpCSum = fopen("..\\ItemCSum.h", "wt");
+		fpCSum = fopen("../ItemCSum.h", "wt");
 	else
-		fpCSum = fopen("..\\ItemCSum.h", "a+");
+		fpCSum = fopen("../ItemCSum.h", "a+");
 
 	if(fpCSum != NULL)
 	{
@@ -2974,7 +2967,6 @@ void BASE_GetCurrentScore(STRUCT_MOB & MOB, STRUCT_AFFECT *Affect, STRUCT_MOBEXT
 
 	if(isSummon == 0)
 	{
-#pragma region Soul Hp/Mp add
 		int bInt = MOB.CurrentScore.Int;
 		int bCon = MOB.CurrentScore.Con;
 
@@ -3096,7 +3088,6 @@ void BASE_GetCurrentScore(STRUCT_MOB & MOB, STRUCT_AFFECT *Affect, STRUCT_MOBEXT
 
 		MOB.CurrentScore.MaxHp += mhp;
 		MOB.CurrentScore.MaxMp += mmp;
-#pragma endregion
 	}
 
 	int special0 = MOB.CurrentScore.Special[0] + BASE_GetMobAbility(&MOB, EF_SPECIAL1);
@@ -3228,7 +3219,6 @@ void BASE_GetCurrentScore(STRUCT_MOB & MOB, STRUCT_AFFECT *Affect, STRUCT_MOBEXT
 	int Fogo = MOB.Resist[2];
 	int Gelo = MOB.Resist[3];
 
-#pragma region Buff Loop
 	for(int i = 0; i < MAX_AFFECT; i++)
 	{
 		if(Affect == 0)
@@ -3750,10 +3740,8 @@ void BASE_GetCurrentScore(STRUCT_MOB & MOB, STRUCT_AFFECT *Affect, STRUCT_MOBEXT
 		else if (Type == 39)
 			*ExpBonus += 100;
 	}
-#pragma endregion
 
 
-#pragma region Loop affect2
 	for(int i = 0; i < MAX_AFFECT; i++)
 	{
 		if(Affect == 0)
@@ -3873,7 +3861,6 @@ void BASE_GetCurrentScore(STRUCT_MOB & MOB, STRUCT_AFFECT *Affect, STRUCT_MOBEXT
 				MOB.CurrentScore.MaxMp = totalmp;
 		}
 	}
-#pragma endregion
 
 	for(int p = 1; p <= 7; p++)
 	{
@@ -6035,12 +6022,28 @@ void BASE_InitializeSkill()
 	 return;
 }
 
+namespace
+{
+// CP949/ANSI lead-byte rule preserved from the legacy `_mbsinc` call: bytes
+// 0x81-0xFE start a two-byte character.
+const unsigned char *NextAnsiChar(const unsigned char *text)
+{
+	if (text == nullptr || *text == '\0')
+		return text;
+
+	if (*text >= 0x81 && *text <= 0xFE)
+		return text + 2;
+
+	return text + 1;
+}
+}
+
 int IsClearString3(char *str, int nTarget)
 {
 	if(str == NULL)
 		return true;
 
-	const unsigned char *pNextRightChar = _mbsinc(reinterpret_cast<const unsigned char *>(&str[nTarget]));
+	const unsigned char *pNextRightChar = NextAnsiChar(reinterpret_cast<const unsigned char *>(&str[nTarget]));
 
 	if	(reinterpret_cast<const char *>(&str[nTarget]) + 1 != reinterpret_cast<const char *>(pNextRightChar))
 		return false;

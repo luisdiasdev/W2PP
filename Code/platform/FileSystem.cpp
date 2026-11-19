@@ -9,6 +9,18 @@ namespace fs = std::filesystem;
 namespace
 {
 
+// Windows matches file names case-insensitively; Linux treats names as
+// byte-exact. Folding only on Windows keeps a scan from returning a name that a
+// later fopen cannot open.
+char FoldCase(unsigned char c)
+{
+#if defined(_WIN32)
+	return static_cast<char>(std::tolower(c));
+#else
+	return static_cast<char>(c);
+#endif
+}
+
 bool WildcardMatch(const std::string &pattern, const std::string &text)
 {
 	std::size_t patternPos = 0;
@@ -20,8 +32,8 @@ bool WildcardMatch(const std::string &pattern, const std::string &text)
 	{
 		if (patternPos < pattern.size() &&
 		    (pattern[patternPos] == '?' ||
-		     std::tolower(static_cast<unsigned char>(pattern[patternPos])) ==
-		     std::tolower(static_cast<unsigned char>(text[textPos]))))
+		     FoldCase(static_cast<unsigned char>(pattern[patternPos])) ==
+		     FoldCase(static_cast<unsigned char>(text[textPos]))))
 		{
 			++patternPos;
 			++textPos;

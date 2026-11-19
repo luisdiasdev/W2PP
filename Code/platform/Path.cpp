@@ -2,17 +2,60 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <string>
 #include <system_error>
+#include <vector>
+
+#if defined(__linux__)
+#include <unistd.h>
+#endif
 
 namespace platform
 {
 namespace fs = std::filesystem;
-
-std::string ExecutablePath()
+namespace
 {
+
+// Native, platform-specific source of the running executable path. Returns an
+// empty string when the platform cannot report it, so the existing boot
+// failure path applies.
+std::string NativeExecutablePath()
+{
+#if defined(_WIN32)
 	const char *programPath = _pgmptr;
 
 	if (programPath == nullptr || programPath[0] == '\0')
+		return {};
+
+	return programPath;
+#elif defined(__linux__)
+	std::vector<char> buffer(256);
+
+	for (;;)
+	{
+		const ssize_t length =
+			::readlink("/proc/self/exe", buffer.data(), buffer.size());
+
+		if (length < 0)
+			return {};
+
+		if (static_cast<std::size_t>(length) < buffer.size())
+			return std::string(buffer.data(), static_cast<std::size_t>(length));
+
+		buffer.resize(buffer.size() * 2);
+	}
+#else
+	return {};
+#endif
+}
+
+} // namespace
+
+std::string ExecutablePath()
+{
+	const std::string programPath = NativeExecutablePath();
+
+	if (programPath.empty())
 		return {};
 
 	std::error_code ec;

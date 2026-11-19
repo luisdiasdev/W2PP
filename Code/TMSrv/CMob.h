@@ -19,7 +19,7 @@
 #ifndef __CMOB__
 #define __CMOB__
 
-#include "..\Basedef.h"
+#include "../Basedef.h"
 
 #define MAX_ENEMY 13
 

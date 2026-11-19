@@ -3,36 +3,87 @@ cmake_minimum_required(VERSION 3.25)
 project(w2pp VERSION 1.0.0 LANGUAGES CXX)
 
 # The servers are 32-bit binaries and the on-disk / on-wire layouts depend on
-# the Win32 x86 ABI. Refuse any other architecture instead of emitting a
-# mismatched binary.
-if(NOT WIN32)
-  message(FATAL_ERROR "w2pp targets Windows only. Use the x86-debug or x86-release preset.")
-endif()
-
+# the Win32 x86 ABI. Refuse any other platform or architecture instead of
+# emitting a mismatched binary.
 if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
-  message(FATAL_ERROR
-    "w2pp only supports 32-bit x86 (Win32) builds. Configure with "
-    "`cmake --preset x86-debug` or `cmake --preset x86-release`.")
+  if(WIN32)
+    message(FATAL_ERROR
+      "w2pp only supports 32-bit x86 (Win32) builds on Windows. Configure with "
+      "`cmake --preset x86-debug` or `cmake --preset x86-release`.")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message(FATAL_ERROR
+      "w2pp only supports i386 (32-bit) builds on Linux. Configure with "
+      "`cmake --preset linux-x86-debug` or `cmake --preset linux-x86-release`; "
+      "the presets select the vcpkg x86-linux triplet.")
+  else()
+    message(FATAL_ERROR
+      "w2pp only supports 32-bit x86 (i386) builds. Configure on Windows with "
+      "`cmake --preset x86-debug`/`x86-release` or on Linux with "
+      "`cmake --preset linux-x86-debug`/`linux-x86-release`.")
+  endif()
 endif()
 
-# Match the legacy ABI: Debug uses the debug CRT, Release uses the release CRT.
-# This also fixes the old Release project that linked a debug CRT.
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+if(NOT WIN32 AND NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  message(FATAL_ERROR
+    "w2pp targets Windows x86 and Linux i386 only; ${CMAKE_SYSTEM_NAME} is not supported.")
+endif()
+
+# Linux i386: reproduce the Win32 x86 layout instead of inheriting the i386
+# System V defaults. -malign-double aligns long long/double to 8 bytes and
+# _TIME_BITS=64 gives the persisted fields the 64-bit time_t MSVC uses. Project
+# targets only; vcpkg-built dependencies keep their platform default.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  add_compile_options(-malign-double)
+  add_compile_definitions(_TIME_BITS=64 _FILE_OFFSET_BITS=64)
+
+  include(CheckCXXSourceCompiles)
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
+  set(CMAKE_REQUIRED_DEFINITIONS -D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64)
+  check_cxx_source_compiles("
+    #include <time.h>
+    static_assert(sizeof(void *) == 4, \"w2pp requires 32-bit pointers\");
+    static_assert(sizeof(time_t) == 8, \"w2pp requires a 64-bit time_t\");
+    int main() { return 0; }
+  " W2PP_LINUX_I386_ABI)
+
+  if(NOT W2PP_LINUX_I386_ABI)
+    message(FATAL_ERROR
+      "The Linux build requires a 32-bit i386 toolchain with 64-bit time_t "
+      "(gcc-multilib/g++-multilib/libc6-dev-i386 and glibc >= 2.34). Install "
+      "the 32-bit multilib packages and reconfigure with "
+      "`cmake --preset linux-x86-debug` or `cmake --preset linux-x86-release`.")
+  endif()
+endif()
+
+# Windows-specific toolchain settings. Linux keeps its system C++ runtime and
+# must not receive MSVC options or the Win32 preprocessor environment.
+if(WIN32)
+  # Match the legacy ABI: Debug uses the debug CRT, Release uses the release CRT.
+  # This also fixes the old Release project that linked a debug CRT.
+  if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+
+    # Legacy sources are ANSI/CP949 and produce many warnings; keep the legacy
+    # warning level and disable the CRT deprecation warnings during migration.
+    # Legacy sources predate strict conformance (e.g. `goto` over an
+    # initialization); keep the permissive mode the old vcxproj build used.
+    add_compile_options(/W3 /permissive /Zc:strictStrings-)
+  endif()
+
+  # WIN32_LEAN_AND_MEAN keeps <Windows.h> from pulling in the old Winsock.h so
+  # asio can include Winsock2.
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS _MBCS WIN32 _WINDOWS _WIN32_WINNT=0x0601 WIN32_LEAN_AND_MEAN _WINSOCK_DEPRECATED_NO_WARNINGS)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(Threads REQUIRED)
 find_package(asio CONFIG REQUIRED)
 
-# Legacy sources are ANSI/CP949 and produce many warnings; keep the legacy
-# warning level and disable the CRT deprecation warnings during migration.
-# Legacy sources predate strict conformance (e.g. `goto` over an
-# initialization); keep the permissive mode the old vcxproj build used.
-add_compile_options(/W3 /permissive /Zc:strictStrings-)
-# WIN32_LEAN_AND_MEAN keeps <Windows.h> from pulling in the old Winsock.h so
-# asio can include Winsock2. ASIO_USE_TS_EXECUTOR_AS_DEFAULT works around asio
+# Portable asio settings. ASIO_USE_TS_EXECUTOR_AS_DEFAULT works around asio
 # 1.38's default any_io_executor constraints failing under MSVC 19.44/C++20.
-add_compile_definitions(_CRT_SECURE_NO_WARNINGS _MBCS WIN32 _WINDOWS _WIN32_WINNT=0x0601 WIN32_LEAN_AND_MEAN _WINSOCK_DEPRECATED_NO_WARNINGS ASIO_STANDALONE ASIO_USE_TS_EXECUTOR_AS_DEFAULT)
+add_compile_definitions(ASIO_STANDALONE ASIO_USE_TS_EXECUTOR_AS_DEFAULT)
 add_compile_definitions($<$<CONFIG:Debug>:_PACKET_DEBUG>)
 
 # No transitional Win32 libraries: the servers and the shared code no longer
@@ -80,7 +131,7 @@ target_include_directories(w2pp_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/Code
 )
 
-target_link_libraries(w2pp_core PUBLIC asio::asio)
+target_link_libraries(w2pp_core PUBLIC asio::asio Threads::Threads)
 
 # ---------------------------------------------------------------------------
 # TMSrv (game server)
@@ -224,13 +275,20 @@ target_link_libraries(dbsrv PRIVATE w2pp_core)
 # Legacy release tree
 #
 # The old MSBuild projects wrote into ..\release\<Project>\run. Keep that
-# workflow available: the built executables are copied next to their data so
-# they can be started from the existing release tree. Override the root with
+# workflow available on Windows: the built executables are copied next to their
+# data so they can be started from the existing release tree. On Linux the copy
+# is opt-in (the build tree is the normal run location). Override the root with
 # -DW2PP_RELEASE_ROOT=<path> (or an empty value to disable the copy).
 # ---------------------------------------------------------------------------
 
-set(W2PP_RELEASE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../release" CACHE PATH
-    "Legacy release tree that receives the built server executables")
+if(WIN32)
+  set(_w2pp_release_root_default "${CMAKE_CURRENT_SOURCE_DIR}/../release")
+else()
+  set(_w2pp_release_root_default "")
+endif()
+
+set(W2PP_RELEASE_ROOT "${_w2pp_release_root_default}" CACHE PATH
+    "Legacy release tree that receives the built server executables (opt-in on Linux)")
 
 function(w2pp_copy_to_release target folder)
   if(W2PP_RELEASE_ROOT)
@@ -324,6 +382,33 @@ if(BUILD_TESTING)
               -CommonDir "$<TARGET_FILE_DIR:tmsrv>/../../Common"
     )
     set_tests_properties(tmsrv-smoke PROPERTIES
+      LABELS integration
+      TIMEOUT 120
+    )
+  elseif(UNIX)
+    add_test(
+      NAME platform-dependency-check
+      COMMAND ${CMAKE_COMMAND}
+              "-DCODE_DIR=${CMAKE_SOURCE_DIR}/Code"
+              -P "${CMAKE_SOURCE_DIR}/tests/tools/check_platform_dependencies.cmake"
+    )
+    set_tests_properties(platform-dependency-check PROPERTIES
+      LABELS static
+      TIMEOUT 120
+    )
+
+    find_program(W2PP_BASH bash)
+    if(NOT W2PP_BASH)
+      message(FATAL_ERROR "bash is required for the POSIX smoke test")
+    endif()
+
+    add_test(
+      NAME posix-smoke
+      COMMAND ${W2PP_BASH} "${CMAKE_SOURCE_DIR}/tests/integration/posix_smoke.sh"
+              --exe-dir "$<TARGET_FILE_DIR:tmsrv>"
+              --source-dir "${CMAKE_SOURCE_DIR}"
+    )
+    set_tests_properties(posix-smoke PROPERTIES
       LABELS integration
       TIMEOUT 120
     )

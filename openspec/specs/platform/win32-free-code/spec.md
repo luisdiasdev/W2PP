@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Ensures project-owned source code no longer calls Win32 or Winsock directly, and that filesystem, clock, path and diagnostic behavior rely on portable wrappers with defined outcomes.
+Ensures project-owned source code no longer calls Win32 or Winsock directly, and that filesystem, clock, path and diagnostic behavior rely on portable wrappers with defined outcomes on Windows x86 and Linux i386.
 
 ## Requirements
 

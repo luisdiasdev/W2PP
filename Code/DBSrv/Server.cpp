@@ -23,6 +23,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <cstdarg>
 #include <vector>
 
 #include "../Basedef.h"
@@ -406,7 +407,7 @@ int ProcessAdminClientMessage(char *msg)
 
 				memset(&file.Char[slot], 0, sizeof(STRUCT_MOB));
 
-				_strupr(file.Info.AccountName);
+				UpcaseString(file.Info.AccountName);
 
 				ret = cFileDB.DBWriteAccount(&file);
 
@@ -481,7 +482,7 @@ void DisableAccount(int conn, char *account, int Year, int YearDay)
 	account[ACCOUNTNAME_LENGTH-1] = 0;
 	account[ACCOUNTNAME_LENGTH-2] = 0;
 
-	_strupr(account);
+	UpcaseString(account);
 
 	STRUCT_ACCOUNTFILE file;
 	memcpy(file.Info.AccountName, account, ACCOUNTNAME_LENGTH);
@@ -541,7 +542,7 @@ void EnableAccount(int conn, char *account)
 	account[ACCOUNTNAME_LENGTH-1] = 0;
 	account[ACCOUNTNAME_LENGTH-2] = 0;
 
-	_strupr(account);
+	UpcaseString(account);
 
 	STRUCT_ACCOUNTFILE file;
   	memcpy(file.Info.AccountName, account, ACCOUNTNAME_LENGTH);
@@ -694,7 +695,7 @@ int ProcessAdminMessage(int conn, char *msg)
 
 			memcpy(&file.Char[empty], &(m->Mob), sizeof(STRUCT_MOB));
 
-			_strupr(file.Info.AccountName);
+			UpcaseString(file.Info.AccountName);
 
 			ret = cFileDB.DBWriteAccount(&file);
 
@@ -801,7 +802,7 @@ int ProcessAdminMessage(int conn, char *msg)
 		{
 			MSG_NPIDPASS *m = (MSG_NPIDPASS *) msg;
 
-			_strupr(m->Account);
+			UpcaseString(m->Account);
 
 			if(pAdmin[conn].Encode1 != m->Encode1 || pAdmin[conn].Encode2 != m->Encode2) 
 				return false;
@@ -862,8 +863,8 @@ int ProcessAdminMessage(int conn, char *msg)
 			if(pAdmin[conn].Level <= 0)
 				return true;
 
-			_strupr(m->Account);
-			_strupr(m->Char);
+			UpcaseString(m->Account);
+			UpcaseString(m->Char);
 
 			if(m->Char[0] != 0)		
 				cFileDB.GetAccountByChar(m->Account, m->Char); 
@@ -1054,7 +1055,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			m->AccountName[ACCOUNTNAME_LENGTH-1] = 0;
 			m->AccountName[ACCOUNTNAME_LENGTH-2] = 0;
 
-			_strupr(m->AccountName);
+			UpcaseString(m->AccountName);
 
 			int IdxName = cFileDB.GetIndex(m->AccountName);
 
@@ -1084,7 +1085,7 @@ int ProcessAdminMessage(int conn, char *msg)
 			m->AccountName[ACCOUNTNAME_LENGTH-1] = 0;
 			m->AccountName[ACCOUNTNAME_LENGTH-2] = 0;
 
-			_strupr(m->AccountName);
+			UpcaseString(m->AccountName);
 
 			int IdxName = cFileDB.GetIndex(m->AccountName);
 
@@ -1160,9 +1161,7 @@ void ProcessSecTimer()
 
 	if (SecCounter % 600 == 0)
 	{
-#pragma region Gerador de Ranking
 		CReadFiles::WriteRanking();
-#pragma endregion
 	}
 	struct tm when;
 	time_t now;
@@ -1225,7 +1224,7 @@ void StartLog(char *cccc)
 	 time(&now); 
 	 when = *localtime(&now);
 
-	 sprintf(Temp, ".\\Log\\DB_%02d_%02d_%04d_%02d_%02d_%02d_%s.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec, cccc);
+	 sprintf(Temp, "./Log/DB_%02d_%02d_%04d_%02d_%02d_%02d_%s.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec, cccc);
 
    	 fLogFile = fopen(Temp, "a+");
 
@@ -1275,7 +1274,7 @@ void DayLog_ExpLog()
 	time(&now);
 	when = *localtime(&now);
 
-	sprintf(Temp, ".\\DayLog\\EXP_DB_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
+	sprintf(Temp, "./DayLog/EXP_DB_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
 
 	fp = fopen(Temp, "a+");
 
@@ -1330,7 +1329,7 @@ void DayLog_ReadAccountInDir(char *dir, FILE *log)
 
 			errno = 0;
 			FILE* fs;
-			fopen_s(&fs, tmp, "rb");
+			fs = fopen(tmp, "rb");
 
 			if (fs != NULL)
 			{
@@ -1375,7 +1374,7 @@ void DayLog_ItemLog()
 	time(&now);
 	when = *localtime(&now);
 
-	sprintf(Temp, ".\\DayLog\\ITEM_DB_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
+	sprintf(Temp, "./DayLog/ITEM_DB_%02d_%02d_%04d_%02d_%02d_%02d.txt", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec);
 
 	fp = fopen(Temp, "a+");
 

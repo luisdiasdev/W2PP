@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Makes both server binaries and their tests build reproducibly from a single CMake project with vcpkg-managed, pinned dependencies on Win32 x86.
+Makes both server binaries and their tests build reproducibly from a single CMake project with vcpkg-managed, pinned dependencies on Win32 x86 and Linux i386.
 
 ## Requirements
 

@@ -16,9 +16,9 @@
 *
 */
 
-#include "..\Basedef.h"
-#include "..\net\Connection.h"
-#include "..\ItemEffect.h"
+#include "../Basedef.h"
+#include "../net/Connection.h"
+#include "../ItemEffect.h"
 #include "Language.h"
 
 #include "CItem.h"

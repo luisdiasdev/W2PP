@@ -195,6 +195,30 @@ TEST_CASE("platform directory iterator matches a wildcard scan", "[platform]")
 	REQUIRE(sawDirectory);
 }
 
+TEST_CASE("platform directory iterator follows platform path case rules", "[platform]")
+{
+	TempDir temp;
+
+	WriteFile(temp.path / "Case.txt", std::vector<std::uint8_t>{ 1 });
+	WriteFile(temp.path / "case.txt", std::vector<std::uint8_t>{ 2 });
+
+#if defined(_WIN32)
+	// Windows folds case, so both names (and any-cased pattern) address the
+	// same file and the scan returns it.
+	REQUIRE(CollectNames((temp.path / "*.txt").string()) ==
+	        std::set<std::string>{ "Case.txt" });
+	REQUIRE(CollectNames((temp.path / "CASE.TXT").string()) ==
+	        std::set<std::string>{ "Case.txt" });
+#else
+	// Linux treats the names as distinct and matches the pattern byte-exactly.
+	REQUIRE(CollectNames((temp.path / "*.txt").string()) ==
+	        std::set<std::string>{ "Case.txt", "case.txt" });
+	REQUIRE(CollectNames((temp.path / "Case.txt").string()) ==
+	        std::set<std::string>{ "Case.txt" });
+	REQUIRE(CollectNames((temp.path / "CASE.TXT").string()).empty());
+#endif
+}
+
 TEST_CASE("platform clock provides wrap-safe monotonic and local time", "[platform]")
 {
 	const std::uint32_t first = platform::MonotonicMs();
@@ -240,7 +264,15 @@ TEST_CASE("platform path resolves siblings from a foreign working directory",
 	REQUIRE_FALSE(platform::ExecutableDirectory().empty());
 	REQUIRE(platform::SetWorkingDirectoryToExecutable());
 	REQUIRE(fs::current_path() == fs::path(platform::ExecutableDirectory()));
-	REQUIRE(fs::exists(fs::current_path() / "w2pp_tests.exe"));
+
+#if defined(_WIN32)
+	const std::string executableName = "w2pp_tests.exe";
+#else
+	const std::string executableName = "w2pp_tests";
+#endif
+
+	REQUIRE(platform::ExecutableFileName() == executableName);
+	REQUIRE(fs::exists(fs::current_path() / executableName));
 
 	std::error_code ec;
 	fs::current_path(original, ec);

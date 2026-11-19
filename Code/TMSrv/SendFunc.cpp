@@ -18,7 +18,7 @@
 */
 #include <memory>
 
-#include "..\Basedef.h"
+#include "../Basedef.h"
 #include "SendFunc.h"
 #include "GetFunc.h"
 #include "Server.h"

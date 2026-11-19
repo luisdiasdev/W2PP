@@ -9,6 +9,8 @@
 #ifndef _ABIGUARDS_
 #define _ABIGUARDS_
 
+#include <cstddef>
+
 #include "Basedef.h"
 #include "net/Protocol.h"
 
@@ -33,5 +35,17 @@ static_assert(sizeof(STRUCT_CAPSULE) == 1352,
 // Selected-character block exchanged with peers.
 static_assert(sizeof(STRUCT_SELCHAR) == 840,
 	"STRUCT_SELCHAR must stay 840 bytes for wire compatibility");
+
+// Field offsets inside the guarded records. Size checks alone miss internal
+// shifts (for example a differently aligned nested struct), so pin the offsets
+// of the layout-sensitive members too.
+static_assert(offsetof(STRUCT_ACCOUNTFILE, Char) == 224,
+	"STRUCT_ACCOUNTFILE::Char must start at offset 224");
+static_assert(offsetof(STRUCT_ACCOUNTFILE, Cargo) == 3488,
+	"STRUCT_ACCOUNTFILE::Cargo must start at offset 3488");
+static_assert(offsetof(STRUCT_ACCOUNTFILE, mobExtra) == 5608,
+	"STRUCT_ACCOUNTFILE::mobExtra must start at offset 5608");
+static_assert(offsetof(STRUCT_CAPSULE, extra) == 816,
+	"STRUCT_CAPSULE::extra must start at offset 816");
 
 #endif

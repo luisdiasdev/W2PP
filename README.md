@@ -14,13 +14,15 @@ The initial code was created by Klafke and TheHouse and is maintained by an acti
 
 ## Building from source
 
-The servers build with CMake and vcpkg on Windows x86 (Win32). Prerequisites:
+The servers build with CMake and vcpkg on Windows x86 (Win32) and on Linux i386 (32-bit). The legacy on-disk and on-wire layouts depend on the Win32 x86 ABI, so both targets are 32-bit; any other platform or architecture fails configure with a clear message.
+
+### Windows x86
+
+Prerequisites:
 
 * Visual Studio 2022 with the "Desktop development with C++" workload (v143 toolset and a Windows 10/11 SDK)
 * CMake 3.25 or newer
 * vcpkg, with the `VCPKG_ROOT` environment variable pointing at the vcpkg checkout (for example `C:\dev\vcpkg`)
-
-Third-party dependencies (`asio`, `catch2`) are declared in `vcpkg.json` and pinned with `builtin-baseline` (`ec48c11eae9448c8c6e7739d93e06fa2433aa95f`), so no machine-global installs or floating SDK selections are used. `asio` is the standalone (no Boost) header-only build. The project targets Win32 x86 only; configuring any other architecture fails with a clear message.
 
 ```powershell
 $env:VCPKG_ROOT = "C:\dev\vcpkg"
@@ -36,9 +38,38 @@ cmake --build --preset x86-release
 ctest --preset x86-release
 ```
 
-Configure and build into `build/x86-<config>`. The executables are written to `build/x86-<config>/<Config>/` (`tmsrv.exe`, `dbsrv.exe`, `w2pp_tests.exe`). Run a subset of the tests with `ctest --preset x86-debug -R <regex>`. Configure fails with a clear message if a non-Win32 architecture is requested.
+Configure and build into `build/x86-<config>`. The executables are written to `build/x86-<config>/<Config>/` (`tmsrv.exe`, `dbsrv.exe`, `w2pp_tests.exe`). Run a subset of the tests with `ctest --preset x86-debug -R <regex>`.
 
-The post-build step also copies `tmsrv.exe` and `dbsrv.exe` into the legacy release tree (by default `../release/TMSRV/run` and `../release/DBSRV/run`), so they can be started next to the existing runtime data. Debug builds also copy the companion `.pdb` so a debugger can resolve symbols for the deployed binary. Override the destination with `-DW2PP_RELEASE_ROOT=<path>`, or set it to an empty value to disable the copy.
+### Linux i386
+
+Prerequisites:
+
+* A 32-bit toolchain and multilib C/C++ runtime: on Debian/Ubuntu, `gcc-multilib`, `g++-multilib` and `libc6-dev-i386`
+* glibc 2.34 or newer (required for the 64-bit `time_t` used by the persisted structures)
+* CMake 3.25 or newer plus Ninja (or Make)
+* A bootstrapped vcpkg checkout (`bootstrap-vcpkg.sh`) with `VCPKG_ROOT` pointing at it
+
+```bash
+export VCPKG_ROOT="$HOME/vcpkg"
+
+# Debug
+cmake --preset linux-x86-debug
+cmake --build --preset linux-x86-debug
+ctest --preset linux-x86-debug
+
+# Release
+cmake --preset linux-x86-release
+cmake --build --preset linux-x86-release
+ctest --preset linux-x86-release
+```
+
+The Linux presets select the vcpkg `x86-linux` triplet (with the community triplet overlay) and pass `-m32`. Configure and build into `build/linux-x86-<config>`; the executables are `tmsrv`, `dbsrv` and `w2pp_tests`. Configure fails with an actionable message when 32-bit multilib is missing or `time_t` is not 64-bit.
+
+Third-party dependencies (`asio`, `catch2`) are declared in `vcpkg.json` and pinned with `builtin-baseline` (`ec48c11eae9448c8c6e7739d93e06fa2433aa95f`), so no machine-global installs or floating SDK selections are used. `asio` is the standalone (no Boost) header-only build.
+
+To reproduce the Win32 x86 data layout on i386 Linux, project targets are compiled with `-malign-double` and `_TIME_BITS=64` + `_FILE_OFFSET_BITS=64`. `Code/AbiGuards.h` pins the header and record sizes and the layout-sensitive field offsets at compile time on both platforms.
+
+On Windows, the post-build step also copies `tmsrv.exe` and `dbsrv.exe` into the legacy release tree (by default `../release/TMSRV/run` and `../release/DBSRV/run`), so they can be started next to the existing runtime data. Debug builds also copy the companion `.pdb` so a debugger can resolve symbols for the deployed binary. Override the destination with `-DW2PP_RELEASE_ROOT=<path>`, or set it to an empty value to disable the copy. On Linux the copy is opt-in and disabled by default: the build tree is the normal run location, and setting `-DW2PP_RELEASE_ROOT=<path>` enables the same post-build copy.
 
 ## Running the servers
 
@@ -52,6 +83,12 @@ Set-Location <exe dir>
 .\dbsrv.exe
 ```
 
+```bash
+cd <exe dir>
+./tmsrv
+./dbsrv
+```
+
 Boot failures (missing base set, missing `localip.txt`/`serverlist.txt`, listener bind failure, both DB connect attempts failed) are written to the log and standard error, and the process exits non-zero. No modal dialog is shown.
 
 Console commands are read only when stdin is a terminal; set `W2PP_FORCE_CONSOLE=1` to feed commands through a pipe in scripted runs.
@@ -61,7 +98,7 @@ Console commands are read only when stdin is a terminal; set `W2PP_FORCE_CONSOLE
 | TMSrv | `saveall`, `reboot`, `readguild`, `readguildname`, `readgameconfig`, `reloadmob`, `status`, `quit` |
 | DBSrv | `readmobbase`, `status`, `quit` |
 
-`quit`, `Ctrl+C` and `SIGTERM` share one graceful shutdown path: listeners stop, links close, pending data is flushed/closed, logs are flushed and the process exits successfully.
+`quit`, `Ctrl+C`, `SIGINT` and `SIGTERM` share one graceful shutdown path: listeners stop, links close, pending data is flushed/closed, logs are flushed and the process exits successfully.
 
 ## Debugging with VS Code
 

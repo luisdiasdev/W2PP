@@ -19,7 +19,7 @@
 #ifndef __CNPCGENE__
 #define __CNPCGENE__
 
-#include "..\Basedef.h"
+#include "../Basedef.h"
 
 #define MOB_FREE 0
 #define MOB_USE 1

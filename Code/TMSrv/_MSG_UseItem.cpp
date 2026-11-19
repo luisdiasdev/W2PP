@@ -94,7 +94,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 	int Vol = BASE_GetItemAbility(item, EF_VOLATILE);
 	int amount = BASE_GetItemAmount(item);
 
-#pragma region POT HP / MP
 	if (Vol == 1)
 	{
 		int Hp = BASE_GetItemAbility(item, EF_HP);
@@ -145,8 +144,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		return;
 	}
 
-#pragma endregion
-#pragma region PO / PL
 	if (Vol == 4 || Vol == 5) // PO - PL
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -218,7 +215,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			pUser[conn].UseItemTime = platform::MonotonicMs();
 */
 
-#pragma region REFINE_LOCKED_SEAL
 			if (itemtype == 5)
 			{
 				if (sanc >= 9)
@@ -329,7 +325,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			SendClientMessage(conn, g_pMessageStringTable[_NN_Only_To_Equips]);
 			SendItem(conn, m->SourType, m->SourPos, item);
 			return;
-#pragma endregion
 		}
 
 		if (m->DestType == ITEM_PLACE_EQUIP && m->DestPos == 0 || m->DestType || m->DestPos > 11 && m->DestPos < 15 && dest->sIndex != 753 && dest->sIndex != 769 && dest->sIndex != 1726 && !Egg)
@@ -378,7 +373,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			return;
 		}
 
-#pragma region Refinar item celestial / HC
 		if (itemtype == 3)
 		{
 			if (sanc >= REF_15)
@@ -507,8 +501,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 			return;
 		}
-#pragma endregion
-#pragma region Pedras Arch
 		if(dest->sIndex >= 1752 && dest->sIndex <= 1759)
 		{
 			int _rd = rand() % 115;
@@ -708,9 +700,7 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 			return;
 		}
-#pragma endregion
 
-#pragma region Refinar brincos +10+
 		if(sanc >= 9 && sanc <= REF_14 && Vol == 5 && m->DestPos == 8 && g_pItemList[dest->sIndex].nPos == 256)
 		{
 			int RateSucess = 15;
@@ -794,7 +784,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			}
 			return;
 		}
-#pragma endregion
 
 		if (sanc == 9 || sanc >= REF_11 || sanc < 0 || sanc >= 9 && dest->sIndex == 769)
 		{
@@ -973,8 +962,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		return;
 	}
 
-#pragma endregion
-#pragma region Pilula Orc
 	if (Vol == 6) // Pilula Orc
 	{
 		if(pMob[conn].extra.QuestInfo.Mortal.PilulaOrc)
@@ -994,8 +981,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Poeira de Fada
 	if (Vol == 7)//Poeira de Fada
 	{
 		int Level = pMob[conn].MOB.BaseScore.Level;
@@ -1040,8 +1025,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-	#pragma endregion
-#pragma region Olho Crescente
 	if (Vol == 8)
 	{
 		if(pMob[conn].extra.ClassMaster != MORTAL)
@@ -1075,8 +1058,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Adamantita/beril etc LE
 	if (Vol == 9) // Adamantita / Beril etc
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -1193,8 +1174,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-	#pragma endregion
-#pragma region KAPPA_POTION
 	if (Vol == 10 || Vol == 55 || Vol == 200 || Vol == 201 || Vol == 56 || Vol == 52 || Vol == 53 || Vol == 57 || Vol == 202)
 	{
 		int value = 0;
@@ -1296,8 +1275,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Retorno
 	if (Vol == 11)
 	{
 		DoRecall(conn);
@@ -1312,11 +1289,13 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Gema Estelar
 	if (Vol == 12)
 	{
 		unsigned char map_att = GetAttribute(pMob[conn].TargetX, pMob[conn].TargetY);
+
+		// Declared before the CanSave jumps so they cross no initialization.
+		int Arena = 0;
+		int Village = 0;
 
 		if((pMob[conn].TargetX/128) == 9 && (pMob[conn].TargetY/128) == 1)
 			goto CanSave;
@@ -1332,8 +1311,8 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		}
 
 							 
-		int Arena = BASE_GetArena(pMob[conn].TargetX, pMob[conn].TargetY);
-		int Village = BASE_GetVillage(pMob[conn].TargetX, pMob[conn].TargetY);
+		Arena = BASE_GetArena(pMob[conn].TargetX, pMob[conn].TargetY);
+		Village = BASE_GetVillage(pMob[conn].TargetX, pMob[conn].TargetY);
 
 		if (Arena < MAX_GUILDZONE || Village < MAX_GUILDZONE)
 		{
@@ -1373,8 +1352,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Portal
 	if (Vol == 13)
 	{
 		if((pMob[conn].MOB.SPX/128) == 9 && (pMob[conn].MOB.SPY/128) == 1 || (pMob[conn].MOB.SPX/128) == 8 && (pMob[conn].MOB.SPY/128) == 2)
@@ -1406,8 +1383,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region DBRecord
 	if (Vol == 14)
 	{
 		MSG_MessageDBRecord sm_dbrec;
@@ -1429,8 +1404,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region PET_RATION
 	if (Vol == 15)
 	{
 		if (m->DestType || m->DestPos != 14)
@@ -1515,8 +1488,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region PET_ESSENCE
 	if (Vol == 16)
 	{
 		if (m->DestType || m->DestPos != 14)
@@ -1639,8 +1610,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region GUILDBOARD
 	if (Vol == 17)
 	{
 		int Guild = BASE_GetGuild(item);
@@ -1661,8 +1630,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Fogos de Artificio
 	if (Vol == 19)
 	{
 		SendEmotion(conn, 100, rand()%5);
@@ -1677,8 +1644,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Pergaminho da agua M
 	if (Vol >= 21 && Vol <= 30)
 	{
 		int TargetX = pMob[conn].TargetX;
@@ -1782,8 +1747,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Livros Sephira
 	if (Vol >= 31 && Vol <= 38)
 	{
 		int ItemID = item->sIndex;
@@ -1823,8 +1786,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Contratos do reino
 	if (Vol >= 41 && Vol < 50)
 	{
 		int Evock = Vol - 41;
@@ -1871,8 +1832,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Pergaminho da agua N
 	if (Vol >= 131 && Vol <= 140)
 	{
 		int TargetX = pMob[conn].TargetX;
@@ -1976,8 +1935,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Pergaminho da agua A
 	if (Vol >= 161 && Vol <= 170)
 	{
 		int TargetX = pMob[conn].TargetX;
@@ -2080,8 +2037,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Divina 7 15 30 Dias
 	if (Vol >= 64 && Vol <= 66)
 	{
 		int sAffect = GetEmptyAffect(conn, 34);
@@ -2126,8 +2081,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Vigor 1 Hora
 	if (Vol == 58)
 	{
 		int sAffect = GetEmptyAffect(conn, 35);
@@ -2160,8 +2113,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Baú de XP
 	if (Vol == 198)
 	{
 		int sAffect = GetEmptyAffect(conn, 39);
@@ -2195,8 +2146,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Frango Assado
 	if (Vol == 63)
 	{
 		int sAffect = GetEmptyAffect(conn, 30);
@@ -2230,8 +2179,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Itens de quests
 	if (Vol == 191)
 	{
 		if (pMob[conn].extra.ClassMaster != MORTAL && pMob[conn].extra.ClassMaster != ARCH)
@@ -2263,13 +2210,11 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 		pMob[conn].MOB.Coin += CReadFiles::QuestCoin[thisQuest];
 		pMob[conn].MOB.Exp += QuestExp;
 
-#pragma region DAILY_EXP_LOG
 		if (when.tm_yday != pMob[conn].extra.DayLog.YearDay)
 			pMob[conn].extra.DayLog.Exp = 0;
 
 		pMob[conn].extra.DayLog.YearDay = when.tm_yday;
 		pMob[conn].extra.DayLog.Exp += QuestExp;
-#pragma endregion
 
 		if(pMob[conn].MOB.Coin > 2000000000)
 			pMob[conn].MOB.Coin = 2000000000;
@@ -2307,13 +2252,11 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			sprintf(temp, g_pMessageStringTable[_NS_GETEXP], QuestExpParty);
 			SendClientMessage(partyleader, temp);
 
-#pragma region DAILY_EXP_LOG
 			if (when.tm_yday != pMob[partyleader].extra.DayLog.YearDay)
 				pMob[partyleader].extra.DayLog.Exp = 0;
 
 			pMob[partyleader].extra.DayLog.YearDay = when.tm_yday;
 			pMob[partyleader].extra.DayLog.Exp += QuestExpParty;
-#pragma endregion
 
 			SendEmotion(partyleader, 14, 3);
 
@@ -2344,13 +2287,11 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			{
 				pMob[partymember].MOB.Exp += QuestExpParty;
 
-#pragma region DAILY_EXP_LOG
 				if (when.tm_yday != pMob[partymember].extra.DayLog.YearDay)
 					pMob[partymember].extra.DayLog.Exp = 0;
 
 				pMob[partymember].extra.DayLog.YearDay = when.tm_yday;
 				pMob[partymember].extra.DayLog.Exp += QuestExpParty;
-#pragma endregion
 
 				sprintf(temp, g_pMessageStringTable[_NS_GETEXP], QuestExpParty);
 				SendClientMessage(partymember, temp);
@@ -2380,8 +2321,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 			memset(item, 0, sizeof(STRUCT_ITEM));
 		return;
 	}
-#pragma endregion
-#pragma region Molar do Gargula
 	if (Vol == 194)
 	{
 		if (pMob[conn].extra.ClassMaster != MORTAL)
@@ -2435,8 +2374,6 @@ void Exec_MSG_UseItem(int conn, char *pMsg)
 
 		return;
 	}
-#pragma endregion
-#pragma region Pesadelo N
 	if (Vol == 173)
 	{
 		int TargetX = pMob[conn].TargetX;
@@ -2530,8 +2467,6 @@ lbl_n_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Pesadelo M
 	if (Vol == 174)
 	{
 		int TargetX = pMob[conn].TargetX;
@@ -2631,8 +2566,6 @@ lbl_m_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Pesadelo A
 	if (Vol == 175)
 	{
 		int TargetX = pMob[conn].TargetX;
@@ -2754,8 +2687,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Carta de Duelo N.M.A
 	if (Vol == 20)
 	{
 		int TargetX = pMob[conn].TargetX;
@@ -2862,8 +2793,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region HUNTING_SCROLL
 	if (Vol == 195)
 	{
 		if (item->sIndex < 3432 || item->sIndex > 3437)
@@ -2884,8 +2813,6 @@ lbl_a_noparty:
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Pedra Ideal
 	if (Vol == 211)
 	{
 		if (pMob[conn].extra.ClassMaster != ARCH && pMob[conn].extra.ClassMaster != CELESTIAL)
@@ -3066,8 +2993,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Pedra Misteriosa
 	if (item->sIndex == 4148)
 	{
 		if (pMob[conn].extra.ClassMaster != CELESTIALCS && pMob[conn].extra.ClassMaster != SCELESTIAL)
@@ -3173,8 +3098,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Escritura do Pesadelo
 	if (Vol == 212)
 	{
 		time_t mtime;
@@ -3207,8 +3130,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Selo do Guerreiro
 	if (item->sIndex == 4146)
 	{
 		pUser[conn].UseItemTime = platform::MonotonicMs();
@@ -3247,8 +3168,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Cristal - Elime - Sylphed - Thelion - Noas
 	if (Vol == 187)
 	{
 		if (pMob[conn].extra.ClassMaster != ARCH)
@@ -3343,8 +3262,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Pedra da Fúria
 	if (item->sIndex == 3020)
 	{
 		if ((pMob[conn].extra.ClassMaster == CELESTIAL || pMob[conn].extra.ClassMaster == CELESTIALCS || pMob[conn].extra.ClassMaster == SCELESTIAL) && pMob[conn].MOB.CurrentScore.Level >= 199)
@@ -3573,8 +3490,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region COURAGE_MEDICINE
 	if (item->sIndex == 4046 || item->sIndex == 646)
 	{
 		int sAffect = GetEmptyAffect(conn, 30);
@@ -3607,8 +3522,6 @@ lbl_a_noparty:
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Elixir da Coragem
 	if (Vol == 230 && (item->sIndex == 647 || item->sIndex == 3378))
 	{
 		int sAffect = GetEmptyAffect(conn, 30);
@@ -3641,8 +3554,6 @@ lbl_a_noparty:
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region REMOVE_MAGIC_BEAN
 	if(Vol == 186)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -3738,8 +3649,6 @@ lbl_a_noparty:
 
 		return;
 	}
-	#pragma endregion
-#pragma region FORGIVENESS_SCROLL
 	if (Vol == 203)
 	{
 		SetPKPoint(conn, 150);
@@ -3763,8 +3672,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Gema de diamante
 	if(Vol == 180)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -3841,8 +3748,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Gema de esmeralda
 	if(Vol == 181)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -3919,8 +3824,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Gema de Coral
 	if(Vol == 182)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -3997,8 +3900,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Gema de Garnet
 	if(Vol == 183)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -4075,8 +3976,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Entrada do Território
 	if(Vol == 188)
 	{
 		int territorio = item->sIndex - 4111;
@@ -4112,8 +4011,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Barra de Prata
 	if(Vol == 185)
 	{
 		int gold = 0;
@@ -4160,8 +4057,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region PVP_JEWELS
 	if (Vol == 242)
 	{
 		int sAffect = GetEmptyAffect(conn, 8);
@@ -4223,8 +4118,6 @@ lbl_a_noparty:
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region STORAGE_RECOVERY_JEWELS
 	if(Vol == 243)
 	{
 		if(item->sIndex == 3203)
@@ -4257,8 +4150,6 @@ lbl_a_noparty:
 		ItemLog(temp, pUser[conn].AccountName, pUser[conn].IP);
 		return;
 	}
-#pragma endregion
-#pragma region Barra Mytril (Dano)
 	if(Vol == 235)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -4387,8 +4278,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Barra Mytril (Magia)
 	if(Vol == 236)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -4517,8 +4406,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Barra Mytril (Defesa)
 	if(Vol == 237)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -4664,8 +4551,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Barra Mytril (Crítico)
 	if(Vol == 238)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -4795,8 +4680,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Classe
 	if(Vol == 190)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -4850,8 +4733,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Catalizadores
 	if(Vol == 94)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -4937,8 +4818,6 @@ lbl_a_noparty:
 						
 		return;
 	}
-#pragma endregion		
-#pragma region Restaurador
 	if(Vol == 93)
 	{
 		STRUCT_ITEM *dest = GetItemPointer(&pMob[conn].MOB, pUser[conn].Cargo, m->DestType, m->DestPos);
@@ -5023,8 +4902,6 @@ lbl_a_noparty:
 						
 		return;
 	}
-#pragma endregion
-#pragma region HELM_EXTRACTION
 	if (item->sIndex == 3021)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5122,8 +4999,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region CHEST_EXTRACTION
 	if (item->sIndex == 3022)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5220,8 +5095,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region LEGS_EXTRACTION
 	if (item->sIndex == 3023)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5318,8 +5191,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region GLOVES_EXTRACTION
 	if (item->sIndex == 3024)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5416,8 +5287,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region BOOTS_EXTRACTION
 	if (item->sIndex == 3025)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5526,8 +5395,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region WEAPON_EXTRACTION
 	if (item->sIndex == 3026)
 	{
 		int extra = BASE_GetItemAbility(item, EF_ITEMLEVEL);
@@ -5624,8 +5491,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Selo das Almas
 	if(Vol == 206)
 	{
 		if(item->stEffect[0].cEffect == 0)
@@ -5659,8 +5524,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region Bolsa do Andarilho
 	if (item->sIndex == 3467)
 	{
 		if (pMob[conn].MOB.Carry[60].sIndex == 3467 && pMob[conn].MOB.Carry[61].sIndex == 3467)
@@ -5703,8 +5566,6 @@ lbl_a_noparty:
 
 		return;
 	}
-#pragma endregion
-#pragma region War Pack
 	if (Vol == 184)
 	{
 		int donate = BASE_GetItemAbility(item, EF_DONATE);
@@ -5722,5 +5583,4 @@ lbl_a_noparty:
 		SendEmotion(conn, 14, 3);
 		return;
 	}
-#pragma endregion
 }

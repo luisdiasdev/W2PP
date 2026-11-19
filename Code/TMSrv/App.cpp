@@ -716,7 +716,6 @@ int main()
 
 	CurrentTime = platform::MonotonicMs();
 
-	CReadFiles::CReadFiles();
 	CCastleZakum::ReadCastleQuest();
 
 	g_runtime = std::make_unique<host::Runtime>();

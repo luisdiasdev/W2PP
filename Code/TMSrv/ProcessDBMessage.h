@@ -23,8 +23,8 @@
 #include <string.h>        
 #include <time.h>
 
-#include "..\Basedef.h"
-#include "..\net\Connection.h"
+#include "../Basedef.h"
+#include "../net/Connection.h"
 
 #include "CItem.h"
 #include "CMob.h"

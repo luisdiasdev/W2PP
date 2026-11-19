@@ -19,8 +19,8 @@
 #ifndef __CUSER__
 #define __CUSER__
 
-#include "..\Basedef.h"
-#include "..\net\Connection.h"
+#include "../Basedef.h"
+#include "../net/Connection.h"
 
 //-------Connecting User Modes----------------------------------------------------------------------------
 #define USER_EMPTY       0 // There's no user on this slot
