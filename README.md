@@ -1,6 +1,6 @@
 # W2PP
 
-### About the Project:
+## About the Project
 
 The W2PP is a project based on a decompilation from a Polly's Server Release for the game W2. The project is entirely developed in C/C++ and is built with CMake and vcpkg (see [Building from source](#building-from-source)).
 
@@ -10,9 +10,9 @@ We use the latest client build to connect this release.
 
 We do not claim any copyrights, this project was created just for study purposes. All rights reserved to Hanbitsoft.
 
-The initial code was created by Klafke and TheHouse and are maintened by a active community at current moment.
+The initial code was created by Klafke and TheHouse and is maintained by an active community at the current moment.
 
-### Building from source
+## Building from source
 
 The servers build with CMake and vcpkg on Windows x86 (Win32). Prerequisites:
 
@@ -38,9 +38,9 @@ ctest --preset x86-release
 
 Configure and build into `build/x86-<config>`. The executables are written to `build/x86-<config>/<Config>/` (`tmsrv.exe`, `dbsrv.exe`, `w2pp_tests.exe`). Run a subset of the tests with `ctest --preset x86-debug -R <regex>`. Configure fails with a clear message if a non-Win32 architecture is requested.
 
-The post-build step also copies `tmsrv.exe` and `dbsrv.exe` into the legacy release tree (by default `../release/TMSRV/run` and `../release/DBSRV/run`, i.e. `E:\wyd\test-setup\release` for this checkout), so they can be started next to the existing runtime data. Debug builds also copy the companion `.pdb` so a debugger can resolve symbols for the deployed binary. Override the destination with `-DW2PP_RELEASE_ROOT=<path>`, or set it to an empty value to disable the copy.
+The post-build step also copies `tmsrv.exe` and `dbsrv.exe` into the legacy release tree (by default `../release/TMSRV/run` and `../release/DBSRV/run`), so they can be started next to the existing runtime data. Debug builds also copy the companion `.pdb` so a debugger can resolve symbols for the deployed binary. Override the destination with `-DW2PP_RELEASE_ROOT=<path>`, or set it to an empty value to disable the copy.
 
-### Running the servers
+## Running the servers
 
 Both executables are console applications. They open no window, need no desktop session, and change their working directory to the executable's folder, preserving the legacy layout (`../../Common`, `./account`, `./char`, `./Log`). The full runtime trees and startup requirements are documented in [docs/operations.md](docs/operations.md).
 
@@ -57,13 +57,13 @@ Boot failures (missing base set, missing `localip.txt`/`serverlist.txt`, listene
 Console commands are read only when stdin is a terminal; set `W2PP_FORCE_CONSOLE=1` to feed commands through a pipe in scripted runs.
 
 | Server | Commands |
-|---|---|
+| --- | --- |
 | TMSrv | `saveall`, `reboot`, `readguild`, `readguildname`, `readgameconfig`, `reloadmob`, `status`, `quit` |
 | DBSrv | `readmobbase`, `status`, `quit` |
 
 `quit`, `Ctrl+C` and `SIGTERM` share one graceful shutdown path: listeners stop, links close, pending data is flushed/closed, logs are flushed and the process exits successfully.
 
-### Debugging with VS Code
+## Debugging with VS Code
 
 `.vscode/` ships launch configurations for both servers. They run the copies in the release tree, which the `x86-debug` build refreshes together with the matching PDB:
 
@@ -73,9 +73,9 @@ Console commands are read only when stdin is a terminal; set `W2PP_FORCE_CONSOLE
 
 The launch configurations use the integrated terminal, so the console commands (`status`, `quit`, ...) keep working while debugging. If `W2PP_RELEASE_ROOT` was overridden, update the `program`/`cwd` paths in `.vscode/launch.json` accordingly.
 
-### Behavior differences from the legacy Win32 servers
+## Behavior differences from the legacy Win32 servers
 
-The migration preserves the wire format and on-disk formats but intentionally changes the host behavior. These deviations are recorded for reviewers and operators in the [change release notes](openspec/changes/migrate-win32-to-asio/release-notes.md) and summarized here:
+The migration preserves the wire format and on-disk formats but intentionally changes the host behavior. These deviations are recorded for reviewers and operators in the [change release notes](openspec/changes/archive/2026-11-17-migrate-win32-to-asio/release-notes.md) and summarized here:
 
 1. **No modal dialogs** — fatal boot errors log and exit non-zero; warnings log and continue.
 2. **No window or menu** — operator actions are console commands or signals; status is text.
@@ -87,33 +87,27 @@ The migration preserves the wire format and on-disk formats but intentionally ch
 8. **`CurrentTime` is monotonic since boot** rather than exactly `timeGetTime`; comparisons are difference-based and `ClientTick` is opaque.
 9. **Lower idle memory** — receive buffers are allocated on accept and the per-session send buffer is replaced by a frame queue.
 
-### Content of W2PP Project:
+## Content of W2PP Project
 
-Here's a list with avaliable content in actual project and what means:
+Here's a list with the content available in the actual project and what it means:
 
-* AttributeMap_Editor: Developed to make changes in attributes of Map.
-* BISrv: Application deprecated destined to control GameServers and CPU usage.
-* ClientPatch_v7662: DLL to unlock Client.
-* DBSrv: Application to control accounts, chars and others.
-* DropTool: Application to change drop.
-* EDITAPMOB: Application to edit summons. (Envocations and Mounts)
-* EDITAPNPC: Application to edit npcs.
-* ExpTool: Application to change exp rate in mobs.
-* NPTool: Application to manage accounts. (Administrative tool)
-* SearchPass
-* TMSrv: Application to control connections.
-* ZerarSkill
+* TMSrv: Application to control connections, characters and world state (`Code/TMSrv`).
+* DBSrv: Application to control accounts, chars and others (`Code/DBSrv`).
+* Shared code: networking, host runtime and platform abstractions (`Code/net`, `Code/host`, `Code/platform`).
+* Tests: Catch2 unit, integration and codec tests (`tests/`), built as the `w2pp_tests` target.
+* Documentation: operations, protocol and platform notes (`docs/`) and change proposals/specs (`openspec/`).
 
-### Thigs to do:
-- [X] Decompile the release from Polly's Server.
-- [X] Stable release.
-- [X] Remove all compile warnings.
-- [ ] Fix all bugs.
-- [ ] Create an documentation.
-- [ ] Re-create the project, to make more organized.
-- [ ] ???
+## Things to do
 
-### General Public License:
+* [X] Decompile the release from Polly's Server.
+* [X] Stable release.
+* [X] Remove all compile warnings.
+* [ ] Fix all bugs.
+* [ ] Expand the documentation.
+* [ ] Continue organizing the project.
+* [ ] ???
+
+## General Public License
 
 The code is under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.html) license, so you can be feel free to study and contribute.
 
@@ -130,9 +124,8 @@ The code is under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.html) li
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-### Helpful Links:    
-* [Visual Studio 2015](https://www.visualstudio.com/pt-br/downloads/download-visual-studio-vs.aspx)
+## Helpful Links
+
+* [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)
 * [Learn Git/Github](https://help.github.com/articles/good-resources-for-learning-git-and-github/)
 * [Learn C/C++](http://www.learn-c.org/)
-
-
