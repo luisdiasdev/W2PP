@@ -11,7 +11,7 @@
 - [x] 2.1 Apply `-malign-double` and `_TIME_BITS=64` + `_FILE_OFFSET_BITS=64` to Linux project targets, and verify every `Code/AbiGuards.h` static assertion passes.
 - [x] 2.2 Add compile-time offset assertions for `STRUCT_ACCOUNTFILE::Char`, `STRUCT_ACCOUNTFILE::Cargo`, `STRUCT_ACCOUNTFILE::mobExtra` and `STRUCT_CAPSULE::extra`, and verify their Linux i386 offsets equal the Win32 x86 values (224, 3488, 5608, 816).
 - [x] 2.3 Add a configure-time check that Linux uses a 32-bit pointer width and a 64-bit `time_t` (glibc ≥ 2.34), and verify a machine without 32-bit multilib fails with an actionable message.
-- [ ] 2.4 Verify the Windows x86 Debug and Release builds still pass the same ABI assertions after the build changes.
+- [x] 2.4 Verify the Windows x86 Debug and Release builds still pass the same ABI assertions after the build changes.
 
 ## 3. Source portability
 
@@ -56,6 +56,6 @@
 ## 8. Cross-platform verification
 
 - [x] 8.1 On Linux i386, build Debug and Release and run the full CTest suite plus the POSIX smoke test; verify every test passes.
-- [ ] 8.2 On Windows x86, build Debug and Release and run the full CTest suite including the existing PowerShell harnesses; verify every test passes.
-- [ ] 8.3 On both platforms, replay the codec fixture and a record round-trip; verify the 12-byte header and the 7808/816/536/1352/840-byte record sizes and the guarded field offsets match.
+- [x] 8.2 On Windows x86, build Debug and Release and run the full CTest suite including the existing PowerShell harnesses; verify every test passes.
+- [x] 8.3 On both platforms, replay the codec fixture and a record round-trip; verify the 12-byte header and the 7808/816/536/1352/840-byte record sizes and the guarded field offsets match.
 - [x] 8.4 On Linux, confirm the servers start without a desktop, accept a loopback connection, reject an oversized/invalid frame with a logged close, and shut down cleanly through both `quit` and SIGINT.
