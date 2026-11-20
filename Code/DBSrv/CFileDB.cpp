@@ -28,7 +28,7 @@
 #include "Server.h"
 #include "CRanking.h"
 #include "CReadFiles.h"
-#include "..\Basedef.h"
+#include "../Basedef.h"
 
 
 extern int ServerIndex; //Server.cpp
@@ -78,7 +78,7 @@ int CFileDB::AddAccount(char *id, char *pass, char *name, int ssn1, int ssn2, ch
 
 	strncpy(check, id, ACCOUNTNAME_LENGTH);
 
-	_strupr(check);
+	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
@@ -145,7 +145,7 @@ int CFileDB::UpdateAccount(char *id, char *pass)
 
 	strncpy(check, id, ACCOUNTNAME_LENGTH);
 
-	_strupr(check);
+	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
@@ -308,8 +308,8 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			mob->MobName[NAME_LENGTH-1] = 0;
 			mob->MobName[NAME_LENGTH-2] = 0;
 
-			_strupr(slotname);
-			_strupr(m->OldName);
+			UpcaseString(slotname);
+			UpcaseString(m->OldName);
 
 			if(strcmp(slotname, m->OldName))
 			{
@@ -510,7 +510,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			int Idx = GetIndex(conn, m->ID);
 
-			_strupr(m->AccountInfo.AccountName);
+			UpcaseString(m->AccountInfo.AccountName);
 
 			char *accname = m->AccountInfo.AccountName;
 
@@ -538,7 +538,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				return true;				
 			}
 
-			_strupr(file->Info.AccountName);
+			UpcaseString(file->Info.AccountName);
 
 			AddAccountList(Idx);
 
@@ -609,7 +609,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		{
 			MSG_AccountLogin *m = (MSG_AccountLogin*)Msg;
 
-			_strupr(m->AccountName);
+			UpcaseString(m->AccountName);
 
 			char *ac = m->AccountName;
 
@@ -699,7 +699,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				break;
 			}
 
-			_strupr(file.Info.AccountName);
+			UpcaseString(file.Info.AccountName);
 
 			int right = -1;
 			int left = -1;
@@ -836,7 +836,6 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 					return true;
 				}
 				pUser[conn].cSock.SendOneMessage((char*)&sm, sizeof(MSG_CNFCharacterLogin));
-#pragma region Ranking
 				int rankId = rankingSystem.grindRanking.getElementIndex(pAccountList[Idx].File.Char[Slot].MobName);
 
 				if (rankId >= LAST && rankId <= FIRST)
@@ -846,7 +845,6 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 				// Send ranking info to tm->client
 				rankingSystem.sendUpdateIndividualRank(rankId, conn, sm.ID, new STRUCT_RANKING(pAccountList[Idx].File.Char[Slot].MobName, pAccountList[Idx].File.Char[Slot].Exp, pAccountList[Idx].File.mobExtra[Slot].ClassMaster, pAccountList[Idx].File.Char[Slot].CurrentScore.Level, pAccountList[Idx].File.Char[Slot].Class));
-#pragma endregion
 			}
 		} break;
 		
@@ -889,7 +887,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			strncpy(check, m->MobName, NAME_LENGTH);
 
-			_strupr(check);
+			UpcaseString(check);
 
 			if(strcmp(check, "KING") == 0 || strcmp(check, "KINGDOM") == 0 || strcmp(check, "GRITAR") == 0 || strcmp(check, "RELO") == 0)
 			{
@@ -1076,7 +1074,6 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			pUser[conn].cSock.SendOneMessage((char*)&sm, sizeof(MSG_CNFCharacterLogin));
 
-#pragma region Ranking
 			int rankId = rankingSystem.grindRanking.getElementIndex(pAccountList[Idx].File.Char[Slot].MobName);
 
 			if (rankId >= LAST && rankId <= FIRST)
@@ -1086,7 +1083,6 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			// Send ranking info to tm->client
 			rankingSystem.sendUpdateIndividualRank(rankId, conn, sm.ID, new STRUCT_RANKING(pAccountList[Idx].File.Char[Slot].MobName, pAccountList[Idx].File.Char[Slot].Exp, pAccountList[Idx].File.mobExtra[Slot].ClassMaster, pAccountList[Idx].File.Char[Slot].CurrentScore.Level, pAccountList[Idx].File.Char[Slot].Class));
-#pragma endregion
 			return true;
 		}
 
@@ -1453,7 +1449,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		strncpy(check, m->MobName, NAME_LENGTH);
 
-		_strupr(check);
+		UpcaseString(check);
 
 		if(strcmp(check, "KING") == 0 || strcmp(check, "KINGDOM") == 0 || strcmp(check, "GRITAR") == 0 || strcmp(check, "RELO") == 0)
 		{
@@ -2214,7 +2210,7 @@ int CFileDB::CreateCharacter(char *ac, char *ch)
 
 	strncpy(check, ac, ACCOUNTNAME_LENGTH);
 
-	_strupr(check);
+	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
@@ -2223,7 +2219,7 @@ int CFileDB::CreateCharacter(char *ac, char *ch)
 
 	strncpy(check, ch, NAME_LENGTH);
 
-	_strupr(check);
+	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
@@ -2270,7 +2266,7 @@ int CFileDB::DeleteCharacter(char *ch, char *account)
 
 	strncpy(check, ch, ACCOUNTNAME_LENGTH);
 
-	_strupr(check);
+	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
@@ -2359,7 +2355,7 @@ int CFileDB::DBWriteAccount(STRUCT_ACCOUNTFILE *account)
 
 	strncpy(check, accname, ACCOUNTNAME_LENGTH);
 
-	 _strupr(check);
+	 UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
@@ -2414,7 +2410,7 @@ int CFileDB::DBExportAccount(STRUCT_ACCOUNTFILE *file)
 
 	strncpy(check, accname, 16);
 
-	_strupr(check);
+	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
@@ -2460,7 +2456,7 @@ int CFileDB::DBReadAccount(STRUCT_ACCOUNTFILE *file)
 
 	strncpy(check, file->Info.AccountName, ACCOUNTNAME_LENGTH);
 
-	_strupr(check);
+	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
@@ -2563,7 +2559,7 @@ void CFileDB::GetAccountByChar(char *acc, char *cha)
 
 	strncpy(check, cha, NAME_LENGTH);
 
-	_strupr(check);
+	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return;

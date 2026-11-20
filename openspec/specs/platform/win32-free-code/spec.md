@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Ensures project-owned source code no longer calls Win32 or Winsock directly, and that filesystem, clock, path and diagnostic behavior rely on portable wrappers with defined outcomes.
+Ensures project-owned source code no longer calls Win32 or Winsock directly, and that filesystem, clock, path and diagnostic behavior rely on portable wrappers with defined outcomes on Windows x86 and Linux i386.
 
 ## Requirements
 
 ### Requirement: No direct Win32 or Winsock usage in project sources
 
-Source files owned by the project SHALL NOT include Windows platform headers or invoke Windows/Winsock API functions directly. Any platform capability SHALL be reached through a project wrapper, and the dependency check SHALL fail the build when a direct usage is reintroduced.
+Source files owned by the project SHALL NOT include Windows platform headers or invoke Windows/Winsock API functions directly, and shared sources SHALL NOT depend on MSVC-only CRT headers or functions. Any platform capability SHALL be reached through a project wrapper, and the dependency check SHALL fail the build when a direct or MSVC-only usage is reintroduced.
 
 #### Scenario: Direct platform include is added
 
@@ -19,6 +19,11 @@ Source files owned by the project SHALL NOT include Windows platform headers or 
 
 - **WHEN** a project source calls a Win32 file, window, dialog, timer, socket or path function directly
 - **THEN** the dependency check fails and names the offending symbol
+
+#### Scenario: MSVC-only CRT usage is added
+
+- **WHEN** a shared source adds an MSVC-only CRT header or function outside a platform wrapper
+- **THEN** the cross-platform dependency check or the Linux build fails and names the offending file
 
 #### Scenario: Third-party internals are not counted
 
@@ -46,7 +51,7 @@ Reading and writing fixed-size binary records SHALL preserve existing byte seman
 
 ### Requirement: Portable directory and file management
 
-Directory enumeration, file existence, rename and delete operations SHALL expose the same observable outcomes as the previous platform calls, including case-insensitive Windows path behavior and the distinction between "not found" and "operation failed".
+Directory enumeration, file existence, rename and delete operations SHALL expose the same observable outcomes as the previous platform calls on each supported platform, including the platform's path case rules (case-insensitive on Windows, case-sensitive on Linux) and the distinction between "not found" and "operation failed".
 
 #### Scenario: Bulk import scans a directory
 
@@ -62,6 +67,11 @@ Directory enumeration, file existence, rename and delete operations SHALL expose
 
 - **WHEN** deletion is requested for a file that no longer exists
 - **THEN** the result distinguishes absence from an access failure
+
+#### Scenario: Path case rules
+
+- **WHEN** two file names differ only by letter case
+- **THEN** Windows resolves them as the same path and Linux resolves them as distinct paths
 
 ### Requirement: Executable-relative working directory
 
@@ -122,3 +132,17 @@ Status text previously pushed to a window caption SHALL be written to the operat
 
 - **WHEN** a log or status update occurs
 - **THEN** the text appears in the console/log sink and no window handle is required
+
+### Requirement: Portable runtime paths
+
+Runtime log, day-log, chat-log, item-log and dump paths SHALL use platform-neutral path separators and SHALL resolve to the existing logical directories on every supported target.
+
+#### Scenario: Linux log creation
+
+- **WHEN** a server starts and writes its first dated log on Linux
+- **THEN** the file appears under `./Log`, `./DayLog`, `./chat_log` or `./item_log` and not as a file whose name contains literal backslashes
+
+#### Scenario: Windows log path unchanged
+
+- **WHEN** a server writes logs on Windows
+- **THEN** the same logical directories and file names are used as before

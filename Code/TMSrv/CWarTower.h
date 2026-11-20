@@ -19,7 +19,7 @@
 #pragma once
 
 #include <stdio.h>
-#include "..\Basedef.h"
+#include "../Basedef.h"
 
 
 class CWarTower

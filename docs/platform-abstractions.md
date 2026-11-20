@@ -1,8 +1,11 @@
 # Platform abstractions
 
-Project sources must not call Win32, Winsock or the Win32 CRT I/O API directly.
+Project sources must not call Win32, Winsock or the Win32 CRT I/O API directly,
+and shared sources must not depend on MSVC-only CRT headers or functions.
 `Code/platform/` provides the small wrappers used by the servers. The wrappers
-are covered by `tests/platform/PlatformTests.cpp`.
+are covered by `tests/platform/PlatformTests.cpp`, and
+`tests/tools/check_platform_dependencies.cmake` enforces the no-direct-use rule
+on POSIX builds (the PowerShell equivalent covers Windows).
 
 ## Error model
 
@@ -63,7 +66,8 @@ Covered by `platform filesystem distinguishes not found from failure`.
 Enumerates a directory using a legacy-style pattern such as `"./account/*"`,
 `"./Import/Item/*.txt"` or a plain directory path (treated as `*`).
 
-- Leaf matching is case-insensitive and supports `*` and `?`.
+- Leaf matching follows the platform path rules: case-insensitive on Windows
+  and byte-exact (case-sensitive) on Linux. Both support `*` and `?`.
 - `.` and `..` are never returned.
 - Each `DirectoryEntry` carries the leaf `name`, a constructed `path`,
   `isDirectory`, and the local `lastWriteTime`.
@@ -72,7 +76,8 @@ Enumerates a directory using a legacy-style pattern such as `"./account/*"`,
 - Enumeration order is unspecified; callers must not depend on it. The legacy
   scans only compared file sets, and so do the tests.
 
-Covered by `platform directory iterator matches a wildcard scan`.
+Covered by `platform directory iterator matches a wildcard scan` and
+`platform directory iterator follows platform path case rules`.
 
 ## `platform::MonotonicMs`, `platform::ElapsedMs`
 
@@ -97,11 +102,26 @@ paths such as `../../Common`, `./account` and `./char` resolved. The wrappers
 preserve that:
 
 - `ExecutablePath()` returns the running executable's absolute path, or an
-  empty string if it cannot be determined.
+  empty string if it cannot be determined. Windows reads `_pgmptr`; Linux reads
+  the `/proc/self/exe` link, growing the buffer when the link is truncated.
 - `SetWorkingDirectoryToExecutable()` returns `false` when the directory is
   unavailable instead of silently using an unexpected directory.
 
 Covered by `platform path resolves siblings from a foreign working directory`.
+
+## Paths, case and encoding
+
+- Runtime log, day-log, chat-log, item-log and dump paths use `/` on both
+  platforms. Windows accepts forward slashes, so one literal serves both.
+- Windows path lookup is case-insensitive; Linux lookup and directory pattern
+  matching are case-sensitive. Wrappers expose the platform rule rather than
+  papering over it, so a scan never returns a name a later `fopen` cannot open.
+- Project sources and content files retain the legacy CP949/ANSI byte encoding;
+  they are not transcoded to UTF-8. Helpers that inspect multibyte text preserve
+  the CP949 rule that `0x81`-`0xFE` starts a two-byte character, and the
+  uppercase helper only folds bytes that the default "C" locale maps (ASCII),
+  matching the legacy `_strupr` behavior. ASCII-only build tooling and docs are
+  UTF-8.
 
 ## Diagnostics and status
 

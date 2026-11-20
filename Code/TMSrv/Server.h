@@ -25,8 +25,8 @@
 #include <time.h>
 #include <string>
 
-#include "..\Basedef.h"
-#include "..\net\Connection.h"
+#include "../Basedef.h"
+#include "../net/Connection.h"
 
 #include "CItem.h"
 #include "CMob.h"

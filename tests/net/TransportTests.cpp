@@ -425,10 +425,16 @@ TEST_CASE("transport connector succeeds on a later attempt", "[transport]")
 	std::string error;
 	REQUIRE(acceptor->Listen("127.0.0.1", port, error));
 
+	// Keep the accepted socket open for the duration of the test: closing it
+	// immediately can reset the connection before the client's init write
+	// completes on POSIX.
+	std::shared_ptr<tcp::socket> acceptedSocket;
+
 	acceptor->Start(
 		[&](tcp::socket socket, const std::string &)
 		{
 			REQUIRE(socket.is_open());
+			acceptedSocket = std::make_shared<tcp::socket>(std::move(socket));
 		},
 		[&](const std::string &message) { error = message; });
 
@@ -440,6 +446,9 @@ TEST_CASE("transport connector succeeds on a later attempt", "[transport]")
 		[&](tcp::socket) { connected = true; },
 		[&](const std::string &message) { error = message; });
 
+	// run_for() leaves the context stopped once its work drains; restart it so
+	// the second attempt is processed.
+	context.restart();
 	REQUIRE(RunUntil(context, [&]() { return connected; }, 4000));
 	REQUIRE(connected);
 

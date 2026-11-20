@@ -70,6 +70,20 @@ void Exec_MSG_Buy(int conn, char *pMsg)
 	if (itemIndex <= 0 || itemIndex >= MAX_ITEMLIST)
 		return;
 
+	// Declared before the donate branch so the DonateBuy label can share the
+	// common tail without jumping over live initializations.
+	int Price = 0;
+	int Price2 = 0;
+	int Village = 0;
+	int GuildTax = 0;
+	int bPrice = 0;
+	int Desconto = 0;
+	int TargetVillage = 0;
+	int Guild = 0;
+	int CityTax = 0;
+	char tmplog[2048];
+	int x = 0;
+
 	int Donate = BASE_GetItemAbility(ItemMob, EF_DONATE);
 
 	if(Donate)
@@ -101,10 +115,10 @@ void Exec_MSG_Buy(int conn, char *pMsg)
 		goto DonateBuy;
 	}
 
-	int Price = g_pItemList[itemIndex].Price;
-	int Price2 = Price;
-	int Village = BASE_GetVillage(pMob[TargetID].TargetX, pMob[TargetID].TargetY);
-	int CityTax = g_pGuildZone[Village].CityTax;
+	Price = g_pItemList[itemIndex].Price;
+	Price2 = Price;
+	Village = BASE_GetVillage(pMob[TargetID].TargetX, pMob[TargetID].TargetY);
+	CityTax = g_pGuildZone[Village].CityTax;
 
 	if (Village < 0 || Village >= 5 || CityTax <= 0 || CityTax >= 30)
 		goto LABEL_BUY1;
@@ -118,13 +132,12 @@ void Exec_MSG_Buy(int conn, char *pMsg)
 	if (Price < 0)
 		return;
 
-	int GuildTax = (Price - Price2) / 2;
+	GuildTax = (Price - Price2) / 2;
 LABEL_BUY1:
 
-	int bPrice = Price;
-	int Desconto = 0;
-	int TargetVillage = BASE_GetVillage(pMob[TargetID].TargetX, pMob[TargetID].TargetY);
-	int Guild = pMob[conn].MOB.Guild;
+	bPrice = Price;
+	TargetVillage = BASE_GetVillage(pMob[TargetID].TargetX, pMob[TargetID].TargetY);
+	Guild = pMob[conn].MOB.Guild;
 					 
 	if (Price <= 1999999999 && TargetVillage >= 0 && TargetVillage < 5 && Guild > 0 && g_pGuildZone[TargetVillage].ChargeGuild == Guild)
 	{
@@ -235,8 +248,6 @@ LABEL_BUY1:
 
 	if (Price >= 0)
 	{
-		int x = 0;
-
 		for (x = 0; x < MAX_MOB_MERC; x++)
 		{
 			//Verifica se o vendedor é um mob mercador especial.
@@ -284,7 +295,6 @@ DonateBuy:
 
 		memcpy(&pMob[conn].MOB.Carry[MyInvenPos], ItemMob, sizeof(STRUCT_ITEM));
 		
-		char tmplog[2048];
 		BASE_GetItemCode(ItemMob, tmplog);
 
 		sprintf(temp, "buy_npc,npc:%s price:%d item:%s", pMob[TargetID].MOB.MobName, Price, tmplog);

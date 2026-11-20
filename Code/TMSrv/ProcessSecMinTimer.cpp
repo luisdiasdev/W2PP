@@ -20,9 +20,9 @@
 #include <time.h>
 #include <math.h>
 
-#include "..\Basedef.h"
-#include "..\net\Connection.h"
-#include "..\ItemEffect.h"
+#include "../Basedef.h"
+#include "../net/Connection.h"
+#include "../ItemEffect.h"
 #include "Language.h"
 
 #include "CItem.h"
@@ -185,7 +185,6 @@ lbl_PST1:
 				DoRecall(bb);
 		}
 
-#pragma region Pista de Runas Balrog Portais
 			int xv = (pMob[bb].TargetX) & 0xFFFC;
 			int yv = (pMob[bb].TargetY) & 0xFFFC;
 
@@ -446,7 +445,6 @@ lbl_PST1:
 				}
 			}
 
-#pragma endregion
 	}
 
 	if(SecCounter % 12 == 0)
@@ -611,7 +609,6 @@ lbl_PST1:
 			for(int xx = KEFRA_MOB_INITIAL; xx <= KEFRA_MOB_END; xx++)
 				GenerateMob(xx, 0, 0);
 		}
-#pragma region Pesa Reset
 		if ((when.tm_min == 9 || when.tm_min == 29 || when.tm_min == 49) && when.tm_sec == 0)
 		{
 			DeleteMobMapa(9, 1);
@@ -640,8 +637,6 @@ lbl_PST1:
 			sprintf(temp, "etc,nightmare_normal clear -%d:%d", when.tm_hour, when.tm_min);
 			Log(temp, "-system", 0);
 		}
-#pragma endregion
-#pragma region Pista de runas entrada
 		if ((when.tm_min == 20 || when.tm_min == 40 || when.tm_min == 00) && when.tm_sec == 0)
 		{//Pista de Runas entrada
 
@@ -708,8 +703,6 @@ lbl_PST1:
 				}
 			}
 		}
-#pragma endregion
-#pragma region Pista de runas saída
 		if ((when.tm_min == 15 || when.tm_min == 35 || when.tm_min == 55) && when.tm_sec == 0)
 		{//Pista de Runas saida
 
@@ -989,9 +982,7 @@ lbl_PST1:
 			}
 
 		}
-#pragma endregion
 
-#pragma region Pesa Start
 		if (GetUserInArea(1152, 128, 1280, 256, temp) && (when.tm_min == 14 && when.tm_sec == 0 || when.tm_min == 34 && when.tm_sec == 0 || when.tm_min == 54 && when.tm_sec == 0))
 		{
 			MSG_STANDARDPARM sm;
@@ -1050,7 +1041,6 @@ lbl_PST1:
 			sprintf(temp, "etc,nigthmare_normal started");
 			Log(temp, "-system", 0);
 		}
-#pragma endregion
 	}
 
 	if((SecCounter % 2) == 0)
@@ -1307,7 +1297,6 @@ lbl_PST1:
 
 	int Sec6 = SecCounter % 6;
 
-#pragma region Movimento / fala dos NPCS 
 	int initial = Sec6 + MAX_USER;
 	for (int index = initial; index < MAX_MOB; index += 6)
 	{
@@ -1504,11 +1493,9 @@ lbl_PST1:
 			}
 		}
 	}
-#pragma endregion
 
 	Sec4 = SecCounter % 4;
 
-#pragma region MOB_ATTACK_SPEACH_ACTION
 	for (int index = Sec4 + MAX_USER; index < MAX_MOB; index += 4)
 	{
 		if (pMob[index].Mode != MOB_COMBAT)
@@ -1968,7 +1955,6 @@ KefraAttackLabel:
 			GridMulticast(index, pMob[index].NextX, pMob[index].NextY, (MSG_STANDARD*)&sm);
 		}
 	}
-#pragma endregion
 }
 
 void ProcessMinTimer()
@@ -2065,7 +2051,6 @@ void ProcessMinTimer()
 
 	CCastleZakum::ProcessMinTimer();
 
-#pragma region Clear Area
 	if (Kingdom1Clear == 1)
 	{
 		Kingdom1Clear = 2;
@@ -2087,14 +2072,12 @@ void ProcessMinTimer()
 
 		ClearArea(1676, 1816, 1776, 1892);
 	}
-#pragma endregion
 
 	if ((MinCounter % 10) == 0)
 		memset(FailAccount, 0, sizeof(FailAccount));
 
 	CurrentTime = platform::MonotonicMs();
 
-#pragma region Close Gates
 	for (int i = 17; i < g_dwInitItem; i++)
 	{
 		int ipx = g_pInitItem[i].PosX; // Item Pos X
@@ -2163,8 +2146,6 @@ void ProcessMinTimer()
 			}
 		}
 	}
-#pragma endregion
-#pragma region GenerateMobs
 	for (int i = 0; i < mNPCGen.NumList; i++)
 	{
 		int MinuteGenerate = mNPCGen.pList[i].MinuteGenerate;
@@ -2234,7 +2215,6 @@ void ProcessMinTimer()
 			}
 		}
 	}
-#pragma endregion
 	MinCounter++;
 
 	int rndWeather = rand() % 1200;

@@ -35,6 +35,36 @@
         "VCPKG_MANIFEST_MODE": "ON",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }
+    },
+    {
+      "name": "linux-x86-debug",
+      "displayName": "Linux i386 Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-x86-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-m32",
+        "CMAKE_EXE_LINKER_FLAGS": "-m32",
+        "VCPKG_TARGET_TRIPLET": "x86-linux",
+        "VCPKG_OVERLAY_TRIPLETS": "$env{VCPKG_ROOT}/triplets/community",
+        "VCPKG_MANIFEST_MODE": "ON",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "linux-x86-release",
+      "displayName": "Linux i386 Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-x86-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS": "-m32",
+        "CMAKE_EXE_LINKER_FLAGS": "-m32",
+        "VCPKG_TARGET_TRIPLET": "x86-linux",
+        "VCPKG_OVERLAY_TRIPLETS": "$env{VCPKG_ROOT}/triplets/community",
+        "VCPKG_MANIFEST_MODE": "ON",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
     }
   ],
   "buildPresets": [
@@ -47,6 +77,14 @@
       "name": "x86-release",
       "configurePreset": "x86-release",
       "configuration": "Release"
+    },
+    {
+      "name": "linux-x86-debug",
+      "configurePreset": "linux-x86-debug"
+    },
+    {
+      "name": "linux-x86-release",
+      "configurePreset": "linux-x86-release"
     }
   ],
   "testPresets": [
@@ -62,6 +100,20 @@
       "name": "x86-release",
       "configurePreset": "x86-release",
       "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-x86-debug",
+      "configurePreset": "linux-x86-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-x86-release",
+      "configurePreset": "linux-x86-release",
       "output": {
         "outputOnFailure": true
       }

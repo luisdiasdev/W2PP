@@ -86,7 +86,7 @@ void Exec_MSG_AccountLogin(int conn, char *pMsg)
 
 	sscanf(m->AccountName, "%s", pUser[conn].AccountName);
 
-	_strupr(pUser[conn].AccountName);
+	UpcaseString(pUser[conn].AccountName);
 
 	strncpy(m->AccountName, pUser[conn].AccountName, NAME_LENGTH);
 

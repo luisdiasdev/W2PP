@@ -21,7 +21,9 @@
 #ifndef _BASEDEF_ // Last updated 27/01/2013
 #define _BASEDEF_
 
-#include <time.h>
+#include <cctype>
+#include <cstring>
+#include <ctime>
 
 #include "net/Protocol.h"
 #include "platform/Clock.h"
@@ -40,7 +42,20 @@ inline unsigned char HighByte(unsigned long value)
 	return static_cast<unsigned char>((value >> 8) & 0xFFu);
 }
 
-#pragma region Defines
+// Portable replacement for the MSVC-only `_strupr`. Each byte is uppercased in
+// place; in the default "C" locale the CP949 high bytes are left untouched,
+// matching the legacy ANSI behaviour.
+inline char *UpcaseString(char *text)
+{
+	if (text == nullptr)
+		return nullptr;
+
+	for (unsigned char *p = reinterpret_cast<unsigned char *>(text); *p != 0; ++p)
+		*p = static_cast<unsigned char>(std::toupper(*p));
+
+	return text;
+}
+
 
 //#define PKDrop
 
@@ -72,7 +87,6 @@ inline unsigned char HighByte(unsigned long value)
 #define		MAX_DBACCOUNT			(MAX_USER * MAX_SERVER) // Max players connected to a single DBSrv at the same time
 #define		MAX_RANK_INDEX			500
 
-#pragma region Account related defines
 
 #define		ACCOUNTNAME_LENGTH		16		// Max length of the account login
 #define		ACCOUNTPASS_LENGTH		16      // Max length of the account password
@@ -82,7 +96,6 @@ inline unsigned char HighByte(unsigned long value)
 #define		TELEPHONE_LENGTH		16      // Max length of the telephone number of the account owner
 #define		MOB_PER_ACCOUNT			4       // Max number of mobs an account can have
 
-#pragma endregion
 
 #define		MAX_EQUIP				16
 #define		MAX_CARRY				64
@@ -403,9 +416,7 @@ inline unsigned char HighByte(unsigned long value)
 
 ////////////////////////////////////////////////////////////
 
-#pragma endregion
 
-#pragma region Structures
 
 struct STRUCT_ITEM
 {
@@ -845,9 +856,7 @@ struct STRUCT_RANKING
 	int Class;
 };
 #pragma pack(pop)
-#pragma endregion
 
-#pragma region File Structures
 
 struct STRUCT_ACCOUNTFILE
 {
@@ -930,9 +939,7 @@ struct STRUCT_BLOCKMAC
 	int Mac[4];
 };
 
-#pragma endregion
 
-#pragma region Messages defines and structures
 
 #define _MSG      	short		  Size;			\
 					char		  KeyWord;		\
@@ -2336,9 +2343,7 @@ struct		  MSG_NPDonate
 
 const short _MSG_NPAppeal					= (16 | FLAG_DB2GAME | FLAG_GAME2DB | FLAG_DB2NP);
 
-#pragma endregion
 
-#pragma region Basedef functions prototypes
 
 int  BASE_NeedLog(STRUCT_ITEM *item, int money);
 int  BASE_GetBonusSkillPoint(STRUCT_MOB *mob, STRUCT_MOBEXTRA *extra);
@@ -2446,9 +2451,7 @@ void BASE_SetItemDate(STRUCT_ITEM *Item, int day);
 int  BASE_CheckItemDate(STRUCT_ITEM *Item);
 void BASE_CheckFairyDate(STRUCT_ITEM *Item);
 
-#pragma endregion
 
-#pragma region Basedef Externs
 
 extern STRUCT_GUILDZONE g_pGuildZone[MAX_GUILDZONE];
 
@@ -2512,6 +2515,5 @@ extern int g_pBonusValue3[25][4];//Elmo
 extern int g_pBonusValue4[30][4];//Luva
 extern int g_pBonusValue5[30][4];//Bota
 
-#pragma endregion
 
 #endif

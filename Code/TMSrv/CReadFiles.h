@@ -20,7 +20,7 @@
 #define __CREAD_FILES_H__
 
 #include <stdio.h>
-#include "..\Basedef.h"
+#include "../Basedef.h"
 
 class CReadFiles
 {

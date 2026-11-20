@@ -175,15 +175,20 @@ LABEL_S1:
 
 
 	int sVillage = BASE_GetVillage(pMob[sTargetID].TargetX, pMob[sTargetID].TargetY);
+
+	// Declared before the LABEL_S2 jump so it crosses no initialization.
+	int CityTax = 0;
+	int fPrice = 0;
+	int tcoin = 0;
+
 	if (sVillage < 0 || sVillage > 5)
 		goto LABEL_S2;
 
-
-	int CityTax = g_pGuildZone[sVillage].CityTax;
+	CityTax = g_pGuildZone[sVillage].CityTax;
 
 	if (CityTax >= 0 && CityTax <= 30)
 	{
-		int fPrice = sPrice;
+		fPrice = sPrice;
 						  
 		if (sPrice < 100000)
 			sPrice = sPrice * (100 - CityTax) / 100;
@@ -193,7 +198,7 @@ LABEL_S1:
 						  
 		if (sPrice >= 0)
 		{
-			int tcoin = (fPrice - sPrice) / 2;
+			tcoin = (fPrice - sPrice) / 2;
 			tcoin /= 2;
 
 			if (GuildImpostoID[sVillage] >= MAX_USER && GuildImpostoID[sVillage] < MAX_MOB  && tcoin > 0  && pMob[GuildImpostoID[sVillage]].Mode != MOB_EMPTY)

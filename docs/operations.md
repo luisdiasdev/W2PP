@@ -1,8 +1,9 @@
 # DBSrv operations (headless)
 
 DBSrv is a console application. It opens no window and needs no desktop
-session. The listener ports are unchanged: game-server `7514` and NP admin
-`8895`.
+session on Windows or on Linux. The listener ports are unchanged: game-server
+`7514` and NP admin `8895`. On Linux the binary is `dbsrv`; the Windows name is
+`dbsrv.exe`.
 
 ## Runtime tree
 
@@ -11,7 +12,7 @@ existing layout is preserved:
 
 ```
 <exe dir>/
-  dbsrv.exe
+  dbsrv.exe            # dbsrv on Linux
   Config.txt
   serverlist.txt
   Admin.txt            # optional whitelist
@@ -32,6 +33,11 @@ existing layout is preserved:
   Guilds.txt
 ```
 
+Paths use the platform separator. Linux uses forward slashes and case-sensitive
+file names; Windows keeps its case-insensitive lookup. Log, day-log, chat-log
+and item-log files are created under `./Log`, `./DayLog`, `./chat_log` and
+`./item_log` on both platforms.
+
 A missing base-set file, `Config.txt`, `serverlist.txt` or `AttributeMap.dat`
 is fatal: the server writes a diagnostic and exits non-zero.
 
@@ -48,13 +54,19 @@ Set-Location <exe dir>
 .\dbsrv.exe
 ```
 
+```bash
+cd <exe dir>
+./dbsrv
+```
+
 The process runs until a shutdown command or signal. Startup diagnostics and
 warnings go to the log and to standard error.
 
 ## Console commands
 
-The console thread is started only when stdin is a terminal. (The integration
-harness sets `W2PP_FORCE_CONSOLE=1` to feed commands through a pipe.)
+The console thread is started only when stdin is a terminal. Set
+`W2PP_FORCE_CONSOLE=1` on Windows or Linux to feed commands through a pipe or
+FIFO in scripted runs.
 
 | Command | Action |
 |---|---|
@@ -64,11 +76,14 @@ harness sets `W2PP_FORCE_CONSOLE=1` to feed commands through a pipe.)
 
 The former window menu has no replacement for window painting; status is text.
 
-## Shutdown
+## Shutdown and exit codes
 
-`quit` and `Ctrl+C`/`SIGTERM` use the same path: stop the listeners, close the
-game/admin/redirect links, write `Config.txt`, guild data and the daily logs,
-flush and close the log file, then exit with success.
+`quit`, `Ctrl+C`, `SIGINT` and `SIGTERM` use the same path: stop the listeners,
+close the game/admin/redirect links, write `Config.txt`, guild data and the
+daily logs, flush and close the log file, then exit with status `0`. A boot
+failure (missing base set, missing `Config.txt`/`serverlist.txt`, listener bind
+failure) logs a diagnostic and exits non-zero. Signals are handled through
+asio; no window or desktop session is involved.
 
 ## Loopback verification
 
@@ -99,8 +114,10 @@ pwsh -NoProfile -File tests/integration/dbsrv_loopback.ps1 `
 # TMSrv operations (headless)
 
 TMSrv is a console application. It opens no window and needs no desktop
-session. The game listener port is unchanged (`8281`), the DB link connects to
-`7514` and the optional billing link uses the address in `biserver.txt`.
+session on Windows or on Linux. The game listener port is unchanged (`8281`),
+the DB link connects to `7514` and the optional billing link uses the address
+in `biserver.txt`. On Linux the binary is `tmsrv`; the Windows name is
+`tmsrv.exe`.
 
 ## Runtime tree
 
@@ -109,7 +126,7 @@ existing layout is preserved:
 
 ```
 <exe dir>/
-  tmsrv.exe
+  tmsrv.exe             # tmsrv on Linux
   gameconfig.txt        # generated from defaults when absent
   localip.txt           # local address used for the listener and DB bind
   serverlist.txt        # group/number/address table
@@ -149,6 +166,11 @@ Set-Location <exe dir>
 .\tmsrv.exe
 ```
 
+```bash
+cd <exe dir>
+./tmsrv
+```
+
 Startup order is preserved from the former `WinMain`: configuration, content
 and base-set reads, `Reboot`, local address/server group selection, DB link,
 billing link, guild report and the game listener. The DB connect is
@@ -158,8 +180,9 @@ fail the process performs a graceful shutdown and exits non-zero during boot.
 
 ## Console commands
 
-The console thread is started only when stdin is a terminal. The integration
-harness sets `W2PP_FORCE_CONSOLE=1` to feed commands through a pipe.
+The console thread is started only when stdin is a terminal. Set
+`W2PP_FORCE_CONSOLE=1` on Windows or Linux to feed commands through a pipe or
+FIFO.
 
 | Command | Action |
 |---|---|
@@ -175,13 +198,15 @@ harness sets `W2PP_FORCE_CONSOLE=1` to feed commands through a pipe.
 Commands are posted to the event loop, so they execute in submission order and
 never interleave with a timer tick.
 
-## Shutdown
+## Shutdown and exit codes
 
-`quit`, `Ctrl+C` and `SIGTERM` share one path: stop the listener, stop the
-reconnect ladder, send the billing logout record, close the client/DB/billing
-links, write guild data, flush and close the log files, then exit with success.
-A requested `reboot` instead runs the legacy countdown and shuts down through
-the second-tick handler once every user has been saved.
+`quit`, `Ctrl+C`, `SIGINT` and `SIGTERM` share one path: stop the listener,
+stop the reconnect ladder, send the billing logout record, close the
+client/DB/billing links, write guild data, flush and close the log files, then
+exit with status `0`. A boot failure (missing `localip.txt`/`serverlist.txt`,
+listener bind failure, both DB connect attempts failed) logs a diagnostic and
+exits non-zero. A requested `reboot` instead runs the legacy countdown and
+shuts down through the second-tick handler once every user has been saved.
 
 ## Loopback verification
 
@@ -209,6 +234,22 @@ pwsh -NoProfile -File tests/integration/tmsrv_smoke.ps1 `
   -ExeDir build/x86-debug/Debug `
   -CommonDir build/Common
 ```
+
+### POSIX smoke test
+
+On Linux, `tests/integration/posix_smoke.sh` builds a temporary runtime tree,
+starts the real `dbsrv` and `tmsrv`, verifies the `8281` listener accepts the
+init handshake, sends `quit` through a console FIFO, and starts a second TMSrv
+that is shut down with `SIGINT`. Both runs must exit with status `0`; every
+wait is timeout-bounded and the temporary tree is removed on exit. It is
+registered as the `posix-smoke` test:
+
+```bash
+ctest --preset linux-x86-debug -R posix-smoke --output-on-failure
+```
+
+The static source check (`platform-dependency-check`) also runs on Linux and
+rejects Win32 or MSVC-only headers/functions outside `Code/platform/`.
 
 ## Connection diagnostics
 
