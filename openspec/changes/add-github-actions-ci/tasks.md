@@ -24,10 +24,10 @@
 
 ## 5. Pipeline verification
 
-- [ ] 5.1 Push the change to a pull request and verify the workflow runs four uniquely named jobs, all four configure and build, and all four pass the filtered test step on a cold cache.
-- [ ] 5.2 Re-run the workflow (new commit or re-run) and verify the vcpkg binary cache is restored in every job and the jobs still pass with the same dependency versions.
-- [ ] 5.3 Verify the pipeline publishes nothing and needs no secrets: inspect the workflow run and confirm there are no upload/deploy/release steps, the run uses read-only repository permissions, and a fork-style pull request would not require credentials.
-- [ ] 5.4 Confirm the integration harnesses remain untested by CI as scoped: verify `ctest --preset <preset> -LE integration -N` omits `dbsrv-loopback`/`tmsrv-smoke`/`posix-smoke`, and that the README states where those tests are run instead.
+- [x] 5.1 Push the change to a pull request and verify the workflow runs four uniquely named jobs, all four configure and build, and all four pass the filtered test step on a cold cache.
+- [x] 5.2 Re-run the workflow (new commit or re-run) and verify the vcpkg binary cache is restored in every job and the jobs still pass with the same dependency versions.
+- [x] 5.3 Verify the pipeline publishes nothing and needs no secrets: inspect the workflow run and confirm there are no upload/deploy/release steps, the run uses read-only repository permissions, and a fork-style pull request would not require credentials.
+- [x] 5.4 Confirm the integration harnesses remain untested by CI as scoped: verify `ctest --preset <preset> -LE integration -N` omits `dbsrv-loopback`/`tmsrv-smoke`/`posix-smoke`, and that the README states where those tests are run instead.
 
 ## Workflow follow-up
 
