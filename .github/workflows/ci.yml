@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            preset: x86-debug
+            name: Windows x86 Debug
+            triplet: x86-windows
+          - os: windows-2022
+            preset: x86-release
+            name: Windows x86 Release
+            triplet: x86-windows
+          - os: ubuntu-24.04
+            preset: linux-x86-debug
+            name: Linux i386 Debug
+            triplet: x86-linux
+          - os: ubuntu-24.04
+            preset: linux-x86-release
+            name: Linux i386 Release
+            triplet: x86-linux
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Resolve the pinned vcpkg checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          baseline="$(grep -Eo '"builtin-baseline"[[:space:]]*:[[:space:]]*"[0-9a-f]{40}"' vcpkg.json \
+            | grep -Eo '[0-9a-f]{40}' | head -n1)"
+          if [ -z "$baseline" ]; then
+            echo "::error::vcpkg.json does not declare a 40-character builtin-baseline"
+            exit 1
+          fi
+
+          root="${VCPKG_INSTALLATION_ROOT:-}"
+          if [ -z "$root" ] || [ ! -d "$root/.git" ]; then
+            echo "Runner image provides no vcpkg checkout; cloning one into $RUNNER_TEMP/vcpkg"
+            root="$RUNNER_TEMP/vcpkg"
+            git clone --quiet https://github.com/microsoft/vcpkg.git "$root"
+          fi
+
+          if [ ! -x "$root/vcpkg" ] && [ ! -x "$root/vcpkg.exe" ]; then
+            echo "Bootstrapping vcpkg in $root"
+            case "$RUNNER_OS" in
+              Windows) ( cd "$root" && cmd.exe //c bootstrap-vcpkg.bat -disableMetrics ) ;;
+              *) "$root/bootstrap-vcpkg.sh" -disableMetrics ;;
+            esac
+          fi
+
+          if ! git -C "$root" cat-file -e "${baseline}^{commit}" 2>/dev/null; then
+            echo "Baseline commit $baseline is missing from $root; fetching it"
+            git -C "$root" fetch --quiet origin "$baseline" 2>/dev/null \
+              || git -C "$root" fetch --quiet --unshallow origin 2>/dev/null \
+              || git -C "$root" fetch --quiet origin 2>/dev/null \
+              || true
+          fi
+
+          if ! git -C "$root" cat-file -e "${baseline}^{commit}" 2>/dev/null; then
+            echo "::error::vcpkg checkout $root cannot resolve the pinned baseline $baseline"
+            exit 1
+          fi
+
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            archives="${LOCALAPPDATA}\\vcpkg\\archives"
+          else
+            archives="$HOME/.cache/vcpkg/archives"
+          fi
+
+          echo "VCPKG_ROOT=$root" >> "$GITHUB_ENV"
+          echo "VCPKG_ARCHIVES_PATH=$archives" >> "$GITHUB_ENV"
+          echo "Using vcpkg at $root with baseline $baseline"
+          echo "Caching vcpkg binary archives from $archives"
+
+      - name: Install Linux i386 prerequisites
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-multilib g++-multilib libc6-dev-i386 ninja-build
+          echo 'int main(){}' | gcc -m32 -x c - -o /tmp/w2pp-m32-probe
+          /tmp/w2pp-m32-probe
+
+      - name: Cache vcpkg binary archives
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_ARCHIVES_PATH }}
+          key: vcpkg-${{ runner.os }}-${{ matrix.triplet }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-${{ matrix.triplet }}-
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }} -DW2PP_RELEASE_ROOT=
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Test (non-integration)
+        run: ctest --preset ${{ matrix.preset }} -LE integration --output-on-failure
