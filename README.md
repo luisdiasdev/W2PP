@@ -71,6 +71,47 @@ To reproduce the Win32 x86 data layout on i386 Linux, project targets are compil
 
 On Windows, the post-build step also copies `tmsrv.exe` and `dbsrv.exe` into the legacy release tree (by default `../release/TMSRV/run` and `../release/DBSRV/run`), so they can be started next to the existing runtime data. Debug builds also copy the companion `.pdb` so a debugger can resolve symbols for the deployed binary. Override the destination with `-DW2PP_RELEASE_ROOT=<path>`, or set it to an empty value to disable the copy. On Linux the copy is opt-in and disabled by default: the build tree is the normal run location, and setting `-DW2PP_RELEASE_ROOT=<path>` enables the same post-build copy.
 
+## Continuous integration
+
+Every pull request, every push to `master` and every manual run validates the supported build matrix on hosted GitHub Actions runners:
+
+| Host | Runner | Presets |
+| --- | --- | --- |
+| Windows x86 | `windows-2022` | `x86-debug`, `x86-release` |
+| Linux i386 | `ubuntu-24.04` | `linux-x86-debug`, `linux-x86-release` |
+
+Each of the four combinations runs as its own job, so one failing host or configuration does not cancel the others. A job resolves `asio` and `catch2` from the pinned `vcpkg.json` baseline, configures, builds and runs the tests. The workflow uses read-only repository permissions, publishes no artifacts and needs no secrets, so pull requests from forks run unchanged.
+
+The integration tests are not part of CI: the test step excludes the `integration` label, so `dbsrv-loopback`, `tmsrv-smoke` and `posix-smoke` stay local because they need fixed ports and process timing. Run them locally with `ctest --preset <preset>` (without `-LE integration`).
+
+The commands that reproduce a job are the ones from [Building from source](#building-from-source) with the integration label excluded and the release-tree copy disabled:
+
+```powershell
+$env:VCPKG_ROOT = "C:\dev\vcpkg"
+
+cmake --preset x86-debug -DW2PP_RELEASE_ROOT=
+cmake --build --preset x86-debug
+ctest --preset x86-debug -LE integration --output-on-failure
+
+cmake --preset x86-release -DW2PP_RELEASE_ROOT=
+cmake --build --preset x86-release
+ctest --preset x86-release -LE integration --output-on-failure
+```
+
+```bash
+export VCPKG_ROOT="$HOME/vcpkg"
+
+cmake --preset linux-x86-debug -DW2PP_RELEASE_ROOT=
+cmake --build --preset linux-x86-debug
+ctest --preset linux-x86-debug -LE integration --output-on-failure
+
+cmake --preset linux-x86-release -DW2PP_RELEASE_ROOT=
+cmake --build --preset linux-x86-release
+ctest --preset linux-x86-release -LE integration --output-on-failure
+```
+
+The Linux jobs also install `gcc-multilib`, `g++-multilib`, `libc6-dev-i386` and `ninja-build` before configuring, and the workflow caches the vcpkg binary archives so a cold run stays practical.
+
 ## Running the servers
 
 Both executables are console applications. They open no window, need no desktop session, and change their working directory to the executable's folder, preserving the legacy layout (`../../Common`, `./account`, `./char`, `./Log`). The full runtime trees and startup requirements are documented in [docs/operations.md](docs/operations.md).
