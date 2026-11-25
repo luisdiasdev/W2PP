@@ -9,6 +9,7 @@
 #include "Server.h"
 #include "CReadFiles.h"
 #include "CUser.h"
+#include "CRanking.h"
 
 #include "../host/Runtime.h"
 #include "../net/Acceptor.h"
@@ -17,6 +18,7 @@
 #include "../net/Session.h"
 #include "../platform/Diagnostics.h"
 #include "../platform/Path.h"
+#include "../storage/StorageConfig.h"
 
 #include <asio.hpp>
 
@@ -516,6 +518,20 @@ int main()
 
 	if (!ReadConfig())
 		return EXIT_FAILURE;
+
+	{
+		storage::StorageConfig storageConfig;
+		std::string storageError;
+
+		if (!storage::LoadStorageConfig("Config.txt", &storageConfig, &storageError)
+			|| !cFileDB.InitStorage(storageConfig, &storageError))
+		{
+			platform::ReportFatal(storageError.c_str(), "DATABASE ERROR");
+			return EXIT_FAILURE;
+		}
+	}
+
+	rankingSystem.loadRanking();
 
 	BASE_InitializeServerList();
 

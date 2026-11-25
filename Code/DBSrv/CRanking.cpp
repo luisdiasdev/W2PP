@@ -20,10 +20,18 @@
 #include "CRanking.h"
 #include "CUser.h"
 #include "Server.h"
+#include "CFileDB.h"
 #include "CReadFiles.h"
 #include "../platform/FileSystem.h"
+#include "../storage/AccountRepository.h"
+
+#include <algorithm>
+#include <string>
+#include <vector>
 
 #include <errno.h>
+
+extern CFileDB cFileDB;
 
 extern CUser pUser[MAX_SERVER]; // Server.cpp
 extern CUser pAdmin[MAX_ADMIN]; // Server.cpp
@@ -93,13 +101,46 @@ GrindRankingConnId GrindRanking::getElementConnId(int rankId)
 
 RankingSystem::RankingSystem()
 {
-	loadRanking();
+	// The ranking is loaded from the database after storage initialization;
+	// constructing the global must not query anything.
 }
 
 void RankingSystem::loadRanking()
 {
 	unsigned int startClock = platform::MonotonicMs();
-	int entryCount = readAccountsInDir("./account/*");
+	int entryCount = 0;
+
+	if (cFileDB.Repository() != nullptr)
+	{
+		std::vector<storage::AccountRepository::RankingEntry> entries;
+		std::string error;
+
+		if (cFileDB.Repository()->RankingEntries(&entries, &error))
+		{
+			for (const storage::AccountRepository::RankingEntry &entry : entries)
+			{
+				char name[NAME_LENGTH];
+				memset(name, 0, sizeof(name));
+
+				size_t length = std::min<std::size_t>(entry.name.size(),
+					sizeof(name) - 1);
+
+				if (length > 0)
+					memcpy(name, entry.name.data(), length);
+
+				tryInsertInRanking(OUT_OF_RANK, name, entry.exp,
+					entry.class_master, entry.level, entry.clazz,
+					NULL, NULL, NULL);
+
+				entryCount++;
+			}
+		}
+		else
+		{
+			Log(error, "-system", 0);
+		}
+	}
+
 	unsigned int resultClock = platform::MonotonicMs() - startClock;
 
 	char tt[1024];
@@ -108,90 +149,6 @@ void RankingSystem::loadRanking()
 	Log(tt, "-system", 0);
 
 	CReadFiles::WriteRanking();
-}
-
-/*
-	Read each account file seeking the exp info to build and load the ranking into the dbsrv's memory.
-
-	Returns the amount of read file
-*/
-int RankingSystem::readAccountsInDir(char *dir)
-{
-	int entryCount = 0;
-
-	char tmp[1024];
-
-	platform::DirectoryIterator iterator(dir);
-	platform::DirectoryEntry entry;
-
-	while (iterator.Next(entry))
-	{
-		if (entry.isDirectory)
-		{
-			sprintf(tmp, "./account/%s/*", entry.name.c_str());
-			entryCount += readAccountsInDir(tmp);
-		}
-		else
-		{
-			const platform::LocalTime sysTime = platform::LocalNow();
-
-			// Only use active accounts 
-			if (entry.lastWriteTime.year != sysTime.year ||
-			    entry.lastWriteTime.month < sysTime.month - 1)
-				continue;
-
-			sprintf(tmp, "%s", entry.path.c_str());
-
-			errno = 0;
-
-			FILE* fs;
-			fs = fopen(tmp, "rb");
-
-			if (fs != NULL)
-			{
-				int fsize = 0;
-
-				fseek(fs, 0, SEEK_END);
-				fsize = ftell(fs);
-				fseek(fs, 0, SEEK_SET);
-
-				if ((fsize >= 7500 && fsize <= 7600) || fsize == sizeof(STRUCT_ACCOUNTFILE))
-				{
-					STRUCT_ACCOUNTFILE accBuffer;
-					memset(&accBuffer, 0, sizeof(STRUCT_ACCOUNTFILE));
-
-					fread(&accBuffer, sizeof(STRUCT_ACCOUNTFILE), 1, fs);
-
-					for (int i = 0; i < MOB_PER_ACCOUNT; i++)
-					{
-						if (accBuffer.Char[i].MobName[0] == '\0')
-							continue;
-
-						if (accBuffer.Char[i].BaseScore.Level >= 1000)
-							continue;
-
-						int classmaster = accBuffer.mobExtra[i].ClassMaster;
-
-						tryInsertInRanking(OUT_OF_RANK, accBuffer.Char[i].MobName, accBuffer.Char[i].Exp, classmaster, accBuffer.Char[i].CurrentScore.Level, accBuffer.Char[i].Class, NULL, NULL, NULL);
-
-						entryCount++;
-					}
-				}
-				else
-				{
-					// TODO: file don't have the right size
-				}
-
-				fclose(fs);
-			}
-			else
-			{
-				// TODO: Cant open file to read
-			}
-		}
-	}
-
-	return entryCount;
 }
 
 /*

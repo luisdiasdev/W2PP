@@ -56,13 +56,19 @@ void ProcessSecTimer(); // Last updated 15/01/2013
 void ProcessMinTimer(); // Last updated 15/01/2013
 
 void StartLog(char *cccc); // Last updated 15/01/2013
-void Log(char *str1, char *str2, unsigned int ip); // Last updated 15/01/2013
+void Log(const char *str1, const char *str2, unsigned int ip); // Last updated 15/01/2013
+
+// Convenience for repository/security messages held in std::string.
+inline void Log(const std::string &str1, const char *str2, unsigned int ip)
+{
+	Log(str1.c_str(), str2, ip);
+}
 
 void DayLog_ExpLog(); // Last updated 22/03/2015
 
 int  GetEmptyUser(); // Last updated 15/01/2013
 
-void DayLog_ReadAccountInDir(char *dir, FILE *log);
+void DayLog_ReadAccountInDir(FILE *log);
 void DayLog_ItemLog();
 
 bool file_exists(char *s, ...);

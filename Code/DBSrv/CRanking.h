@@ -76,7 +76,6 @@ public:
 	void loadRanking();
 
 public:
-	int readAccountsInDir(char *dir);
 	int getRankingIndexFromName(char* charName);
 	int tryInsertInRanking(int rankId, char* name, long long value, int classvalue, int Level, int cls, GrindRankingConnId* connId, STRUCT_RANKING* olderLastRank, GrindRankingConnId* olderLastConnId);
 	void sendUpdateIndividualRank(int rankId, int tmsrvId, int playerId, STRUCT_RANKING* playerRank);

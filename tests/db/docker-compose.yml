@@ -1,0 +1,35 @@
+# Throwaway PostgreSQL instance for the storage integration tests.
+#
+# The runners (run_db_tests.ps1 / run_db_tests.sh) start this stack under a
+# per-run project name, wait for the healthcheck, run the test command with
+# W2PP_TEST_DSN, and always `down -v --remove-orphans` afterwards.
+#
+# The data directory is a tmpfs so no named volume survives a run. The host
+# port defaults to 55432; override with W2PP_DB_PORT.
+
+services:
+  postgres:
+    image: postgres:19.0
+    environment:
+      POSTGRES_USER: w2pp
+      POSTGRES_PASSWORD: w2pp_test
+      POSTGRES_DB: w2pp
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "${W2PP_DB_PORT:-55432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U w2pp -d w2pp -h 127.0.0.1"]
+      interval: 2s
+      timeout: 3s
+      retries: 45
+      start_period: 5s
+    tmpfs:
+      - /var/lib/postgresql
+    command:
+      - postgres
+      - -c
+      - fsync=off
+      - -c
+      - synchronous_commit=off
+      - -c
+      - full_page_writes=off

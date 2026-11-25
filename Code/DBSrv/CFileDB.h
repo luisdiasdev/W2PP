@@ -22,14 +22,29 @@
 
 #include "../Basedef.h"
 
+#include <memory>
+#include <string>
+
+namespace storage
+{
+class Database;
+class AccountRepository;
+struct StorageConfig;
+}
+
 typedef struct
 {
      int Login;
      int Slot;
      STRUCT_ACCOUNTFILE File;
 	 int SecurePass;
-	 
+
 	 int Mac[4];
+
+	 // In-memory identity/state for repository calls. Not part of any record
+	 // or packet.
+	 long long AccountId;
+	 int State;
 } STRUCT_ACCOUNTLIST;
 
 int ProcessRecord(int conn, char * str);
@@ -80,10 +95,27 @@ public:
 	void SendGuildInfo			(int srv, int Guild);
 	int  GetEncPassword			(int idx, int *Enc);
 	void SetEncPassword			(int idx, int newsrv, int *Enc, int Unk);
+
+	// PostgreSQL storage. InitStorage connects, migrates and prepares the
+	// repository; every game/admin persistence call below goes through it.
+	bool InitStorage			(const storage::StorageConfig &config, std::string *error);
+	storage::AccountRepository *Repository() { return repository_.get(); }
+	const std::string &StorageError() const { return storageError_; }
+
+	// Credential/admin helpers backed by the repository.
+	int  GetAccountState			(const char *account);
+	bool SetAccountState			(const char *account, int state);
+	bool VerifyAccountPassword		(const char *account, const char *password, bool *matched);
+	bool ChangeAccountPassword		(const char *account, const char *password);
+	long long GetAccountId		(const char *account);
+
+private:
+	std::unique_ptr<storage::Database> database_;
+	std::unique_ptr<storage::AccountRepository> repository_;
+	std::string storageError_;
 };
 
 extern STRUCT_GUILDINFO GuildInfo[65536];
 extern unsigned short	g_pGuildWar[65536];
 extern unsigned short	g_pGuildAlly[65536];
-extern unsigned short   LastCapsule;
 #endif

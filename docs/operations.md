@@ -5,6 +5,93 @@ session on Windows or on Linux. The listener ports are unchanged: game-server
 `7514` and NP admin `8895`. On Linux the binary is `dbsrv`; the Windows name is
 `dbsrv.exe`.
 
+## Credential hashing policy
+
+DBSrv stores only BCrypt hashes of account passwords and numeric secure
+tokens. Hashing is confined to DBSrv; TMSrv forwards the submitted bytes
+unchanged. New hashes use the `$2b$` format with a fresh per-credential salt,
+and verification accepts `$2a$`/`$2b$`. A successful verification upgrades a
+hash whose cost is below the current policy inside the same transaction.
+
+Configuration (all values can be overridden by the listed environment
+variable):
+
+| Key in `Config.txt` | Environment override | Default | Meaning |
+| --- | --- | --- | --- |
+| `BcryptCost` | `W2PP_BCRYPT_COST` | `12` | BCrypt log2 cost; accepted range 10-14. A value outside the range makes DBSrv refuse to start. |
+| `AuthMaxFailures` | `W2PP_AUTH_MAX_FAILURES` | `5` | Consecutive failed password/token verifications before lockout. |
+| `AuthLockoutSeconds` | `W2PP_AUTH_LOCKOUT_SECONDS` | `900` | Lockout window; durable in the database across restarts. |
+
+Failed and locked verifications append a row to `credential_events` with the
+account id, credential kind and timestamp. No password, token, hash or
+submitted value is written to that table, the logs, exports or admin replies.
+
+The numeric secure token is only 4-6 digits, so its hash is guessable offline
+if the database leaks even at cost 12. BCrypt and the per-account lockout make
+online guessing impractical, but operators should prefer 6-digit tokens, keep
+database access restricted and treat the cost factor as a floor. A
+server-side pepper remains a possible follow-up.
+
+## PostgreSQL storage
+
+DBSrv uses PostgreSQL 19 as the only writable store for accounts, characters,
+cargo, affects and soul capsules; it never reads or writes `./account`,
+`./char` or `./capsule` while serving game or admin traffic. A running
+PostgreSQL 19 instance, the schema and a completed import are startup
+prerequisites.
+
+`Config.txt` keeps `Sapphire` on the first line and adds `Key Value` lines.
+Every key has an environment override:
+
+| Key | Environment | Default | Meaning |
+| --- | --- | --- | --- |
+| `PgHost` | `W2PP_PG_HOST` | `127.0.0.1` | Server host. |
+| `PgPort` | `W2PP_PG_PORT` | `5432` | Server port. |
+| `PgDatabase` | `W2PP_PG_DATABASE` | `w2pp` | Database name. |
+| `PgUser` | `W2PP_PG_USER` | `w2pp` | Runtime DML role. |
+| `PgSslMode` | `W2PP_PG_SSLMODE` | `prefer` | libpq `sslmode`. |
+| `PgConnectTimeout` | `W2PP_PG_CONNECT_TIMEOUT` | `10` | Connection timeout, seconds. |
+| `PgStatementTimeoutMs` | `W2PP_PG_STATEMENT_TIMEOUT_MS` | `5000` | Per-statement timeout. |
+| `PgLockTimeoutMs` | `W2PP_PG_LOCK_TIMEOUT_MS` | `2000` | Lock wait timeout. |
+
+The database password is never written to `Config.txt`. Set
+`W2PP_PG_PASSWORD`, `PGPASSWORD`, or use a libpq password file.
+
+At startup DBSrv connects, verifies the schema contract, applies pending
+migrations (advisory-locked), requires `store_metadata.import_state =
+'complete'`, and only then starts listening. An unreachable database, rejected
+credentials, a newer schema contract, a failed migration or a pending import
+each exit non-zero with a message naming the problem; there is no fallback to
+the legacy files.
+
+Operator-visible admin changes: the NP account information reply carries an
+empty password field, and the reported state is the explicit account state
+(0 normal, 1 blocked, 2 deleted, 3 disabled) with a dated block also reported
+as 1. Saving from the admin tool cannot overwrite a stored hash.
+
+## Legacy cutover runbook
+
+1. Provision PostgreSQL 19, a database and a runtime DML role. Put the
+   password in `W2PP_PG_PASSWORD` and the connection keys in `Config.txt`.
+2. Stop the old DBSrv and keep a copy of `./account`, `./char`, `./capsule`
+   and `Config.txt`. The importer only reads the trees.
+3. Dry run and review rejects:
+   `dbimport --source <legacy root> --dry-run --report import-dry.txt`
+   then run `dbimport --source <legacy root> --report import.txt`.
+   A successful run reports `result=complete`, sets `import_state = complete`
+   and seeds the capsule sequence above the imported maximum.
+4. Start the new DBSrv. It refuses to start if `import_state` is not complete.
+5. Smoke test with `db_login_probe 127.0.0.1 7514 <account> <password>` (exit 0
+   admitted, 2 credential/state refusal, 3 connect failure), then check save,
+   capsule put-in/take-out and the ranking report.
+6. Cut over: keep the legacy tree untouched and let the new DBSrv be the only
+   writer. Archive the tree after the observation window.
+7. Rollback before cutover: stop the new DBSrv and start the previous binary
+   (the files were not modified). After cutover: run
+   `dbimport --legacy-export <restore dir>` and start the previous binary on
+   that tree; credentials are intentionally absent from the export, so reset
+   affected passwords through the admin flow if rollback is required.
+
 ## Runtime tree
 
 The process sets its working directory to the executable's directory. The
