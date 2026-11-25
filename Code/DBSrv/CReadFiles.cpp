@@ -836,14 +836,14 @@ void CReadFiles::UpdateUser()
 			{
 				ret = (platform::DeleteFile(filename) == platform::FsResult::Ok) ? 1 : 0;
 
-				sprintf(temp, "AccountName:%s AccountPass:%s filename:%s", id, pass, filename);
+				sprintf(temp, "AccountName:%s filename:%s", id, filename);
 				Log(temp, "-UPDATE USER SUCCESS - FILE DELETED [WARNING]", 0);
 			}
 			else
 			{
 				ret = (platform::DeleteFile(filename) == platform::FsResult::Ok) ? 1 : 0;
 
-				sprintf(temp, "AccountName:%s AccountPass:%s filename:%s", id, pass, filename);
+				sprintf(temp, "AccountName:%s filename:%s", id, filename);
 				Log(temp, "-UPDATE USER FAIL - FILE DELETED [WARNING]", 0);
 			}
 		}

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(w2pp VERSION 1.0.0 LANGUAGES CXX)
+project(w2pp VERSION 1.0.0 LANGUAGES C CXX)
 
 # The servers are 32-bit binaries and the on-disk / on-wire layouts depend on
 # the Win32 x86 ABI. Refuse any other platform or architecture instead of
@@ -77,9 +77,25 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 find_package(Threads REQUIRED)
 find_package(asio CONFIG REQUIRED)
+
+# PostgreSQL client library for the DBSrv storage layer. vcpkg ships the
+# find_package integration; requiring it here makes a missing or unsupported
+# triplet fail configure instead of producing a DBSrv without a store.
+find_package(PostgreSQL REQUIRED)
+
+# Small executable that only prints the linked libpq version. It proves the
+# manifest resolves and links the client library on every supported triplet.
+add_executable(libpq_probe tests/tools/libpq_probe.cpp)
+target_link_libraries(libpq_probe PRIVATE PostgreSQL::PostgreSQL)
+
+# Smoke executable for the vendored BCrypt target (hash + verify).
+add_executable(bcrypt_probe tests/tools/bcrypt_probe.cpp)
+target_link_libraries(bcrypt_probe PRIVATE w2pp_bcrypt)
 
 # Portable asio settings. ASIO_USE_TS_EXECUTOR_AS_DEFAULT works around asio
 # 1.38's default any_io_executor constraints failing under MSVC 19.44/C++20.
@@ -88,6 +104,63 @@ add_compile_definitions($<$<CONFIG:Debug>:_PACKET_DEBUG>)
 
 # No transitional Win32 libraries: the servers and the shared code no longer
 # call user32, gdi32 or winmm. Winsock is linked by the asio headers.
+
+# ---------------------------------------------------------------------------
+# BCrypt (vendored): password and secure-token hashing for DBSrv.
+# ---------------------------------------------------------------------------
+
+add_library(w2pp_bcrypt STATIC
+  third_party/bcrypt/bcrypt.c
+  third_party/bcrypt/blowfish.c
+  third_party/bcrypt/w2pp_bcrypt.c
+  third_party/bcrypt/w2pp_bcrypt_random.cpp
+  third_party/bcrypt/w2pp_bcrypt.h
+  third_party/bcrypt/blf.h
+)
+
+target_include_directories(w2pp_bcrypt PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bcrypt
+)
+
+# ---------------------------------------------------------------------------
+# Storage: PostgreSQL persistence, record codec and credential security.
+# ---------------------------------------------------------------------------
+
+add_library(w2pp_storage STATIC
+  Code/storage/StorageConfig.cpp
+  Code/storage/StorageConfig.h
+  Code/storage/Database.cpp
+  Code/storage/Database.h
+  Code/storage/Schema.cpp
+  Code/storage/Schema.h
+  Code/storage/RecordCodec.cpp
+  Code/storage/RecordCodec.h
+  Code/storage/Records.h
+  Code/storage/AccountRepository.cpp
+  Code/storage/AccountRepository.h
+  Code/storage/LegacyImporter.cpp
+  Code/storage/LegacyImporter.h
+  Code/security/PasswordHash.cpp
+  Code/security/PasswordHash.h
+  Code/security/CredentialBytes.cpp
+  Code/security/CredentialBytes.h
+)
+
+target_include_directories(w2pp_storage PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/Code
+)
+
+target_link_libraries(w2pp_storage PUBLIC PostgreSQL::PostgreSQL w2pp_bcrypt)
+
+# ---------------------------------------------------------------------------
+# Legacy importer CLI
+# ---------------------------------------------------------------------------
+
+add_executable(dbimport
+  Code/tools/dbimport.cpp
+)
+
+target_link_libraries(dbimport PRIVATE w2pp_storage w2pp_core)
 
 # ---------------------------------------------------------------------------
 # Shared core: code compiled into both servers.
@@ -269,7 +342,7 @@ add_executable(dbsrv
 )
 
 target_include_directories(dbsrv PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Code/DBSrv)
-target_link_libraries(dbsrv PRIVATE w2pp_core)
+target_link_libraries(dbsrv PRIVATE w2pp_core w2pp_storage)
 
 # ---------------------------------------------------------------------------
 # Legacy release tree
@@ -322,6 +395,10 @@ w2pp_copy_to_release(dbsrv DBSRV)
 
 include(CTest)
 
+option(W2PP_DB_TESTS
+  "Run PostgreSQL storage integration tests through the Compose test stack"
+  ON)
+
 if(BUILD_TESTING)
   find_package(Catch2 CONFIG REQUIRED)
   include(Catch)
@@ -336,14 +413,33 @@ if(BUILD_TESTING)
     tests/net/BillingTests.cpp
     tests/net/ClientLinkTests.cpp
     tests/host/RuntimeTests.cpp
+    tests/storage/RecordCodecTests.cpp
+    tests/security/SecurityTests.cpp
   )
 
-  target_link_libraries(w2pp_tests PRIVATE Catch2::Catch2WithMain w2pp_core)
+  target_link_libraries(w2pp_tests PRIVATE
+    Catch2::Catch2WithMain w2pp_core w2pp_storage)
   target_compile_definitions(w2pp_tests PRIVATE
     W2PP_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
   )
 
   catch_discover_tests(w2pp_tests)
+
+  # Database integration binary. It is run as a whole by CTest through the
+  # container runners, so its cases are not registered individually.
+  add_executable(w2pp_db_tests
+    tests/db/DbTests.cpp
+    tests/db/SchemaTests.cpp
+    tests/db/RepositoryTests.cpp
+    tests/db/ConnectionTests.cpp
+    tests/db/ImportTests.cpp
+  )
+
+  target_link_libraries(w2pp_db_tests PRIVATE
+    Catch2::Catch2WithMain w2pp_storage w2pp_core)
+  target_compile_definitions(w2pp_db_tests PRIVATE
+    W2PP_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+  )
 
   if(WIN32)
     find_program(W2PP_PWSH pwsh)
@@ -372,6 +468,7 @@ if(BUILD_TESTING)
     set_tests_properties(dbsrv-loopback PROPERTIES
       LABELS integration
       TIMEOUT 90
+      SKIP_RETURN_CODE 77
     )
 
     add_test(
@@ -384,6 +481,19 @@ if(BUILD_TESTING)
     set_tests_properties(tmsrv-smoke PROPERTIES
       LABELS integration
       TIMEOUT 120
+    )
+
+    add_test(
+      NAME dbsrv-db-smoke
+      COMMAND ${W2PP_PWSH} -NoProfile -ExecutionPolicy Bypass
+              -File "${CMAKE_SOURCE_DIR}/tests/integration/dbsrv_db_smoke.ps1"
+              -ExeDir "$<TARGET_FILE_DIR:dbsrv>"
+              -CommonDir "$<TARGET_FILE_DIR:dbsrv>/../../Common"
+    )
+    set_tests_properties(dbsrv-db-smoke PROPERTIES
+      LABELS integration
+      TIMEOUT 180
+      SKIP_RETURN_CODE 77
     )
   elseif(UNIX)
     add_test(
@@ -420,5 +530,51 @@ if(BUILD_TESTING)
     tests/tools/login_probe.cpp
   )
   target_link_libraries(login_probe PRIVATE w2pp_core)
+
+  # Database-backed login probe: plays one _MSG_DBAccountLogin directly
+  # against DBSrv so the PostgreSQL admission path can be checked without
+  # TMSrv or a game client.
+  add_executable(db_login_probe
+    tests/tools/db_login_probe.cpp
+  )
+  target_link_libraries(db_login_probe PRIVATE w2pp_core)
+
+  # Writes a minimal legacy account/char tree for importer and login smoke
+  # tests.
+  add_executable(legacy_fixture
+    tests/tools/legacy_fixture.cpp
+  )
+  target_link_libraries(legacy_fixture PRIVATE w2pp_core)
+
+  # Database integration: one CTest entry that owns the Compose lifecycle.
+  find_program(W2PP_DOCKER docker)
+  if(W2PP_DB_TESTS AND W2PP_DOCKER)
+    if(WIN32)
+      add_test(
+        NAME db-integration
+        COMMAND ${W2PP_PWSH} -NoProfile -ExecutionPolicy Bypass
+                -File "${CMAKE_SOURCE_DIR}/tests/db/run_db_tests.ps1"
+                -Command "& '$<TARGET_FILE:w2pp_db_tests>'"
+      )
+    else()
+      add_test(
+        NAME db-integration
+        COMMAND ${W2PP_BASH} "${CMAKE_SOURCE_DIR}/tests/db/run_db_tests.sh"
+                -- "$<TARGET_FILE:w2pp_db_tests>"
+      )
+    endif()
+
+    set_tests_properties(db-integration PROPERTIES
+      LABELS "integration;db"
+      TIMEOUT 600
+      SKIP_RETURN_CODE 77
+    )
+  elseif(W2PP_DB_TESTS)
+    message(STATUS
+      "db-integration disabled: Docker was not found on PATH "
+      "(configure with -DW2PP_DB_TESTS=OFF to silence this message)")
+  else()
+    message(STATUS "db-integration disabled by -DW2PP_DB_TESTS=OFF")
+  endif()
 endif()
 

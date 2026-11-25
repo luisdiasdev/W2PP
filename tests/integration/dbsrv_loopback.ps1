@@ -11,6 +11,13 @@ if ($CommonDir -eq "") { $CommonDir = Join-Path $PSScriptRoot "..\..\build\Commo
 $ExeDir = (Resolve-Path $ExeDir).Path
 $CommonDir = [System.IO.Path]::GetFullPath($CommonDir)
 
+# DBSrv now needs PostgreSQL and a completed import. CTest skips this test when
+# no database is provisioned; run it through tests/db/run_db_tests.ps1 locally.
+if (-not $env:W2PP_PG_HOST) {
+    Write-Host "skip: PostgreSQL is not configured (run through tests/db/run_db_tests.ps1)"
+    exit 77
+}
+
 $exe = Join-Path $ExeDir "dbsrv.exe"
 if (-not (Test-Path $exe)) { throw "dbsrv.exe not found at $exe" }
 
@@ -22,7 +29,22 @@ New-Item -ItemType Directory -Force -Path `
     (Join-Path $ExeDir "Import\Donate"), `
     $CommonDir | Out-Null
 
-Set-Content -Path (Join-Path $ExeDir "Config.txt") -Value "Sapphire 8`nLastCapsule 1" -Encoding ascii
+$config = @(
+    "Sapphire 8",
+    "PgHost $($env:W2PP_PG_HOST)",
+    "PgPort $($env:W2PP_PG_PORT)",
+    "PgDatabase $($env:W2PP_PG_DATABASE)",
+    "PgUser $($env:W2PP_PG_USER)",
+    "PgSslMode $($env:W2PP_PG_SSLMODE)"
+) -join "`n"
+
+Set-Content -Path (Join-Path $ExeDir "Config.txt") -Value $config -Encoding ascii
+
+$dbimport = Join-Path $ExeDir "dbimport.exe"
+if (-not (Test-Path $dbimport)) { throw "dbimport.exe not found at $dbimport" }
+
+& $dbimport --empty | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "dbimport --empty failed with exit code $LASTEXITCODE" }
 
 foreach ($name in @("TK", "FM", "BM", "HT")) {
     [System.IO.File]::WriteAllBytes((Join-Path $ExeDir "BaseMob\$name"), (New-Object byte[] 816))

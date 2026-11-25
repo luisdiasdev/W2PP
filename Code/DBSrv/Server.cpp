@@ -25,9 +25,12 @@
 #include <errno.h>
 #include <cstdarg>
 #include <vector>
+#include <algorithm>
+#include <string>
 
 #include "../Basedef.h"
 #include "../ItemEffect.h"
+#include "../storage/AccountRepository.h"
 #include "../net/LocalAddress.h"
 #include "../platform/FileSystem.h"
 #include "CUser.h"
@@ -248,17 +251,16 @@ int SendAdminParm(int svr, unsigned short id, unsigned short signal, int parm)
 	return true;
 }
 
-int SendAdminState(int svr, unsigned short id, unsigned short signal, char *pass)
+int SendAdminState(int svr, unsigned short id, unsigned short signal, int state)
 {
 	MSG_STANDARDPARM sm;
+	memset(&sm, 0, sizeof(sm));
 
 	sm.Type = signal;
 	sm.ID	= id;
 	sm.Size = sizeof(MSG_STANDARDPARM);
 
-	if(pass[0] == '@') sm.Parm = 1;
-	if(pass[0] == '_') sm.Parm = 2;
-	if(pass[0] == '#') sm.Parm = 3;
+	sm.Parm = state;
 
 	pAdmin[svr].cSock.SendOneMessage((char*)&sm, sizeof(sm));
 
@@ -317,7 +319,6 @@ int ReadConfig()
 	}
 
 	fscanf(fp, "Sapphire %d\n", &Sapphire);
-	fscanf(fp, "LastCapsule %hu\n", &LastCapsule);
 
 	fclose(fp);
 
@@ -332,7 +333,6 @@ int WriteConfig()
 		return false;
 
 	fprintf(fp, "Sapphire %d\n", Sapphire);
-	fprintf(fp, "LastCapsule %d\n", LastCapsule);
 
 	fclose(fp);
 
@@ -503,13 +503,12 @@ void DisableAccount(int conn, char *account, int Year, int YearDay)
 	if(file.Info.YearDay != 0 && file.Info.Year != 0) 
 	{	
 		if(conn >= 0) 
-			SendAdminState(conn, 0, _MSG_NPState, "1");
+			SendAdminState(conn, 0, _MSG_NPState, 1);
 
 		return;
 	}
 
-	file.Info.AccountPass[ACCOUNTPASS_LENGTH-1] = 0;
-	file.Info.AccountPass[ACCOUNTPASS_LENGTH-2] = 0;
+	cFileDB.SetAccountState(account, 1);
 
 	file.Info.Year = Year;
 	file.Info.YearDay = YearDay;
@@ -560,23 +559,25 @@ void EnableAccount(int conn, char *account)
 		return;
 	}
 
-	if(file.Info.Year == 0 && file.Info.YearDay == 0) 
+	int currentState = cFileDB.GetAccountState(account);
+
+	if(file.Info.Year == 0 && file.Info.YearDay == 0 && currentState == 0)
 	{	
 		if(conn >= 0) 
-			SendAdminState(conn, 0, _MSG_NPState, file.Info.AccountPass);
+			SendAdminState(conn, 0, _MSG_NPState, 0);
 
 		return;
 	}
 
-	file.Info.AccountPass[ACCOUNTPASS_LENGTH-1] = 0;
-	file.Info.AccountPass[ACCOUNTPASS_LENGTH-2] = 0;
+	cFileDB.SetAccountState(account, 0);
+
 	file.Info.Year = 0;
 	file.Info.YearDay = 0;
 
 	cFileDB.DBWriteAccount(&file);
 
 	if(conn >= 0)
-		SendAdminState(conn, 0, _MSG_NPState, file.Info.AccountPass);
+		SendAdminState(conn, 0, _MSG_NPState, 0);
 
 	return ;
 }
@@ -819,16 +820,15 @@ int ProcessAdminMessage(int conn, char *msg)
 			if(iret == false) 
 				return true;
 
-			if(file.Info.AccountPass[0] == '_') 
+			int accountState = cFileDB.GetAccountState(m->Account);
+
+			if(accountState != 0)
 				return false;
-			if(file.Info.AccountPass[0] == '@') 
-				return false; 
 
-			char *p = (char*)file.Info.AccountPass;
+			bool passwordMatched = false;
 
-			iret = strncmp(m->Pass, p, ACCOUNTPASS_LENGTH);
-
-			if(iret) 
+			if (!cFileDB.VerifyAccountPassword(m->Account, m->Pass, &passwordMatched)
+				|| !passwordMatched)
 				return false;
 
 			int maxlevel = 0;
@@ -929,26 +929,23 @@ int ProcessAdminMessage(int conn, char *msg)
 
 			int admin = maxlevel - 1000;
 
-			sm.State = 0;
+			int accountState = cFileDB.GetAccountState(m->Account);
+
+			if (accountState == 0 && sm.account.Info.Year != 0
+				&& sm.account.Info.YearDay != 0)
+				accountState = 1;
+
+			sm.State = accountState;
 
 			char accountstate[256];
-			memset(accountstate, 0, 255);
+			memset(accountstate, 0, sizeof(accountstate));
 
-			if (sm.account.Info.AccountPass[0] == '@' || sm.account.Info.Year != 0) 
-			{
+			if (accountState == 1)
 				sprintf(accountstate, "Conta bloqueada.");
-				sm.State = 1;
-			}
-			if (sm.account.Info.AccountPass[0] == '_') 
-			{
+			else if (accountState == 2)
 				sprintf(accountstate, "Conta Defeituosa.");
-				sm.State = 2;
-			}
-			if (sm.account.Info.AccountPass[0] == '#') 
-			{
+			else if (accountState == 3)
 				sprintf(accountstate, "Conta Desativada.");
-				sm.State = 3;
-			}
 
 			char temp[256]; 			
 			sprintf(temp, "%s < %s | %s | %s | %s> - %s", file.Info.AccountName, file.Char[0].MobName, file.Char[1].MobName, file.Char[2].MobName, file.Char[3].MobName, accountstate);
@@ -1033,6 +1030,8 @@ int ProcessAdminMessage(int conn, char *msg)
 
 			memcpy(m->account.Info.AccountPass, tmpact.Info.AccountPass, ACCOUNTPASS_LENGTH);
 
+			// Credential columns are never overwritten by an admin save; the
+			// submitted password field is ignored on purpose.
 			cFileDB.DBWriteAccount(&m->account);
 
 			char temp[128]; 
@@ -1231,7 +1230,7 @@ void StartLog(char *cccc)
 	 LastLogDay = when.tm_mday;
 }
 
-void Log(char *str1, char *str2, unsigned int ip)
+void Log(const char *str1, const char *str2, unsigned int ip)
 {
 	struct tm when;
 	time_t now;
@@ -1284,7 +1283,7 @@ void DayLog_ExpLog()
 		return;
 	}
 
-	DayLog_ReadAccountInDir("./account/*", fp);
+	DayLog_ReadAccountInDir(fp);
 
 	fclose(fp);
 }
@@ -1302,64 +1301,47 @@ int GetEmptyUser()
 	return -1;
 }
 
-void DayLog_ReadAccountInDir(char *dir, FILE *log)
+void DayLog_ReadAccountInDir(FILE *log)
 {
-	char tmp[1024];
+	if (log == nullptr || cFileDB.Repository() == nullptr)
+		return;
 
-	platform::DirectoryIterator iterator(dir);
-	platform::DirectoryEntry entry;
+	struct tm when;
+	time_t now;
+	time(&now);
+	when = *localtime(&now);
 
-	while (iterator.Next(entry))
+	std::vector<storage::AccountRepository::DayLogEntry> entries;
+	std::string error;
+
+	if (!cFileDB.Repository()->DayLogEntries(when.tm_yday - 1, &entries, &error))
 	{
-		if (entry.isDirectory)
-		{
-			sprintf(tmp, "./account/%s/*", entry.name.c_str());
-			DayLog_ReadAccountInDir(tmp, log);
-		}
-		else
-		{
-			const platform::LocalTime sysTime = platform::LocalNow();
+		Log(error, "-system", 0);
+		return;
+	}
 
-			// Only use fresh active accounts 
-			if (entry.lastWriteTime.year != sysTime.year ||
-			    entry.lastWriteTime.month != sysTime.month)
-				continue;
+	for (const storage::AccountRepository::DayLogEntry &entry : entries)
+	{
+		char account[ACCOUNTNAME_LENGTH];
+		char character[NAME_LENGTH];
 
-			sprintf(tmp, "%s", entry.path.c_str());
+		memset(account, 0, sizeof(account));
+		memset(character, 0, sizeof(character));
 
-			errno = 0;
-			FILE* fs;
-			fs = fopen(tmp, "rb");
+		size_t accountLength = std::min<std::size_t>(entry.account.size(),
+			sizeof(account) - 1);
+		size_t characterLength = std::min<std::size_t>(entry.character.size(),
+			sizeof(character) - 1);
 
-			if (fs != NULL)
-			{
-				STRUCT_ACCOUNTFILE accBuffer;
-				memset(&accBuffer, 0, sizeof(STRUCT_ACCOUNTFILE));
+		if (accountLength > 0)
+			memcpy(account, entry.account.data(), accountLength);
+		if (characterLength > 0)
+			memcpy(character, entry.character.data(), characterLength);
 
-				fread(&accBuffer, sizeof(STRUCT_ACCOUNTFILE), 1, fs);
-
-				struct tm when;
-				time_t now;
-				time(&now);
-				when = *localtime(&now);
-
-				for (int i = 0; i < MOB_PER_ACCOUNT; i++)
-				{
-					if (accBuffer.Char[i].MobName[0] == '\0')
-						continue;
-
-					if (accBuffer.mobExtra[i].DayLog.YearDay == when.tm_yday-1)
-						fprintf(log, "[%02d/%02d/%04d][%02d:%02d:%02d] %s Char:%s recebeu %llu exp hoje.\n", when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour, when.tm_min, when.tm_sec, accBuffer.Info.AccountName, accBuffer.Char[i].MobName, accBuffer.mobExtra[i].DayLog.Exp);
-					
-				}
-
-				fclose(fs);
-			}
-			else
-			{
-				// TODO: Cant open file to read
-			}
-		}
+		fprintf(log, "[%02d/%02d/%04d][%02d:%02d:%02d] %s Char:%s recebeu %llu exp hoje.\n",
+			when.tm_mday, when.tm_mon + 1, when.tm_year + 1900, when.tm_hour,
+			when.tm_min, when.tm_sec, account, character,
+			static_cast<unsigned long long>(entry.exp));
 	}
 }
 

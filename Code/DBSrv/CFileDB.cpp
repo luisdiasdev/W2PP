@@ -29,6 +29,16 @@
 #include "CRanking.h"
 #include "CReadFiles.h"
 #include "../Basedef.h"
+#include "../storage/AccountRepository.h"
+#include "../storage/Database.h"
+#include "../storage/RecordCodec.h"
+#include "../storage/Schema.h"
+#include "../storage/StorageConfig.h"
+#include "../security/CredentialBytes.h"
+
+#include <algorithm>
+#include <string>
+#include <vector>
 
 
 extern int ServerIndex; //Server.cpp
@@ -48,7 +58,6 @@ extern STRUCT_ITEMLOG ItemDayLog[MAX_ITEMLIST];
 unsigned short	g_pGuildWar[65536] = {0,};
 unsigned short	g_pGuildAlly[65536] = {0,};
 STRUCT_GUILDINFO GuildInfo[65536];
-unsigned short  LastCapsule = 0; 
 
 
 CFileDB::CFileDB()
@@ -64,6 +73,9 @@ CFileDB::CFileDB()
 		pAccountList[i].Mac[2] = 0;
 		pAccountList[i].Mac[3] = 0;
 
+		pAccountList[i].AccountId = 0;
+		pAccountList[i].State = 0;
+
 		memset(&pAccountList[i].File, 0, sizeof(pAccountList[i].File));
 	}
 }
@@ -76,7 +88,8 @@ int CFileDB::AddAccount(char *id, char *pass, char *name, int ssn1, int ssn2, ch
 {
 	char check[ACCOUNTNAME_LENGTH];
 
-	strncpy(check, id, ACCOUNTNAME_LENGTH);
+	strncpy(check, id, ACCOUNTNAME_LENGTH - 1);
+	check[ACCOUNTNAME_LENGTH - 1] = 0;
 
 	UpcaseString(check);
 
@@ -85,33 +98,36 @@ int CFileDB::AddAccount(char *id, char *pass, char *name, int ssn1, int ssn2, ch
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
 
-	char First[128];
-
-	BASE_GetFirstKey(id, First);
-
-	char temp[128];
-
-	sprintf(temp, "./account/%s/%s", First, check);
-
-	platform::File probe;
-
-	if(probe.OpenRead(temp))
+	if (!repository_)
 	{
-		probe.Close();
-
+		Log("err addaccount storage not initialized", check, 0);
 		return false;
 	}
+
+	storage::AccountRecord existing;
+	bool found = false;
+	std::string error;
+
+	if (!repository_->LoadAccount(storage::NameBytes(check, ACCOUNTNAME_LENGTH),
+			&existing, &found, &error))
+	{
+		Log(error, check, 0);
+		return false;
+	}
+
+	if (found)
+		return false;
 
 	STRUCT_ACCOUNTFILE file;
 
 	memset(&file, 0, sizeof(STRUCT_ACCOUNTFILE));
 
-	strncpy(file.Info.AccountName, id, ACCOUNTNAME_LENGTH);
-	strncpy(file.Info.AccountPass, pass, ACCOUNTPASS_LENGTH);
-	strncpy(file.Info.RealName, name, REALNAME_LENGTH);
-	strncpy(file.Info.Email, email, EMAIL_LENGTH);
-	strncpy(file.Info.Telephone, tel, TELEPHONE_LENGTH);
-	strncpy(file.Info.Address, addr, ADDRESS_LENGTH);
+	strncpy(file.Info.AccountName, id, ACCOUNTNAME_LENGTH - 1);
+	strncpy(file.Info.AccountPass, pass, ACCOUNTPASS_LENGTH - 1);
+	strncpy(file.Info.RealName, name, REALNAME_LENGTH - 1);
+	strncpy(file.Info.Email, email, EMAIL_LENGTH - 1);
+	strncpy(file.Info.Telephone, tel, TELEPHONE_LENGTH - 1);
+	strncpy(file.Info.Address, addr, ADDRESS_LENGTH - 1);
 
 	file.Info.NumericToken[0] = -1;
 	file.Donate = 0;
@@ -143,7 +159,8 @@ int CFileDB::UpdateAccount(char *id, char *pass)
 {
 	char check[ACCOUNTNAME_LENGTH];
 
-	strncpy(check, id, ACCOUNTNAME_LENGTH);
+	strncpy(check, id, ACCOUNTNAME_LENGTH - 1);
+	check[ACCOUNTNAME_LENGTH - 1] = 0;
 
 	UpcaseString(check);
 
@@ -152,54 +169,34 @@ int CFileDB::UpdateAccount(char *id, char *pass)
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
 
-	char First[128];
-
-	BASE_GetFirstKey(id, First);
-
-	char temp[128];
-
-	sprintf(temp, "./account/%s/%s", First, check);
-
-	platform::File probe;
-
-	if(!probe.OpenRead(temp))
+	if (!repository_)
 		return false;
 
-	probe.Close();
+	storage::AccountRecord record;
+	bool found = false;
+	std::string error;
+
+	if (!repository_->LoadAccount(storage::NameBytes(check, ACCOUNTNAME_LENGTH),
+			&record, &found, &error))
+	{
+		Log(error, check, 0);
+		return false;
+	}
+
+	if (!found)
+		return false;
+
+	if (!repository_->ChangePassword(record.account_id,
+			security::NewCredential(pass, ACCOUNTPASS_LENGTH), &error))
+	{
+		Log(error, check, 0);
+		return false;
+	}
 
 	int Idx = GetIndex(id);
 
-	if(Idx != 0)
-		strncpy(pAccountList[Idx].File.Info.AccountPass, pass, ACCOUNTPASS_LENGTH);
-
-	STRUCT_ACCOUNTFILE file;
-
-	memcpy(file.Info.AccountName, id, ACCOUNTNAME_LENGTH);
-
-	int ret = DBReadAccount(&file);
-
-	if(ret == false)
-	{
-		Log("err, updateaccount read fail", id, 0);
-
-		return false;
-	}
-
-	strncpy(file.Info.AccountPass, pass, ACCOUNTPASS_LENGTH);
-
-	ret = DBWriteAccount(&file);
-
-	if(ret == false)
-	{
-		Log("err, updateAccount write fail", id, 0);
-
-		return false;
-	}
-
-	int IdxName = GetIndex(file.Info.AccountName);
-
-	if(IdxName > 0 && IdxName < MAX_DBACCOUNT)
-		strncpy(file.Info.AccountPass, pass, ACCOUNTPASS_LENGTH);
+	if (Idx != 0)
+		memset(pAccountList[Idx].File.Info.AccountPass, 0, ACCOUNTPASS_LENGTH);
 
 	return true;
 }
@@ -542,6 +539,9 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 			AddAccountList(Idx);
 
+			pAccountList[Idx].AccountId = GetAccountId(file->Info.AccountName);
+			pAccountList[Idx].State = 0;
+
 			MSG_DBCNFAccountLogin sm;
 
 			sm.Type = _MSG_DBCNFAccountLogin;
@@ -624,60 +624,64 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			int Idx = GetIndex(conn, m->ID);
 			int IdxName = GetIndex(m->AccountName);
 
-			STRUCT_ACCOUNTFILE file;
-
-			memset(&file, 0, sizeof(file));
-
-			memcpy(&file.Info.AccountName, m->AccountName, ACCOUNTNAME_LENGTH);
-
-			int ret = DBReadAccount(&file);
-
-			if(ret == 0)
+			if (!repository_)
 			{
+				Log("err,login storage not initialized", m->AccountName, 0);
+
 				SendDBSignal(conn, m->ID, _MSG_DBAccountLoginFail_Account);
 
 				return true;
 			}
 
-			if(file.Coin < 0)
-				file.Coin = 0;
+			storage::AccountRecord record;
+			std::string storageError;
+			bool tempKeyUsed = false;
 
-			if(file.Info.Year != 0 && file.Info.YearDay != 0)
+			std::string password = security::SubmittedCredential(
+				m->AccountPassword, ACCOUNTPASS_LENGTH);
+			std::string tempKey(m->Zero, sizeof(m->Zero));
+
+			storage::LoginStatus status = repository_->AdmitLogin(
+				storage::NameBytes(m->AccountName, ACCOUNTNAME_LENGTH),
+				password, tempKey, &record, &tempKeyUsed, &storageError);
+
+			switch (status)
 			{
-				struct tm when;
-				time_t now;
-				time(&now);
-				when = *localtime(&now);
+			case storage::LoginStatus::Success:
+				break;
 
-				if(file.Info.Year >= when.tm_year || file.Info.Year >= when.tm_year && file.Info.YearDay >= when.tm_yday)
-				{
-					SendDBSignalParm(conn, m->ID, _MSG_DBAccountLoginFail_Block, 0);
-					return true;
-				}
-			}
-
-			int ChangeServer = 0;
-
-			if (file.TempKey[0] != 0 && m->Zero[0] != 0)
-			{
-				if (memcmp(file.TempKey, m->Zero, sizeof(file.TempKey)) == 0)
-				{
-					memset(file.TempKey, 0, sizeof(file.TempKey));
-					ChangeServer = 1;
-					goto lb_sucess;
-				}
-				memset(file.TempKey, 0, sizeof(file.TempKey));
-				DBWriteAccount(&file);
+			case storage::LoginStatus::NotFound:
+				SendDBSignal(conn, m->ID, _MSG_DBAccountLoginFail_Account);
 				return true;
-			}
 
-			if(strcmp(file.Info.AccountPass, m->AccountPassword) != 0)
-			{
+			case storage::LoginStatus::WrongPassword:
+			case storage::LoginStatus::Locked:
+				if (!storageError.empty())
+					Log(storageError, m->AccountName, 0);
 				SendDBSignal(conn, m->ID, _MSG_DBAccountLoginFail_Pass);
+				return true;
 
+			case storage::LoginStatus::Blocked:
+				SendDBSignalParm(conn, m->ID, _MSG_DBAccountLoginFail_Block, 0);
+				return true;
+
+			case storage::LoginStatus::TempKeyMismatch:
+				// Legacy behavior: the stored server-change token was cleared
+				// and the attempt ends without a reply.
+				return true;
+
+			case storage::LoginStatus::Error:
+			default:
+				Log(storageError, m->AccountName, 0);
+				SendDBSignal(conn, m->ID, _MSG_DBAccountLoginFail_Account);
 				return true;
 			}
-		lb_sucess:
+
+			STRUCT_ACCOUNTFILE file;
+
+			storage::AccountFileFromRecord(record, &file);
+
+			int ChangeServer = tempKeyUsed ? 1 : 0;
 
 			if(IdxName == Idx)
 				return true;
@@ -744,6 +748,9 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			pFile = &pAccountList[Idx].File;
 
 			memcpy(pFile, &file, sizeof(STRUCT_ACCOUNTFILE));
+
+			pAccountList[Idx].AccountId = record.account_id;
+			pAccountList[Idx].State = record.state;
 
 			pAccountList[Idx].Mac[0] = m->AdapterName[0];
 			pAccountList[Idx].Mac[1] = m->AdapterName[1];
@@ -1292,7 +1299,14 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 				break;
 			}
 
-			if (strncmp(m->Password, pAccountList[Idx].File.Info.AccountPass, ACCOUNTPASS_LENGTH) != 0)
+			bool passwordMatched = false;
+			std::string passwordError;
+
+			if (!repository_
+				|| !repository_->VerifyPassword(pAccountList[Idx].AccountId,
+					security::SubmittedCredential(m->Password, ACCOUNTPASS_LENGTH),
+					&passwordMatched, &passwordError)
+				|| !passwordMatched)
 			{
 				SendDBSignal(conn, m->ID, _MSG_DBDeleteCharacterFail);
 
@@ -1352,6 +1366,10 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		MSG_AccountSecure *m = (MSG_AccountSecure*)Msg;
 
 		int Idx = GetIndex(conn, m->ID);
+
+		if (!repository_ || Idx < 0 || Idx >= MAX_DBACCOUNT)
+			break;
+
 		int Secure = pAccountList[Idx].SecurePass;
 
 		int Change = m->ChangeNumeric;
@@ -1363,50 +1381,63 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			break;
 		}
 
+		std::string token = security::SubmittedCredential(
+			m->NumericToken, sizeof(m->NumericToken));
+		std::string error;
+
 		if (pAccountList[Idx].File.Info.NumericToken[0] == -1)
 		{
-			strncpy(pAccountList[Idx].File.Info.NumericToken, m->NumericToken, 6);
-
-			int ret = DBWriteAccount(&pAccountList[Idx].File);
-
-			if (ret == 0)
+			if (!repository_->BindToken(pAccountList[Idx].AccountId, token, false, &error))
 			{
-				Log("err,save secure - create file", pAccountList[Idx].File.Info.AccountName, 0);
+				Log(error, pAccountList[Idx].File.Info.AccountName, 0);
 
-				return true;
+				pAccountList[Idx].SecurePass = -1;
+				SendDBSignal(conn, m->ID, _MSG_AccountSecureFail);
+
+				break;
 			}
 
+			// The plaintext token is never kept in the session record; zero is
+			// the "bound" marker that replaces the legacy -1 sentinel.
+			memset(pAccountList[Idx].File.Info.NumericToken, 0, sizeof(pAccountList[Idx].File.Info.NumericToken));
+
 			pAccountList[Idx].SecurePass = 1;
 			SendDBSignal(conn, m->ID, _MSG_AccountSecure);
 
 			break;
 		}
 
-		if (Change == 0 && Secure == -1 && strncmp(pAccountList[Idx].File.Info.NumericToken, m->NumericToken, 6) == 0)
+		if (Change == 0 && Secure == -1)
 		{
-			pAccountList[Idx].SecurePass = 1;
-			SendDBSignal(conn, m->ID, _MSG_AccountSecure);
+			bool matched = false;
 
-			break;
+			if (!repository_->VerifyToken(pAccountList[Idx].AccountId, token,
+					&matched, &error))
+			{
+				Log(error, pAccountList[Idx].File.Info.AccountName, 0);
+			}
+
+			if (matched)
+			{
+				pAccountList[Idx].SecurePass = 1;
+				SendDBSignal(conn, m->ID, _MSG_AccountSecure);
+
+				break;
+			}
 		}
-
 		else if (Change == 1 && Secure == 1)
 		{
-			strncpy(pAccountList[Idx].File.Info.NumericToken, m->NumericToken, 6);
-
-			int ret = DBWriteAccount(&pAccountList[Idx].File);
-
-			if (ret == 0)
+			if (repository_->BindToken(pAccountList[Idx].AccountId, token, true, &error))
 			{
-				Log("err,save secure - create file", pAccountList[Idx].File.Info.AccountName, 0);
+				memset(pAccountList[Idx].File.Info.NumericToken, 0, sizeof(pAccountList[Idx].File.Info.NumericToken));
 
-				return true;
+				pAccountList[Idx].SecurePass = 1;
+				SendDBSignal(conn, m->ID, _MSG_AccountSecure);
+
+				break;
 			}
 
-			pAccountList[Idx].SecurePass = 1;
-			SendDBSignal(conn, m->ID, _MSG_AccountSecure);
-
-			break;
+			Log(error, pAccountList[Idx].File.Info.AccountName, 0);
 		}
 
 		pAccountList[Idx].SecurePass = -1;
@@ -1620,29 +1651,28 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		int Index = m->Parm;
 
-		char temp[256];
+		if (!repository_)
+			return false;
 
-		sprintf(temp, "./capsule/%d", Index);
+		storage::CharacterRecord capsuleRecord;
+		bool capsuleFound = false;
+		std::string capsuleError;
 
-		platform::File capsuleFile;
-
-		if(!capsuleFile.OpenRead(temp))
+		if (!repository_->LoadCapsule(Index, &capsuleRecord, &capsuleFound,
+				&capsuleError))
 		{
-			/*if(errno == EINVAL)
-				Log("err readcapsule EINVAL", temp, 0);
-			else if(errno == EMFILE)
-				Log("err readcapsule EEMFILE", temp, 0);
-			else
-				Log("err readcapsule UNKNOW", temp, 0);
-				*/
+			Log(capsuleError, "capsule", 0);
 			return false;
 		}
 
+		if (!capsuleFound)
+			return false;
+
 		STRUCT_CAPSULE file;
+		memset(&file, 0, sizeof(file));
 
-		capsuleFile.Read(&file, sizeof(STRUCT_CAPSULE));
-
-		capsuleFile.Close();
+		storage::MobFromCharacterRecord(capsuleRecord, &file.MOB, &file.extra,
+			nullptr, nullptr);
 
 		MSG_CNFDBCapsuleInfo sm;
 
@@ -1681,47 +1711,44 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		int Slot = m->Parm;
 
 		int Idx = GetIndex(conn, m->ID);
-		   
+
 		if (Slot < 0 || Slot >= MOB_PER_ACCOUNT)
 		{
 			Log("err,putincapsule  slot out of range", pAccountList[Idx].File.Info.AccountName, 0);
 
 			return true;
 		}
-		LastCapsule++;
 
-		char temp[256];
-		sprintf(temp, "./capsule/%d", LastCapsule);
-
-		platform::File capsuleFile;
-
-		if(!capsuleFile.OpenReadWrite(temp))
+		if (!repository_)
 		{
-			Log("err putincapsulewrite OPEN", 0, 0);
+			Log("err,putincapsule storage not initialized", pAccountList[Idx].File.Info.AccountName, 0);
 
-			return false;
+			return true;
 		}
 
-		STRUCT_CAPSULE file;
+		char capturedName[NAME_LENGTH];
+		memset(capturedName, 0, sizeof(capturedName));
+		memcpy(capturedName, pAccountList[Idx].File.Char[Slot].MobName, NAME_LENGTH - 1);
 
-		file.MOB = pAccountList[Idx].File.Char[Slot];
-		file.extra = pAccountList[Idx].File.mobExtra[Slot];
+		int capsuleId = 0;
+		std::string capsuleError;
 
-		file.extra.QuestInfo.Arch.MortalSlot = -1;
+		if (!repository_->PutInCapsule(pAccountList[Idx].AccountId, Slot,
+				&capsuleId, &capsuleError))
+		{
+			Log(capsuleError, pAccountList[Idx].File.Info.AccountName, 0);
 
-		capsuleFile.Write(&file, sizeof(STRUCT_CAPSULE));
-		capsuleFile.Close();
+			return true;
+		}
 
 		memset(pAccountList[Idx].File.ShortSkill[Slot], 0, 16);
 
 		char Temp[128];
-		sprintf(Temp, "putchar in capsule [%s]", file.MOB.MobName);		
+		sprintf(Temp, "putchar in capsule [%s]", capturedName);
 
 		Log(Temp, pAccountList[Idx].File.Info.AccountName, 0);
 
 		STRUCT_MOB *mob = &pAccountList[Idx].File.Char[Slot];
-
-		WriteConfig();
 
 		BASE_ClearMob(mob);
 		BASE_ClearMobExtra(&pAccountList[Idx].File.mobExtra[Slot]);
@@ -1740,11 +1767,17 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 
 		pUser[conn].cSock.SendOneMessage((char*)&sm, sizeof(MSG_CNFDeleteCharacter));
 
-		sprintf(temp, "../../Common/ImportItem/%d%d%d%d%d", LastCapsule, rand()%255, rand()%255, rand()%255, rand()%255);
-		
+		char temp[256];
+
+		sprintf(temp, "../../Common/ImportItem/%d%d%d%d%d", capsuleId, rand()%255, rand()%255, rand()%255, rand()%255);
+
 		FILE *fp = fopen(temp, "a+");
-		fprintf(fp, "%s %d %d %d %d %d %d %d", pAccountList[Idx].File.Info.AccountName, 3443, 59, LastCapsule/256, 59,(LastCapsule - ((LastCapsule/256)*256)), 0, 0);
-		fclose(fp);
+
+		if (fp != nullptr)
+		{
+			fprintf(fp, "%s %d %d %d %d %d %d %d", pAccountList[Idx].File.Info.AccountName, 3443, 59, capsuleId/256, 59, (capsuleId - ((capsuleId/256)*256)), 0, 0);
+			fclose(fp);
+		}
 	} break;
 
 	case _MSG_DBOutCapsule:
@@ -1754,7 +1787,7 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 		int Slot = m->Slot;
 		int NovoSlot = 0;
 		int Idx = GetIndex(conn, m->ID);
-		   
+
 		if (Slot < 0 || Slot >= MOB_PER_ACCOUNT)
 		{
 			Log("err,outcapsule  slot out of range", pAccountList[Idx].File.Info.AccountName, 0);
@@ -1762,11 +1795,38 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			return true;
 		}
 
+		if (!repository_)
+		{
+			Log("err,outcapsule storage not initialized", pAccountList[Idx].File.Info.AccountName, 0);
+
+			return true;
+		}
+
+		STRUCT_ITEM *item = GetItemPointer(&pAccountList[Idx].File.Char[Slot],
+			pAccountList[Idx].File.Cargo, m->SourType, m->SourPos);
+
+		if (item == nullptr)
+		{
+			SendDBSignal(conn, m->ID, _MSG_DBCNFCapsuleCharacterFail);
+
+			return true;
+		}
+
+		int index = item->stEffect[0].cValue * 256 + item->stEffect[1].cValue;
+
+		if (index <= 0)
+		{
+			SendDBSignal(conn, m->ID, _MSG_DBCNFCapsuleCharacterFail);
+
+			return true;
+		}
+
 		for (NovoSlot = 0; NovoSlot < MOB_PER_ACCOUNT; NovoSlot++)
 		{
 			if (pAccountList[Idx].File.Char[NovoSlot].MobName[0] == 0)
-				break;			   
+				break;
 		}
+
 		if (NovoSlot < 0 || NovoSlot >= MOB_PER_ACCOUNT)
 		{
 			Log("err,newcharcapsule  slot out of range", pAccountList[Idx].File.Info.AccountName, 0);
@@ -1774,6 +1834,28 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			SendDBSignal(conn, m->ID, _MSG_DBCNFCapsuleCharacterFail);
 
 			return true;
+		}
+
+		m->MobName[NAME_LENGTH - 1] = 0;
+		m->MobName[NAME_LENGTH - 2] = 0;
+
+		if (m->MobName[0] == 0)
+		{
+			SendDBSignal(conn, m->ID, _MSG_DBCNFCapsuleCharacterFail2);
+
+			return true;
+		}
+
+		int len = strlen(m->MobName);
+
+		for (int i = 0; i < len - 1; i++)
+		{
+			if (m->MobName[i] == 'í' && m->MobName[i + 1] == 'í')
+			{
+				SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
+
+				return true;
+			}
 		}
 
 		int ret = CreateCharacter(pAccountList[Idx].File.Info.AccountName, m->MobName);
@@ -1785,106 +1867,93 @@ int CFileDB::ProcessMessage(char *Msg, int conn)
 			return true;
 		}
 
-		STRUCT_ITEM *item = GetItemPointer(&pAccountList[Idx].File.Char[Slot], pAccountList[Idx].File.Cargo, m->SourType, m->SourPos);
+		storage::CharacterRecord capsuleRecord;
+		bool capsuleFound = false;
+		std::string capsuleError;
 
-		int index = item->stEffect[0].cValue * 256 + item->stEffect[1].cValue;
-
-		char temp[256];
-		sprintf(temp, "./capsule/%d", index);
-
-		platform::File capsuleFile;
-
-		if(!capsuleFile.OpenRead(temp))
+		if (!repository_->LoadCapsule(index, &capsuleRecord, &capsuleFound,
+				&capsuleError) || !capsuleFound)
 		{
-			Log("err putincapsuleread OPEN", 0, 0);
+			Log(capsuleError.empty() ? "err capsule missing" : capsuleError,
+				pAccountList[Idx].File.Info.AccountName, 0);
 
-			return false;
-		}
-
-		STRUCT_CAPSULE file;
-
-		capsuleFile.Read(&file, sizeof(STRUCT_CAPSULE));
-		capsuleFile.Close();
-
-		strncpy(file.MOB.MobName, m->MobName, 12);
-
-		STRUCT_MOB *mob;
-
-		mob = &pAccountList[Idx].File.Char[NovoSlot];
-
-
-		mob->MobName[NAME_LENGTH - 1] = 0;
-		mob->MobName[NAME_LENGTH - 2] = 0;
-
-		m->MobName[NAME_LENGTH - 1] = 0;
-		m->MobName[NAME_LENGTH - 2] = 0;
-
-		if (mob->MobName[0] != 0)
-		{
-			SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
-
-			Log("err,newchar already charged", pAccountList[Idx].File.Info.AccountName, 0);
-			Log(mob->MobName, m->MobName, 0);
+			SendDBSignal(conn, m->ID, _MSG_DBCNFCapsuleCharacterFail2);
 
 			return true;
 		}
 
-		m->MobName[NAME_LENGTH - 1] = 0;
-		m->MobName[NAME_LENGTH - 2] = 0;
+		STRUCT_MOB mob;
+		STRUCT_MOBEXTRA extra;
 
-		int len = strlen(m->MobName);
+		storage::MobFromCharacterRecord(capsuleRecord, &mob, &extra, nullptr, nullptr);
 
-		for (int i = 0; i < len; i++)
+		// Legacy take-out clears everything except the first equipment slot and
+		// the last four carried items, and resets coin/guild state.
+		memset(&mob.Equip[1], 0, sizeof(STRUCT_ITEM) * (MAX_EQUIP - 1));
+		memset(&mob.Carry[0], 0, sizeof(STRUCT_ITEM) * (MAX_CARRY - 4));
+
+		mob.Coin = 0;
+		mob.Guild = 0;
+		mob.GuildLevel = 0;
+
+		memcpy(mob.MobName, m->MobName, NAME_LENGTH - 1);
+		mob.MobName[NAME_LENGTH - 1] = 0;
+
+		if (!repository_->TakeOutCapsule(pAccountList[Idx].AccountId, index,
+				NovoSlot, storage::NameBytes(m->MobName, NAME_LENGTH),
+				&capsuleError))
 		{
-			if (m->MobName[i] == 'í' && m->MobName[i + 1] == 'í')
-			{
-				SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
+			Log(capsuleError, pAccountList[Idx].File.Info.AccountName, 0);
 
-				return true;
-			}
+			SendDBSignal(conn, m->ID, _MSG_DBCNFCapsuleCharacterFail2);
+
+			return true;
 		}
-								  
-		STRUCT_MOBEXTRA *extra;
 
-		extra = &pAccountList[Idx].File.mobExtra[NovoSlot];
+		STRUCT_ACCOUNTFILE accountFile;
+		memset(&accountFile, 0, sizeof(accountFile));
 
-		mob = &file.MOB;
-		extra = &file.extra;
+		memcpy(accountFile.Info.AccountName,
+			pAccountList[Idx].File.Info.AccountName, ACCOUNTNAME_LENGTH);
 
-		memset(item, 0, sizeof(STRUCT_ITEM));
+		if (!DBReadAccount(&accountFile))
+		{
+			SendDBSignal(conn, m->ID, _MSG_DBCNFCapsuleCharacterFail2);
 
-		memset(&pAccountList[Idx].File.affect[NovoSlot], 0, sizeof(pAccountList[Idx].File.affect[NovoSlot]));
-		memset(&pAccountList[Idx].File.ShortSkill[NovoSlot], -1, 16);
+			return true;
+		}
 
-		memset(&mob->Equip[1], 0, sizeof(STRUCT_ITEM)*(MAX_EQUIP - 2));
-		memset(&mob->Carry[0], 0, sizeof(STRUCT_ITEM)*(MAX_CARRY - 4));
+		STRUCT_ITEM *freshItem = GetItemPointer(&accountFile.Char[Slot],
+			accountFile.Cargo, m->SourType, m->SourPos);
 
-		mob->Coin = 0;
-		mob->Guild = 0;
-		mob->GuildLevel = 0;
+		if (freshItem != nullptr)
+			memset(freshItem, 0, sizeof(STRUCT_ITEM));
 
-		memcpy(mob->MobName, m->MobName, NAME_LENGTH);
+		accountFile.Char[NovoSlot] = mob;
+		accountFile.mobExtra[NovoSlot] = extra;
 
-		ret = DBWriteAccount(&pAccountList[Idx].File);
+		memset(&accountFile.affect[NovoSlot], 0,
+			sizeof(accountFile.affect[NovoSlot]));
+		memset(&accountFile.ShortSkill[NovoSlot], -1, 16);
+
+		ret = DBWriteAccount(&accountFile);
 
 		if (ret == 0)
 		{
 			SendDBSignal(conn, m->ID, _MSG_DBNewCharacterFail);
 
-			Log("err,newchar fail - create file", m->MobName, 0);
+			Log("err,newchar fail - save capsule restore",
+				pAccountList[Idx].File.Info.AccountName, 0);
 
 			return true;
 		}
-		memcpy(&pAccountList[Idx].File.Char[NovoSlot], mob, sizeof(STRUCT_MOB));
-		memcpy(&pAccountList[Idx].File.mobExtra[NovoSlot], extra, sizeof(STRUCT_MOBEXTRA));
 
-		sprintf(temp, "create character [%s] - capsule", mob->MobName);
+		pAccountList[Idx].File = accountFile;
+
+		char temp[256];
+		sprintf(temp, "create character [%s] - capsule", m->MobName);
 
 		Log(temp, pAccountList[Idx].File.Info.AccountName, 0);
-
-		sprintf(temp, "./capsule/%d", index);
-		platform::DeleteFile(temp);
-
 
 		MSG_CNFNewCharacter sm;
 
@@ -2208,7 +2277,8 @@ int CFileDB::CreateCharacter(char *ac, char *ch)
 {
 	char check[ACCOUNTNAME_LENGTH];
 
-	strncpy(check, ac, ACCOUNTNAME_LENGTH);
+	strncpy(check, ac, ACCOUNTNAME_LENGTH - 1);
+	check[ACCOUNTNAME_LENGTH - 1] = 0;
 
 	UpcaseString(check);
 
@@ -2217,45 +2287,36 @@ int CFileDB::CreateCharacter(char *ac, char *ch)
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
 
-	strncpy(check, ch, NAME_LENGTH);
+	char nameCheck[NAME_LENGTH];
 
-	UpcaseString(check);
+	strncpy(nameCheck, ch, NAME_LENGTH - 1);
+	nameCheck[NAME_LENGTH - 1] = 0;
 
-	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
+	UpcaseString(nameCheck);
+
+	if(nameCheck[0] == 'C' && nameCheck[1] == 'O' && nameCheck[2] == 'M' && nameCheck[3] >= '0' && nameCheck[3] <= '9' && nameCheck[4] == 0)
 		return false;
-	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
+	if(nameCheck[0] == 'L' && nameCheck[1] == 'P' && nameCheck[2] == 'T' && nameCheck[3] >= '0' && nameCheck[3] <= '9' && nameCheck[4] == 0)
 		return false;
 
-	char First[128];
-	char temp[128];
+	if (!repository_)
+		return false;
 
-	BASE_GetFirstKey(check, First);
+	bool available = false;
+	std::string error;
 
-	sprintf(temp, "./char/%s/%s", First, check);
-
-	FILE *fp = NULL;
-
-	fp = fopen(temp, "r");
-
-	if(fp != NULL)
+	if (!repository_->CharacterNameAvailable(
+			storage::NameBytes(ch, NAME_LENGTH), &available, &error))
 	{
-		fclose(fp);
+		Log(error, ch, 0);
+		return false;
+	}
+
+	if (!available)
+	{
 		Log("err createchar EEXIST", ch, 0);
-
-        return false;
+		return false;
 	}
-
-	platform::File accountFile;
-
-	if(!accountFile.OpenReadWrite(temp))
-	{
-		Log("err createchar OPEN", ch, 0);
-
-         return false;
-	}
-
-	accountFile.Write(ac, ACCOUNTNAME_LENGTH);
-	accountFile.Close();
 
 	return true;
 }
@@ -2264,7 +2325,8 @@ int CFileDB::DeleteCharacter(char *ch, char *account)
 {
 	char check[ACCOUNTNAME_LENGTH];
 
-	strncpy(check, ch, ACCOUNTNAME_LENGTH);
+	strncpy(check, ch, ACCOUNTNAME_LENGTH - 1);
+	check[ACCOUNTNAME_LENGTH - 1] = 0;
 
 	UpcaseString(check);
 
@@ -2273,16 +2335,26 @@ int CFileDB::DeleteCharacter(char *ch, char *account)
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
 
-	char First[128];
-	char temp[128];
+	if (!repository_)
+		return false;
 
-	BASE_GetFirstKey(check, First);
+	storage::AccountRecord ownerRecord;
+	bool found = false;
+	std::string error;
 
-	sprintf(temp, "./char/%s/%s", First, check);
+	if (!repository_->LoadAccount(
+			storage::NameBytes(account, ACCOUNTNAME_LENGTH),
+			&ownerRecord, &found, &error))
+	{
+		Log(error, account, 0);
+		return false;
+	}
 
-	int ret = (platform::DeleteFile(temp) == platform::FsResult::Ok) ? 1 : 0;
+	if (!found)
+		return false;
 
-	return ret;
+	return repository_->DeleteCharacterByName(ownerRecord.account_id,
+		storage::NameBytes(ch, NAME_LENGTH), &error) ? 1 : 0;
 }
 
 int CFileDB::GetIndex(int server, int id)
@@ -2353,51 +2425,38 @@ int CFileDB::DBWriteAccount(STRUCT_ACCOUNTFILE *account)
 
 	char check[ACCOUNTNAME_LENGTH];
 
-	strncpy(check, accname, ACCOUNTNAME_LENGTH);
+	strncpy(check, accname, ACCOUNTNAME_LENGTH - 1);
+	check[ACCOUNTNAME_LENGTH - 1] = 0;
 
-	 UpcaseString(check);
+	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
 
-	char First[128];
-
-	BASE_GetFirstKey(check, First);
-
-	char temp[128];
-
-	sprintf(temp, "./account/%s/%s", First, check);	
-
-	platform::File accountFile;
-
-	if(!accountFile.OpenReadWrite(temp))
+	if (!repository_)
 	{
-		Log("err writeaccount OPEN", accname, 0);
-
+		Log("err writeaccount storage not initialized", accname, 0);
 		return false;
 	}
 
-	if(!accountFile.Seek(0, SEEK_SET))
+	bool inserted = false;
+	std::string error;
+
+	if (!repository_->SaveAccountFile(*account, true, &inserted, &error))
 	{
-		Log("err,writeaccount lseek fail", accname, 0);
-
-		accountFile.Close(); 
-
+		Log(error, accname, 0);
 		return false;
 	}
 
-	if(!accountFile.Write(account, sizeof(STRUCT_ACCOUNTFILE)))
-	{
-		accountFile.Close();
+	// Never retain credential material in the session record. The token keeps
+	// its set/unset marker so the secure-token flow can still distinguish the
+	// first binding.
+	memset(account->Info.AccountPass, 0, ACCOUNTPASS_LENGTH);
 
-		Log("CreateAccount write fail", accname, 0);
-
-		return false;
-	}
-
-	accountFile.Close();
+	if (account->Info.NumericToken[0] != -1)
+		memset(account->Info.NumericToken, 0, sizeof(account->Info.NumericToken));
 
 	return true;
 }
@@ -2408,13 +2467,32 @@ int CFileDB::DBExportAccount(STRUCT_ACCOUNTFILE *file)
 
 	char *accname = file->Info.AccountName;
 
-	strncpy(check, accname, 16);
+	strncpy(check, accname, ACCOUNTNAME_LENGTH - 1);
+	check[ACCOUNTNAME_LENGTH - 1] = 0;
 
 	UpcaseString(check);
 
 	if(check[0] == 'C' && check[1] == 'O' && check[2] == 'M' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
+		return false;
+
+	if (!repository_)
+		return false;
+
+	STRUCT_ACCOUNTFILE exported;
+	bool found = false;
+	std::string error;
+
+	if (!repository_->ExportAccount(
+			storage::NameBytes(accname, ACCOUNTNAME_LENGTH),
+			&exported, &found, &error))
+	{
+		Log(error, accname, 0);
+		return false;
+	}
+
+	if (!found)
 		return false;
 
 	char temp[128];
@@ -2433,7 +2511,7 @@ int CFileDB::DBExportAccount(STRUCT_ACCOUNTFILE *file)
 		return false;
 	}
 
-	if(!exportFile.Write(file, sizeof(STRUCT_ACCOUNTFILE)))
+	if(!exportFile.Write(&exported, sizeof(STRUCT_ACCOUNTFILE)))
 	{
 		exportFile.Close();
 
@@ -2447,14 +2525,13 @@ int CFileDB::DBExportAccount(STRUCT_ACCOUNTFILE *file)
 
 int CFileDB::DBReadAccount(STRUCT_ACCOUNTFILE *file)
 {
-	file->Info.AccountName[ACCOUNTNAME_LENGTH-1] = 0;
-	file->Info.AccountName[ACCOUNTNAME_LENGTH-2] = 0;
-	file->Info.AccountPass[ACCOUNTPASS_LENGTH-1] = 0;
-	file->Info.AccountPass[ACCOUNTPASS_LENGTH-2] = 0;
+	if (file->Info.AccountName[0] == '\0')
+		return false;
 
 	char check[ACCOUNTNAME_LENGTH];
 
-	strncpy(check, file->Info.AccountName, ACCOUNTNAME_LENGTH);
+	strncpy(check, file->Info.AccountName, ACCOUNTNAME_LENGTH - 1);
+	check[ACCOUNTNAME_LENGTH - 1] = 0;
 
 	UpcaseString(check);
 
@@ -2463,39 +2540,26 @@ int CFileDB::DBReadAccount(STRUCT_ACCOUNTFILE *file)
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return false;
 
-	char First[128];
-
-	BASE_GetFirstKey(check, First);
-
-	char temp[128];
-
-	sprintf(temp, "./account/%s/%s", First, check);
-
-	platform::File accountFile;
-
-	if(!accountFile.OpenRead(temp))
+	if (!repository_)
 	{
-		Log("err readaccount OPEN", file->Info.AccountName, 0);
-
+		Log("err readaccount storage not initialized", file->Info.AccountName, 0);
 		return false;
 	}
 
-	int length = static_cast<int>(accountFile.Size());
+	STRUCT_ACCOUNTFILE loaded;
+	bool found = false;
+	std::string error;
 
-	int reqsz = sizeof(STRUCT_ACCOUNTFILE);
-
-	if(!accountFile.Read(file, reqsz))
+	if (!repository_->LoadAccountFile(*file, &loaded, &found, &error))
 	{
-		accountFile.Close();
-
+		Log(error, file->Info.AccountName, 0);
 		return false;
 	}
 
-	accountFile.Close();
+	if (!found)
+		return false;
 
-	if(length < reqsz)
-		memset(file->ShortSkill, 0, 8);
-
+	*file = loaded;
 	return true;
 }
 
@@ -2557,7 +2621,8 @@ void CFileDB::GetAccountByChar(char *acc, char *cha)
 {
 	char check[NAME_LENGTH];
 
-	strncpy(check, cha, NAME_LENGTH);
+	strncpy(check, cha, NAME_LENGTH - 1);
+	check[NAME_LENGTH - 1] = 0;
 
 	UpcaseString(check);
 
@@ -2566,24 +2631,185 @@ void CFileDB::GetAccountByChar(char *acc, char *cha)
 	if(check[0] == 'L' && check[1] == 'P' && check[2] == 'T' && check[3] >= '0' && check[3] <= '9' && check[4] == 0)
 		return;
 
-	char first[16];
-	memset(first, 0, 16);
+	if (!repository_)
+		return;
 
-	BASE_GetFirstKey(check, first);
+	std::vector<unsigned char> owner;
+	bool found = false;
+	std::string error;
 
-	char temp[128];
-
-	sprintf(temp, "./char/%s/%s", first, check);
-
-	platform::File charFile;
-
-	if(!charFile.OpenRead(temp))
+	if (!repository_->FindAccountByCharacterName(
+			storage::NameBytes(check, NAME_LENGTH), &owner, &found, &error))
 	{
+		Log(error, check, 0);
 		return;
 	}
 
-	charFile.Read(acc, ACCOUNTNAME_LENGTH);
-	charFile.Close();
+	if (!found)
+		return;
+
+	memset(acc, 0, ACCOUNTNAME_LENGTH);
+
+	size_t length = std::min<std::size_t>(owner.size(), ACCOUNTNAME_LENGTH - 1);
+
+	if (length > 0)
+		memcpy(acc, owner.data(), length);
+}
+
+bool CFileDB::InitStorage(const storage::StorageConfig &config, std::string *error)
+{
+	database_.reset(new storage::Database());
+
+	if (!database_->Connect(config, error))
+	{
+		storageError_ = error != nullptr ? *error : "database connect failed";
+		return false;
+	}
+
+	int version = 0;
+
+	if (!storage::Migrate(*database_, error, &version))
+	{
+		storageError_ = error != nullptr ? *error : "schema migration failed";
+		return false;
+	}
+
+	std::string importState;
+
+	if (!storage::GetMetadata(*database_, "import_state", &importState, error))
+	{
+		storageError_ = error != nullptr ? *error : "cannot read import_state";
+		return false;
+	}
+
+	if (importState != "complete")
+	{
+		storageError_ = "import_state is '" + importState
+			+ "'; run dbimport until it reports complete before starting DBSrv";
+		if (error != nullptr)
+			*error = storageError_;
+		return false;
+	}
+
+	repository_.reset(new storage::AccountRepository(*database_, config));
+
+	return true;
+}
+
+int CFileDB::GetAccountState(const char *account)
+{
+	if (!repository_)
+		return 0;
+
+	storage::AccountRecord record;
+	bool found = false;
+	std::string error;
+
+	if (!repository_->LoadAccount(
+			storage::NameBytes(account, ACCOUNTNAME_LENGTH),
+			&record, &found, &error))
+	{
+		Log(error, account, 0);
+		return 0;
+	}
+
+	return found ? record.state : 0;
+}
+
+bool CFileDB::SetAccountState(const char *account, int state)
+{
+	if (!repository_)
+		return false;
+
+	storage::AccountRecord record;
+	bool found = false;
+	std::string error;
+
+	if (!repository_->LoadAccount(
+			storage::NameBytes(account, ACCOUNTNAME_LENGTH),
+			&record, &found, &error))
+	{
+		Log(error, account, 0);
+		return false;
+	}
+
+	if (!found)
+		return false;
+
+	return repository_->SetState(record.account_id, state, &error);
+}
+
+bool CFileDB::VerifyAccountPassword(const char *account, const char *password,
+	bool *matched)
+{
+	if (matched != nullptr)
+		*matched = false;
+
+	if (!repository_)
+		return false;
+
+	storage::AccountRecord record;
+	bool found = false;
+	std::string error;
+
+	if (!repository_->LoadAccount(
+			storage::NameBytes(account, ACCOUNTNAME_LENGTH),
+			&record, &found, &error))
+	{
+		Log(error, account, 0);
+		return false;
+	}
+
+	if (!found)
+		return true;
+
+	return repository_->VerifyPassword(record.account_id,
+		security::SubmittedCredential(password, ACCOUNTPASS_LENGTH),
+		matched, &error);
+}
+
+bool CFileDB::ChangeAccountPassword(const char *account, const char *password)
+{
+	if (!repository_)
+		return false;
+
+	storage::AccountRecord record;
+	bool found = false;
+	std::string error;
+
+	if (!repository_->LoadAccount(
+			storage::NameBytes(account, ACCOUNTNAME_LENGTH),
+			&record, &found, &error))
+	{
+		Log(error, account, 0);
+		return false;
+	}
+
+	if (!found)
+		return false;
+
+	return repository_->ChangePassword(record.account_id,
+		security::NewCredential(password, ACCOUNTPASS_LENGTH), &error);
+}
+
+long long CFileDB::GetAccountId(const char *account)
+{
+	if (!repository_)
+		return 0;
+
+	storage::AccountRecord record;
+	bool found = false;
+	std::string error;
+
+	if (!repository_->LoadAccount(
+			storage::NameBytes(account, ACCOUNTNAME_LENGTH),
+			&record, &found, &error))
+	{
+		Log(error, account, 0);
+		return 0;
+	}
+
+	return found ? record.account_id : 0;
 }
 
 void CFileDB::InitAccountList(int idx)

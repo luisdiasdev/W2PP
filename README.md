@@ -23,6 +23,7 @@ Prerequisites:
 * Visual Studio 2022 with the "Desktop development with C++" workload (v143 toolset and a Windows 10/11 SDK)
 * CMake 3.25 or newer
 * vcpkg, with the `VCPKG_ROOT` environment variable pointing at the vcpkg checkout (for example `C:\dev\vcpkg`)
+* Docker Desktop (or another Docker-compatible runtime) for the PostgreSQL integration tests; the build itself does not need it
 
 ```powershell
 $env:VCPKG_ROOT = "C:\dev\vcpkg"
@@ -48,6 +49,7 @@ Prerequisites:
 * glibc 2.34 or newer (required for the 64-bit `time_t` used by the persisted structures)
 * CMake 3.25 or newer plus Ninja (or Make)
 * A bootstrapped vcpkg checkout (`bootstrap-vcpkg.sh`) with `VCPKG_ROOT` pointing at it
+* Docker (or another Docker-compatible runtime) for the PostgreSQL integration tests; the build itself does not need it
 
 ```bash
 export VCPKG_ROOT="$HOME/vcpkg"
@@ -65,11 +67,27 @@ ctest --preset linux-x86-release
 
 The Linux presets select the vcpkg `x86-linux` triplet (with the community triplet overlay) and pass `-m32`. Configure and build into `build/linux-x86-<config>`; the executables are `tmsrv`, `dbsrv` and `w2pp_tests`. Configure fails with an actionable message when 32-bit multilib is missing or `time_t` is not 64-bit.
 
-Third-party dependencies (`asio`, `catch2`) are declared in `vcpkg.json` and pinned with `builtin-baseline` (`ec48c11eae9448c8c6e7739d93e06fa2433aa95f`), so no machine-global installs or floating SDK selections are used. `asio` is the standalone (no Boost) header-only build.
+Third-party dependencies (`asio`, `catch2`, `libpq`) are declared in `vcpkg.json` and pinned with `builtin-baseline` (`ec48c11eae9448c8c6e7739d93e06fa2433aa95f`), so no machine-global installs or floating SDK selections are used. `asio` is the standalone (no Boost) header-only build. `libpq` is the PostgreSQL client library used by DBSrv. The BCrypt implementation is vendored under `third_party/bcrypt` (see its `README.md` and `LICENSE`) and built as the `w2pp_bcrypt` target.
 
 To reproduce the Win32 x86 data layout on i386 Linux, project targets are compiled with `-malign-double` and `_TIME_BITS=64` + `_FILE_OFFSET_BITS=64`. `Code/AbiGuards.h` pins the header and record sizes and the layout-sensitive field offsets at compile time on both platforms.
 
 On Windows, the post-build step also copies `tmsrv.exe` and `dbsrv.exe` into the legacy release tree (by default `../release/TMSRV/run` and `../release/DBSRV/run`), so they can be started next to the existing runtime data. Debug builds also copy the companion `.pdb` so a debugger can resolve symbols for the deployed binary. Override the destination with `-DW2PP_RELEASE_ROOT=<path>`, or set it to an empty value to disable the copy. On Linux the copy is opt-in and disabled by default: the build tree is the normal run location, and setting `-DW2PP_RELEASE_ROOT=<path>` enables the same post-build copy.
+
+### Database integration tests
+
+The storage layer is tested against a real PostgreSQL 19 instance. `tests/db/docker-compose.yml` pins `postgres:19.0`, keeps its data on a tmpfs and exposes host port `55432`; the runners start it under a per-run Compose project, wait for the healthcheck, export `W2PP_TEST_DSN` and always remove the containers and volumes afterwards.
+
+```powershell
+# PowerShell (Windows)
+tests/db/run_db_tests.ps1 -Command "& '.\build\x86-debug\Debug\w2pp_db_tests.exe'"
+```
+
+```bash
+# POSIX (Linux host with Linux containers)
+tests/db/run_db_tests.sh -- ./build/linux-x86-debug/w2pp_db_tests
+```
+
+Running `ctest --preset <preset>` includes the `db-integration` test, which invokes the matching runner for `w2pp_db_tests`. The stack uses `W2PP_DB_PORT` (default `55432`) when that port is busy. Hosts without a container runtime can configure with `-DW2PP_DB_TESTS=OFF`; configure then prints a status line and no database test is registered. Setting `W2PP_DB_TESTS=ON` without Docker also prints a status line and omits the test. Running `w2pp_db_tests` directly without `W2PP_TEST_DSN` exits with CTest's skip code `77`.
 
 ## Continuous integration
 
@@ -80,9 +98,9 @@ Every pull request, every push to `master` and every manual run validates the su
 | Windows x86 | `windows-2022` | `x86-debug`, `x86-release` |
 | Linux i386 | `ubuntu-24.04` | `linux-x86-debug`, `linux-x86-release` |
 
-Each of the four combinations runs as its own job, so one failing host or configuration does not cancel the others. A job resolves `asio` and `catch2` from the pinned `vcpkg.json` baseline, configures, builds and runs the tests. The workflow uses read-only repository permissions, publishes no artifacts and needs no secrets, so pull requests from forks run unchanged.
+Each of the four combinations runs as its own job, so one failing host or configuration does not cancel the others. A job resolves `asio`, `catch2` and `libpq` from the pinned `vcpkg.json` baseline, configures, builds and runs the tests. The workflow uses read-only repository permissions, publishes no artifacts and needs no secrets, so pull requests from forks run unchanged.
 
-The integration tests are not part of CI: the test step excludes the `integration` label, so `dbsrv-loopback`, `tmsrv-smoke` and `posix-smoke` stay local because they need fixed ports and process timing. Run them locally with `ctest --preset <preset>` (without `-LE integration`).
+The integration tests are not part of CI: the test step excludes the `integration` label, so `dbsrv-loopback`, `tmsrv-smoke`, `posix-smoke` and `db-integration` stay local because they need fixed ports, process timing or a container runtime. Run them locally with `ctest --preset <preset>` (without `-LE integration`).
 
 The commands that reproduce a job are the ones from [Building from source](#building-from-source) with the integration label excluded and the release-tree copy disabled:
 
